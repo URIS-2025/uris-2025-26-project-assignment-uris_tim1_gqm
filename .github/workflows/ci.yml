@@ -261,7 +261,8 @@ jobs:
       with:
         path: /tmp/.buildx-cache
         key: buildx-${{ runner.os }}-${{ github.sha }}
-        restore-keys: |\n          buildx-${{ runner.os }}-
+        restore-keys: |
+          buildx-${{ runner.os }}-
     
     - name: Build changed services only
       env:
