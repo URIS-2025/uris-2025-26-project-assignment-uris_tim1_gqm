@@ -1,5 +1,10 @@
 name: CI - Build & Test
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 on:
   push:
     branches: [ main, dev ]
@@ -57,12 +62,26 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build Access Service
         run: dotnet build services/access-service/AccessService.API/AccessService.API.csproj --configuration Release
       - name: Run Access Service Tests
-        run: dotnet test services/access-service/AccessService.Tests/AccessService.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test services/access-service/AccessService.Tests/AccessService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Access Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
   
   build-department:
     needs: detect-changes
@@ -73,12 +92,26 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build Department Service
         run: dotnet build services/department-service/DepartmentService.API/DepartmentService.API.csproj --configuration Release
       - name: Run Department Service Tests
-        run: dotnet test services/department-service/DepartmentService.Tests/DepartmentService.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test services/department-service/DepartmentService.Tests/DepartmentService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Department Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
   
   build-goal:
     needs: detect-changes
@@ -89,12 +122,26 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build Goal Service
         run: dotnet build services/goal-service/GoalService.API/GoalService.API.csproj --configuration Release
       - name: Run Goal Service Tests
-        run: dotnet test services/goal-service/GoalService.Tests/GoalService.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test services/goal-service/GoalService.Tests/GoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Goal Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
   
   build-premise:
     needs: detect-changes
@@ -105,12 +152,26 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build Premise Service
         run: dotnet build services/premise-service/PremiseService.API/PremiseService.API.csproj --configuration Release
       - name: Run Premise Service Tests
-        run: dotnet test services/premise-service/PremiseService.Tests/PremiseService.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test services/premise-service/PremiseService.Tests/PremiseService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Premise Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
   
   build-qgm-goal:
     needs: detect-changes
@@ -121,12 +182,26 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build QGM-Goal Service
         run: dotnet build services/qgm-goal-service/QGMGoalService.API/QGMGoalService.API.csproj --configuration Release
       - name: Run QGM-Goal Service Tests
-        run: dotnet test services/qgm-goal-service/QGMGoalService.Tests/QGMGoalService.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test services/qgm-goal-service/QGMGoalService.Tests/QGMGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: QGM-Goal Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
   
   build-assessment:
     needs: detect-changes
@@ -137,12 +212,26 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build Assessment Service
         run: dotnet build services/assessment-service/AssessmentService.API/AssessmentService.API.csproj --configuration Release
       - name: Run Assessment Service Tests
-        run: dotnet test services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Assessment Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
   
   docker-build:
     runs-on: ubuntu-latest
@@ -150,6 +239,7 @@ jobs:
     if: |
       always() && 
       !cancelled() &&
+      !contains(needs.*.result, 'failure') &&
       (needs.detect-changes.outputs.infrastructure == 'true' || 
        needs.detect-changes.outputs.shared == 'true' ||
        needs.detect-changes.outputs.access == 'true' ||
@@ -166,7 +256,18 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
+    - name: Restore Docker build cache
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: buildx-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |\n          buildx-${{ runner.os }}-
+    
     - name: Build changed services only
+      env:
+        DOCKER_BUILDKIT: 1
+        BUILDX_CACHE_FROM: type=local,src=/tmp/.buildx-cache
+        BUILDX_CACHE_TO: type=local,dest=/tmp/.buildx-cache-new,mode=max
       run: |
         SERVICES=""
         if [ "${{ needs.detect-changes.outputs.access }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
@@ -195,6 +296,11 @@ jobs:
         
         echo "Building services: $SERVICES"
         docker compose build $SERVICES
+    
+    - name: Move Docker cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
     
     - name: Verify Docker images
       run: |
