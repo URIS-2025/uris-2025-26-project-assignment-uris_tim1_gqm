@@ -1,0 +1,156 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - access-service
+      - department-service
+      - goal-service
+      - premise-service
+      - qgm-goal-service
+      - assessment-service
+
+  access-service:
+    build:
+      context: .
+      dockerfile: ./services/access-service/AccessService.API/Dockerfile
+    container_name: access-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=access-db;Port=5432;Database=accessdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - access-db
+
+  access-db:
+    image: postgres:17-alpine
+    container_name: access-db
+    environment:
+      - POSTGRES_DB=accessdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - access-db-data:/var/lib/postgresql/data
+
+  department-service:
+    build:
+      context: .
+      dockerfile: ./services/department-service/DepartmentService.API/Dockerfile
+    container_name: department-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=department-db;Port=5432;Database=departmentdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - department-db
+
+  department-db:
+    image: postgres:17-alpine
+    container_name: department-db
+    environment:
+      - POSTGRES_DB=departmentdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - department-db-data:/var/lib/postgresql/data
+
+  goal-service:
+    build:
+      context: .
+      dockerfile: ./services/goal-service/GoalService.API/Dockerfile
+    container_name: goal-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=goal-db;Port=5432;Database=goaldb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - goal-db
+
+  goal-db:
+    image: postgres:17-alpine
+    container_name: goal-db
+    environment:
+      - POSTGRES_DB=goaldb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - goal-db-data:/var/lib/postgresql/data
+
+  premise-service:
+    build:
+      context: .
+      dockerfile: ./services/premise-service/PremiseService.API/Dockerfile
+    container_name: premise-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=premise-db;Port=5432;Database=premisedb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - premise-db
+
+  premise-db:
+    image: postgres:17-alpine
+    container_name: premise-db
+    environment:
+      - POSTGRES_DB=premisedb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - premise-db-data:/var/lib/postgresql/data
+
+  qgm-goal-service:
+    build:
+      context: .
+      dockerfile: ./services/qgm-goal-service/QGMGoalService.API/Dockerfile
+    container_name: qgm-goal-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=qgm-goal-db;Port=5432;Database=qgmgoaldb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - qgm-goal-db
+
+  qgm-goal-db:
+    image: postgres:17-alpine
+    container_name: qgm-goal-db
+    environment:
+      - POSTGRES_DB=qgmgoaldb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - qgm-goal-db-data:/var/lib/postgresql/data
+
+  assessment-service:
+    build:
+      context: .
+      dockerfile: ./services/assessment-service/AssessmentService.API/Dockerfile
+    container_name: assessment-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=assessment-db;Port=5432;Database=assessmentdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - assessment-db
+
+  assessment-db:
+    image: postgres:17-alpine
+    container_name: assessment-db
+    environment:
+      - POSTGRES_DB=assessmentdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - assessment-db-data:/var/lib/postgresql/data
+
+volumes:
+  access-db-data:
+  department-db-data:
+  goal-db-data:
+  premise-db-data:
+  qgm-goal-db-data:
+  assessment-db-data:

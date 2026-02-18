@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/services/" />
+  <Folder Name="/services/access-service/">
+    <Project Path="services/access-service/AccessService.API/AccessService.API.csproj" />
+    <Project Path="services/access-service/AccessService.Tests/AccessService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/assumption-service/">
+    <Project Path="services/assumption-service/AssumptionService.API/AssumptionService.API.csproj" />
+    <Project Path="services/assumption-service/AssumptionService.Tests/AssumptionService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/context-service/">
+    <Project Path="services/context-service/ContextService.API/ContextService.API.csproj" />
+    <Project Path="services/context-service/ContextService.Tests/ContextService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/goal-service/">
+    <Project Path="services/goal-service/GoalService.API/GoalService.API.csproj" />
+    <Project Path="services/goal-service/GoalService.Tests/GoalService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/organization-service/">
+    <Project Path="services/organization-service/OrganizationService.API/OrganizationService.API.csproj" />
+    <Project Path="services/organization-service/OrganizationService.Tests/OrganizationService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/scenario-service/">
+    <Project Path="services/scenario-service/ScenarioService.API/ScenarioService.API.csproj" />
+    <Project Path="services/scenario-service/ScenarioService.Tests/ScenarioService.Tests.csproj" />
+  </Folder>
+</Solution>

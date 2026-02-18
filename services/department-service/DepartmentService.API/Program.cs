@@ -1,0 +1,70 @@
+using Shared.HMAC;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
+// Add HMAC authentication
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+builder.Services.AddHmacAuthentication(hmacSecretKey);
+builder.Services.AddTransient<HmacDelegatingHandler>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+
+// Add HMAC middleware
+app.UseMiddleware<HmacMiddleware>();
+
+var summaries = new[]
+{
+    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+};
+
+app.MapGet("/weatherforecast", () =>
+{
+    var forecast =  Enumerable.Range(1, 5).Select(index =>
+        new WeatherForecast
+        (
+            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            Random.Shared.Next(-20, 55),
+            summaries[Random.Shared.Next(summaries.Length)]
+        ))
+        .ToArray();
+    return forecast;
+})
+.WithName("GetWeatherForecast");
+
+// Protected endpoint - requires HMAC
+app.MapGet("/departments", () =>
+{
+    return Results.Ok(new[] 
+    {
+        new { Id = 1, Name = "IT Department" },
+        new { Id = 2, Name = "HR Department" },
+        new { Id = 3, Name = "Finance Department" }
+    });
+})
+.WithName("GetDepartments");
+
+// Protected endpoint - requires HMAC
+app.MapPost("/departments", (object dto) =>
+{
+    return Results.Created("/departments/1", new { Id = 1, Message = "Department created" });
+})
+.WithName("CreateDepartment");
+
+app.Run();
+
+record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+{
+    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
