@@ -4,24 +4,27 @@
     <Project Path="services/access-service/AccessService.API/AccessService.API.csproj" />
     <Project Path="services/access-service/AccessService.Tests/AccessService.Tests.csproj" />
   </Folder>
-  <Folder Name="/services/assumption-service/">
-    <Project Path="services/assumption-service/AssumptionService.API/AssumptionService.API.csproj" />
-    <Project Path="services/assumption-service/AssumptionService.Tests/AssumptionService.Tests.csproj" />
-  </Folder>
-  <Folder Name="/services/context-service/">
-    <Project Path="services/context-service/ContextService.API/ContextService.API.csproj" />
-    <Project Path="services/context-service/ContextService.Tests/ContextService.Tests.csproj" />
+  <Folder Name="/services/department-service/">
+    <Project Path="services/department-service/DepartmentService.API/DepartmentService.API.csproj" />
+    <Project Path="services/department-service/DepartmentService.Tests/DepartmentService.Tests.csproj" />
   </Folder>
   <Folder Name="/services/goal-service/">
     <Project Path="services/goal-service/GoalService.API/GoalService.API.csproj" />
     <Project Path="services/goal-service/GoalService.Tests/GoalService.Tests.csproj" />
   </Folder>
-  <Folder Name="/services/organization-service/">
-    <Project Path="services/organization-service/OrganizationService.API/OrganizationService.API.csproj" />
-    <Project Path="services/organization-service/OrganizationService.Tests/OrganizationService.Tests.csproj" />
+  <Folder Name="/services/premise-service/">
+    <Project Path="services/premise-service/PremiseService.API/PremiseService.API.csproj" />
+    <Project Path="services/premise-service/PremiseService.Tests/PremiseService.Tests.csproj" />
   </Folder>
-  <Folder Name="/services/scenario-service/">
-    <Project Path="services/scenario-service/ScenarioService.API/ScenarioService.API.csproj" />
-    <Project Path="services/scenario-service/ScenarioService.Tests/ScenarioService.Tests.csproj" />
+  <Folder Name="/services/qgm-goal-service/">
+    <Project Path="services/qgm-goal-service/QGMGoalService.API/QGMGoalService.API.csproj" />
+    <Project Path="services/qgm-goal-service/QGMGoalService.Tests/QGMGoalService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/assessment-service/">
+    <Project Path="services/assessment-service/AssessmentService.API/AssessmentService.API.csproj" />
+    <Project Path="services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/shared/">
+    <Project Path="shared/Shared.HMAC/Shared.HMAC.csproj" />
   </Folder>
 </Solution>
