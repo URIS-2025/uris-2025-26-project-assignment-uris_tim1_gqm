@@ -7,14 +7,21 @@ using PremiseService.Infrastructure.Persistence;
 
 namespace PremiseService.API.Extensions;
 
+/// <summary>
+/// Extension methods for configuring dependency injection in the Premise Service.
+/// </summary>
 public static class ServiceExtensions
 {
+    /// <summary>
+    /// Registers application-level services: AutoMapper, FluentValidation,
+    /// business services, and repositories.
+    /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // AutoMapper
+        // AutoMapper profiles
         services.AddAutoMapper(typeof(PremiseMappingProfile).Assembly);
 
-        // FluentValidation
+        // FluentValidation validators
         services.AddValidatorsFromAssemblyContaining<PremiseService.Application.Validators.PremiseRequestValidator>();
 
         // Application services
@@ -26,6 +33,10 @@ public static class ServiceExtensions
         return services;
     }
 
+    /// <summary>
+    /// Configures the PostgreSQL database connection using Entity Framework Core.
+    /// Reads the connection string from DATABASE_URL (Docker) or ConnectionStrings:DefaultConnection (local).
+    /// </summary>
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration["DATABASE_URL"]

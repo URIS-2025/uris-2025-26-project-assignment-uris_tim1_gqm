@@ -4,6 +4,10 @@ using PremiseService.Domain.Exceptions;
 
 namespace PremiseService.API.Middleware;
 
+/// <summary>
+/// Global exception handling middleware that catches unhandled exceptions
+/// and returns standardized JSON error responses with appropriate HTTP status codes.
+/// </summary>
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -15,6 +19,9 @@ public class ExceptionHandlingMiddleware
         _logger = logger;
     }
 
+    /// <summary>
+    /// Processes the HTTP request and catches any exceptions thrown downstream.
+    /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -27,6 +34,10 @@ public class ExceptionHandlingMiddleware
         }
     }
 
+    /// <summary>
+    /// Maps domain exceptions to HTTP status codes and writes a JSON error response.
+    /// PremiseNotFoundException → 404, ArgumentException → 400, all others → 500.
+    /// </summary>
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var (statusCode, message) = exception switch

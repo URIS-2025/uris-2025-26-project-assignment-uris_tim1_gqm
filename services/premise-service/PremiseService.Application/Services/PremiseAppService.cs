@@ -6,6 +6,10 @@ using PremiseService.Domain.Exceptions;
 
 namespace PremiseService.Application.Services;
 
+/// <summary>
+/// Application service implementing business logic for the Premise aggregate.
+/// Handles CRUD operations with built-in versioning support.
+/// </summary>
 public class PremiseAppService : IPremiseService
 {
     private readonly IPremiseRepository _repository;
@@ -17,12 +21,14 @@ public class PremiseAppService : IPremiseService
         _mapper = mapper;
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<PremiseResponse>> GetAllActiveAsync()
     {
         var premises = await _repository.GetAllActiveAsync();
         return _mapper.Map<IEnumerable<PremiseResponse>>(premises);
     }
 
+    /// <inheritdoc />
     public async Task<PremiseResponse> GetByIdAsync(Guid id)
     {
         var premise = await _repository.GetByIdAsync(id)
@@ -31,18 +37,21 @@ public class PremiseAppService : IPremiseService
         return _mapper.Map<PremiseResponse>(premise);
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<PremiseResponse>> GetByGoalIdAsync(Guid goalId)
     {
         var premises = await _repository.GetByGoalIdAsync(goalId);
         return _mapper.Map<IEnumerable<PremiseResponse>>(premises);
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<PremiseResponse>> GetByStrategyIdAsync(Guid strategyId)
     {
         var premises = await _repository.GetByStrategyIdAsync(strategyId);
         return _mapper.Map<IEnumerable<PremiseResponse>>(premises);
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<PremiseResponse>> GetVersionHistoryAsync(Guid premiseId)
     {
         var premise = await _repository.GetByIdAsync(premiseId)
@@ -52,6 +61,7 @@ public class PremiseAppService : IPremiseService
         return _mapper.Map<IEnumerable<PremiseResponse>>(history);
     }
 
+    /// <inheritdoc />
     public async Task<PremiseResponse> CreateAsync(PremiseRequest request)
     {
         var premise = _mapper.Map<Premise>(request);
@@ -64,6 +74,7 @@ public class PremiseAppService : IPremiseService
         return _mapper.Map<PremiseResponse>(created);
     }
 
+    /// <inheritdoc />
     public async Task<PremiseResponse> UpdateAsync(Guid id, PremiseUpdateRequest request)
     {
         var existingPremise = await _repository.GetByIdAsync(id)
@@ -73,7 +84,7 @@ public class PremiseAppService : IPremiseService
         existingPremise.IsActive = false;
         await _repository.UpdateAsync(existingPremise);
 
-        // Create a new version with updated description
+        // Create a new version with updated description, inheriting Type, GoalId, and StrategyId
         var newVersion = new Premise
         {
             Id = Guid.NewGuid(),
@@ -91,6 +102,7 @@ public class PremiseAppService : IPremiseService
         return _mapper.Map<PremiseResponse>(created);
     }
 
+    /// <inheritdoc />
     public async Task DeactivateAsync(Guid id)
     {
         var premise = await _repository.GetByIdAsync(id)
