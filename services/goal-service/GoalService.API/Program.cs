@@ -1,51 +1,49 @@
+using GoalService.Infrastructure.Persistence;
+using GoalService.Infrastructure.Seed;
+using Microsoft.EntityFrameworkCore;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// --- Database ---
+var connectionString = builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Database connection string not configured.");
+
+builder.Services.AddDbContext<GoalDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// --- OpenAPI / Swagger ---
 builder.Services.AddOpenApi();
 
-// Add HMAC authentication
-var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+// --- HMAC Authentication ---
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
+    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Controllers ---
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- Seed Data (development only) ---
 if (app.Environment.IsDevelopment())
 {
+    await GoalDbSeeder.SeedAsync(app.Services);
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
 
-// Add HMAC middleware
+// --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// --- Map Controllers ---
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// --- Health Check ---
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal-service" }))
+    .WithName("HealthCheck");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

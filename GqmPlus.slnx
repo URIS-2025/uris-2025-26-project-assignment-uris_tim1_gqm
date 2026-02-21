@@ -10,6 +10,8 @@
   </Folder>
   <Folder Name="/services/goal-service/">
     <Project Path="services/goal-service/GoalService.API/GoalService.API.csproj" />
+    <Project Path="services/goal-service/GoalService.Domain/GoalService.Domain.csproj" />
+    <Project Path="services/goal-service/GoalService.Infrastructure/GoalService.Infrastructure.csproj" />
     <Project Path="services/goal-service/GoalService.Tests/GoalService.Tests.csproj" />
   </Folder>
   <Folder Name="/services/premise-service/">
