@@ -1,3 +1,7 @@
+using FluentValidation;
+using GoalService.API.Middleware;
+using GoalService.Application.Interfaces;
+using GoalService.Application.Services;
 using GoalService.Infrastructure.Persistence;
 using GoalService.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +17,14 @@ var connectionString = builder.Configuration["DATABASE_URL"]
 builder.Services.AddDbContext<GoalDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// --- Application Services ---
+builder.Services.AddScoped<IGoalService, GoalServiceImpl>();
+builder.Services.AddScoped<IStrategyService, StrategyServiceImpl>();
+builder.Services.AddScoped<IGoalInfluenceService, GoalInfluenceServiceImpl>();
+
+// --- FluentValidation ---
+builder.Services.AddValidatorsFromAssemblyContaining<GoalServiceImpl>();
+
 // --- OpenAPI / Swagger ---
 builder.Services.AddOpenApi();
 
@@ -27,7 +39,10 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// --- Seed Data (development only) ---
+// --- Global Exception Handler (first in pipeline) ---
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+// --- Seed Data & Swagger (development only) ---
 if (app.Environment.IsDevelopment())
 {
     await GoalDbSeeder.SeedAsync(app.Services);
