@@ -28,6 +28,7 @@
     <Project Path="services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj" />
   </Folder>
   <Folder Name="/shared/">
+    <Project Path="shared/Shared.Contracts/Shared.Contracts.csproj" />
     <Project Path="shared/Shared.HMAC/Shared.HMAC.csproj" />
   </Folder>
 </Solution>
