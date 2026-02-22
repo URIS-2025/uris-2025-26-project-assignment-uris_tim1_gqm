@@ -12,7 +12,7 @@ services:
       - department-service
       - goal-service
       - premise-service
-      - qgm-goal-service
+      - gqm-goal-service
       - assessment-service
 
   access-service:
@@ -103,27 +103,29 @@ services:
     volumes:
       - premise-db-data:/var/lib/postgresql/data
 
-  qgm-goal-service:
+  gqm-goal-service:
     build:
       context: .
-      dockerfile: ./services/qgm-goal-service/QGMGoalService.API/Dockerfile
-    container_name: qgm-goal-service
+      dockerfile: ./services/gqm-goal-service/gqmGoalService.API/Dockerfile
+    container_name: gqm-goal-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DATABASE_URL=Host=qgm-goal-db;Port=5432;Database=qgmgoaldb;Username=postgres;Password=postgres
+      - DATABASE_URL=Host=gqm-goal-db;Port=5432;Database=gqmgoaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
     depends_on:
-      - qgm-goal-db
+      - gqm-goal-db
 
-  qgm-goal-db:
+  gqm-goal-db:
     image: postgres:17-alpine
-    container_name: qgm-goal-db
+    container_name: gqm-goal-db
+    ports:
+      - "5436:5432"
     environment:
-      - POSTGRES_DB=qgmgoaldb
+      - POSTGRES_DB=gqmgoaldb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - qgm-goal-db-data:/var/lib/postgresql/data
+      - gqm-goal-db-data:/var/lib/postgresql/data
 
   assessment-service:
     build:
@@ -152,5 +154,5 @@ volumes:
   department-db-data:
   goal-db-data:
   premise-db-data:
-  qgm-goal-db-data:
+  gqm-goal-db-data:
   assessment-db-data:

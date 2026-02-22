@@ -12,13 +12,16 @@
     <Project Path="services/goal-service/GoalService.API/GoalService.API.csproj" />
     <Project Path="services/goal-service/GoalService.Tests/GoalService.Tests.csproj" />
   </Folder>
+  <Folder Name="/services/gqm-goal-service/">
+    <Project Path="services/gqm-goal-service/GQMGoalService.API/GQMGoalService.API.csproj" />
+    <Project Path="services/gqm-goal-service/GQMGoalService.Application/GQMGoalService.Application.csproj" />
+    <Project Path="services/gqm-goal-service/GQMGoalService.Domain/GQMGoalService.Domain.csproj" />
+    <Project Path="services/gqm-goal-service/GQMGoalService.Infrastructure/GQMGoalService.Infrastructure.csproj" />
+    <Project Path="services/gqm-goal-service/GQMGoalService.Tests/GQMGoalService.Tests.csproj" />
+  </Folder>
   <Folder Name="/services/premise-service/">
     <Project Path="services/premise-service/PremiseService.API/PremiseService.API.csproj" />
     <Project Path="services/premise-service/PremiseService.Tests/PremiseService.Tests.csproj" />
-  </Folder>
-  <Folder Name="/services/qgm-goal-service/">
-    <Project Path="services/qgm-goal-service/QGMGoalService.API/QGMGoalService.API.csproj" />
-    <Project Path="services/qgm-goal-service/QGMGoalService.Tests/QGMGoalService.Tests.csproj" />
   </Folder>
   <Folder Name="/services/assessment-service/">
     <Project Path="services/assessment-service/AssessmentService.API/AssessmentService.API.csproj" />

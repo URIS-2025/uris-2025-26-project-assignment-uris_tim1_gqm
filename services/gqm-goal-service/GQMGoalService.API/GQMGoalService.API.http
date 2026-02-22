@@ -1,0 +1,7 @@
+@gqmGoalService.API_HostAddress = http://localhost:5278
+
+GET {{gqmGoalService.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
