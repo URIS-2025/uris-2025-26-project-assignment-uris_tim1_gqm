@@ -25,8 +25,9 @@ builder.Services.AddScoped<IGoalInfluenceService, GoalInfluenceServiceImpl>();
 // --- FluentValidation ---
 builder.Services.AddValidatorsFromAssemblyContaining<GoalServiceImpl>();
 
-// --- OpenAPI / Swagger ---
-builder.Services.AddOpenApi();
+// --- Swagger / OpenAPI ---
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // --- HMAC Authentication ---
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
@@ -46,7 +47,12 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     await GoalDbSeeder.SeedAsync(app.Services);
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Goal Service API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();

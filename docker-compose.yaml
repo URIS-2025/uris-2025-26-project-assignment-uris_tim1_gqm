@@ -64,6 +64,8 @@ services:
       context: .
       dockerfile: ./services/goal-service/GoalService.API/Dockerfile
     container_name: goal-service
+    ports:
+      - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=goal-db;Port=5432;Database=goaldb;Username=postgres;Password=postgres
