@@ -4,20 +4,20 @@ using GoalService.Application.Interfaces;
 using GoalService.Application.Interfaces.Clients;
 using GoalService.Application.Mappings;
 using GoalService.Domain.Exceptions;
-using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoalService.Infrastructure.Services;
+namespace GoalService.Application.Services;
 
 public class GoalServiceImpl : IGoalService
 {
-    private readonly GoalDbContext _context;
+    private readonly IGoalDbContext _context;
     private readonly IPremiseClient _premiseClient;
     private readonly IAssessmentClient _assessmentClient;
     private readonly IQgmGoalClient _qgmGoalClient;
 
     public GoalServiceImpl(
-        GoalDbContext context, 
+        IGoalDbContext context, 
         IPremiseClient premiseClient, 
         IAssessmentClient assessmentClient, 
         IQgmGoalClient qgmGoalClient)

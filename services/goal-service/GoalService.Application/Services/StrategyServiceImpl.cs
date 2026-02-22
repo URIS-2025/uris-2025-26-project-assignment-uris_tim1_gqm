@@ -2,16 +2,16 @@ using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
 using GoalService.Application.Mappings;
 using GoalService.Domain.Exceptions;
-using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoalService.Infrastructure.Services;
+namespace GoalService.Application.Services;
 
 public class StrategyServiceImpl : IStrategyService
 {
-    private readonly GoalDbContext _context;
+    private readonly IGoalDbContext _context;
 
-    public StrategyServiceImpl(GoalDbContext context)
+    public StrategyServiceImpl(IGoalDbContext context)
     {
         _context = context;
     }

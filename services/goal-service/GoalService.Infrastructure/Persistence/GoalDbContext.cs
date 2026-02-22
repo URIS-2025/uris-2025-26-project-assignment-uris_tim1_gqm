@@ -1,9 +1,10 @@
 using GoalService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using GoalService.Application.Interfaces.Persistence;
 
 namespace GoalService.Infrastructure.Persistence;
 
-public class GoalDbContext : DbContext
+public class GoalDbContext : DbContext, IGoalDbContext
 {
     public GoalDbContext(DbContextOptions<GoalDbContext> options) : base(options) { }
 
