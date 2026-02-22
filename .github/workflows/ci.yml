@@ -25,7 +25,7 @@ jobs:
       department: ${{ steps.filter.outputs.department }}
       goal: ${{ steps.filter.outputs.goal }}
       premise: ${{ steps.filter.outputs.premise }}
-      qgm-goal: ${{ steps.filter.outputs.qgm-goal }}
+      gqm-goal: ${{ steps.filter.outputs.gqm-goal }}
       assessment: ${{ steps.filter.outputs.assessment }}
       shared: ${{ steps.filter.outputs.shared }}
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
@@ -43,8 +43,8 @@ jobs:
               - 'services/goal-service/**'
             premise:
               - 'services/premise-service/**'
-            qgm-goal:
-              - 'services/qgm-goal-service/**'
+            gqm-goal:
+              - 'services/gqm-goal-service/**'
             assessment:
               - 'services/assessment-service/**'
             shared:
@@ -173,9 +173,9 @@ jobs:
           path: test-results/*.trx
           reporter: dotnet-trx
   
-  build-qgm-goal:
+  build-gqm-goal:
     needs: detect-changes
-    if: needs.detect-changes.outputs.qgm-goal == 'true' || needs.detect-changes.outputs.shared == 'true'
+    if: needs.detect-changes.outputs.gqm-goal == 'true' || needs.detect-changes.outputs.shared == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -191,15 +191,15 @@ jobs:
             nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
-      - name: Build QGM-Goal Service
-        run: dotnet build services/qgm-goal-service/QGMGoalService.API/QGMGoalService.API.csproj --configuration Release
-      - name: Run QGM-Goal Service Tests
-        run: dotnet test services/qgm-goal-service/QGMGoalService.Tests/QGMGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Build gqm-Goal Service
+        run: dotnet build services/gqm-goal-service/gqmGoalService.API/gqmGoalService.API.csproj --configuration Release
+      - name: Run gqm-Goal Service Tests
+        run: dotnet test services/gqm-goal-service/gqmGoalService.Tests/gqmGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
       - name: Publish Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: QGM-Goal Service Tests
+          name: gqm-Goal Service Tests
           path: test-results/*.trx
           reporter: dotnet-trx
   
@@ -235,7 +235,7 @@ jobs:
   
   # docker-build:
   #   runs-on: ubuntu-latest
-  #   needs: [detect-changes, build-access, build-department, build-goal, build-premise, build-qgm-goal, build-assessment]
+  #   needs: [detect-changes, build-access, build-department, build-goal, build-premise, build-gqm-goal, build-assessment]
   #   if: |
   #     always() && 
   #     !cancelled() &&
@@ -246,7 +246,7 @@ jobs:
   #      needs.detect-changes.outputs.department == 'true' ||
   #      needs.detect-changes.outputs.goal == 'true' ||
   #      needs.detect-changes.outputs.premise == 'true' ||
-  #      needs.detect-changes.outputs.qgm-goal == 'true' ||
+  #      needs.detect-changes.outputs.gqm-goal == 'true' ||
   #      needs.detect-changes.outputs.assessment == 'true')
     
   #   steps:
@@ -283,8 +283,8 @@ jobs:
   #       if [ "${{ needs.detect-changes.outputs.premise }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
   #         SERVICES="$SERVICES premise-service"
   #       fi
-  #       if [ "${{ needs.detect-changes.outputs.qgm-goal }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
-  #         SERVICES="$SERVICES qgm-goal-service"
+  #       if [ "${{ needs.detect-changes.outputs.gqm-goal }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
+  #         SERVICES="$SERVICES gqm-goal-service"
   #       fi
   #       if [ "${{ needs.detect-changes.outputs.assessment }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
   #         SERVICES="$SERVICES assessment-service"
@@ -306,3 +306,4 @@ jobs:
   #   - name: Verify Docker images
   #     run: |
   #       docker images | grep uris-2025-26-project-assignment-uris_tim1_gqm || true
+
