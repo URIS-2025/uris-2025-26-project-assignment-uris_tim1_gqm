@@ -1,6 +1,6 @@
 namespace GQMGoalService.Application.DTOs.Measurement;
 
-public class MeasurementResponse
+public record MeasurementResponse
 {
     public Guid Id { get; set; }
     public decimal Value { get; set; }

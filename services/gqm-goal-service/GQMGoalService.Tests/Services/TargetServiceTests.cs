@@ -27,13 +27,17 @@ public class TargetServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new TargetService(_dbContext, _mapper);
+        _service = new TargetService(_dbContext, _mapper, new GQMGoalService.Application.Validators.TargetRequestValidator(_dbContext));
     }
 
     [Fact]
     public async Task CreateAsync_ShouldPersistAndReturnTarget()
     {
-        var request = new TargetRequest { Name = "Test T", Unit = Unit.Percentage, QuestionId = Guid.NewGuid() };
+        var questionId = Guid.NewGuid();
+        _dbContext.Questions.Add(new Question { Id = questionId, Text = "Test", GqmGoalId = Guid.NewGuid(), CreatedAt = DateTime.UtcNow });
+        await _dbContext.SaveChangesAsync();
+
+        var request = new TargetRequest { Name = "Test T", Unit = Unit.Percentage, QuestionId = questionId };
         
         var result = await _service.CreateAsync(request);
 

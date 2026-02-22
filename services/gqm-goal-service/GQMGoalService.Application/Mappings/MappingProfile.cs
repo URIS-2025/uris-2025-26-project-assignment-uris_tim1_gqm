@@ -11,16 +11,22 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<GqmGoalRequest, GqmGoal>();
+        CreateMap<GqmGoalRequest, GqmGoal>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
         CreateMap<GqmGoal, GqmGoalResponse>();
 
-        CreateMap<QuestionRequest, Question>();
+        CreateMap<QuestionRequest, Question>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
         CreateMap<Question, QuestionResponse>();
 
-        CreateMap<TargetRequest, Target>();
+        CreateMap<TargetRequest, Target>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<Target, TargetResponse>();
 
-        CreateMap<MeasurementRequest, Measurement>();
+        CreateMap<MeasurementRequest, Measurement>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<Measurement, MeasurementResponse>();
     }
 }

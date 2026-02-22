@@ -25,6 +25,9 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? "dev-secret-key-
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -61,7 +64,7 @@ using (var scope = app.Services.CreateScope())
                 var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
                 logger.LogWarning(ex, "Failed to connect to database. Retrying in {Delay}s...", retryDelay.TotalSeconds);
                 if (i == maxRetries - 1) throw;
-                Thread.Sleep(retryDelay);
+                await Task.Delay(retryDelay);
             }
         }
     }
@@ -79,6 +82,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/health", () => Results.Ok("Healthy"));
+app.MapHealthChecks("/health");
 
 app.Run();

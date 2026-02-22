@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.GqmGoal;
 using GQMGoalService.Application.Interfaces;
 
@@ -16,9 +17,9 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GqmGoalResponse>>> GetAll()
+    public async Task<ActionResult<PagedResult<GqmGoalResponse>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _service.GetAllAsync();
+        var result = await _service.GetAllAsync(pageNumber, pageSize);
         return Ok(result);
     }
 

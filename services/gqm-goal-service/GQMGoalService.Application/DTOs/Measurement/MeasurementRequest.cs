@@ -1,6 +1,6 @@
 namespace GQMGoalService.Application.DTOs.Measurement;
 
-public class MeasurementRequest
+public record MeasurementRequest
 {
     public decimal Value { get; set; }
     public DateTime? MeasuredAt { get; set; }

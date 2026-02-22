@@ -26,13 +26,17 @@ public class MeasurementServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new MeasurementService(_dbContext, _mapper);
+        _service = new MeasurementService(_dbContext, _mapper, new GQMGoalService.Application.Validators.MeasurementRequestValidator(_dbContext));
     }
 
     [Fact]
     public async Task CreateAsync_ShouldPersistAndReturnMeasurement()
     {
-        var request = new MeasurementRequest { Value = 42, TargetId = Guid.NewGuid() };
+        var targetId = Guid.NewGuid();
+        _dbContext.Targets.Add(new Target { Id = targetId, Name = "Test", QuestionId = Guid.NewGuid() });
+        await _dbContext.SaveChangesAsync();
+
+        var request = new MeasurementRequest { Value = 42, TargetId = targetId };
         
         var result = await _service.CreateAsync(request);
 
