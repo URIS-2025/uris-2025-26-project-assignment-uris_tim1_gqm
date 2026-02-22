@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GoalService.Application.DTOs;
-using GoalService.Infrastructure.Services;
+using GoalService.Application.Services;
 using GoalService.Domain.Entities;
 using GoalService.Domain.Enums;
 using GoalService.Domain.Exceptions;

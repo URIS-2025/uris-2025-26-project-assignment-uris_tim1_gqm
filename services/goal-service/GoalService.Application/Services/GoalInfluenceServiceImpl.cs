@@ -2,16 +2,16 @@ using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
 using GoalService.Application.Mappings;
 using GoalService.Domain.Exceptions;
-using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoalService.Infrastructure.Services;
+namespace GoalService.Application.Services;
 
 public class GoalInfluenceServiceImpl : IGoalInfluenceService
 {
-    private readonly GoalDbContext _context;
+    private readonly IGoalDbContext _context;
 
-    public GoalInfluenceServiceImpl(GoalDbContext context)
+    public GoalInfluenceServiceImpl(IGoalDbContext context)
     {
         _context = context;
     }

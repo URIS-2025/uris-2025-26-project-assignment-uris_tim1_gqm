@@ -87,6 +87,7 @@ Each service follows a layered clean architecture:
 │   ├── Services/
 │   ├── DTOs/
 │   ├── Interfaces/
+│   │   └── Persistence/
 │   ├── Validators/
 │   └── Mappings/
 │
@@ -137,6 +138,7 @@ Each service follows a layered clean architecture:
 - Avoid magic strings
 - Use explicit domain exceptions
 - Validation handled in Application layer
+- Services must inject I{Service}DbContext from Application, never the EF Core DbContext directly
 - Use dependency injection
 - Use consistent formatting across all services
 

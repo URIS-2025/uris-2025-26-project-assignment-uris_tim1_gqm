@@ -2,9 +2,10 @@ using FluentValidation;
 using GoalService.API.Middleware;
 using GoalService.Application.Interfaces;
 using GoalService.Application.Interfaces.Clients;
-using GoalService.Infrastructure.Services;
 using GoalService.Infrastructure.Clients;
 using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Persistence;
+using GoalService.Application.Services;
 using GoalService.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Shared.HMAC;
@@ -18,6 +19,8 @@ var connectionString = builder.Configuration["DATABASE_URL"]
 
 builder.Services.AddDbContext<GoalDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IGoalDbContext>(provider => provider.GetRequiredService<GoalDbContext>());
 
 // --- Application Services ---
 builder.Services.AddScoped<IGoalService, GoalServiceImpl>();
