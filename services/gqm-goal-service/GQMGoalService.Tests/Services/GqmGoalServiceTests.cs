@@ -26,7 +26,7 @@ public class GqmGoalServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new GqmGoalService(_dbContext, _mapper);
+        _service = new GqmGoalService(_dbContext, _mapper, new GQMGoalService.Application.Validators.GqmGoalRequestValidator());
     }
 
     [Fact]

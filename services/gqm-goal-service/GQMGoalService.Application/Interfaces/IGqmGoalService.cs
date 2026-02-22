@@ -1,10 +1,11 @@
+using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.GqmGoal;
 
 namespace GQMGoalService.Application.Interfaces;
 
 public interface IGqmGoalService
 {
-    Task<IEnumerable<GqmGoalResponse>> GetAllAsync();
+    Task<PagedResult<GqmGoalResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10);
     Task<GqmGoalResponse> GetByIdAsync(Guid id);
     Task<IEnumerable<GqmGoalResponse>> GetByGoalIdAsync(Guid goalId);
     Task<GqmGoalResponse> CreateAsync(GqmGoalRequest request);

@@ -2,7 +2,7 @@ using GQMGoalService.Application.DTOs.Question;
 
 namespace GQMGoalService.Application.DTOs.GqmGoal;
 
-public class GqmGoalResponse
+public record GqmGoalResponse
 {
     public Guid Id { get; set; }
     public string Description { get; set; } = string.Empty;

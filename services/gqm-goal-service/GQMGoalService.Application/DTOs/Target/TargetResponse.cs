@@ -3,7 +3,7 @@ using GQMGoalService.Domain.Enums;
 
 namespace GQMGoalService.Application.DTOs.Target;
 
-public class TargetResponse
+public record TargetResponse
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
