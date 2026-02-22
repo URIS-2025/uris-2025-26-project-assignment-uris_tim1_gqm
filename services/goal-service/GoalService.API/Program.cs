@@ -1,7 +1,9 @@
 using FluentValidation;
 using GoalService.API.Middleware;
 using GoalService.Application.Interfaces;
-using GoalService.Application.Services;
+using GoalService.Application.Interfaces.Clients;
+using GoalService.Infrastructure.Services;
+using GoalService.Infrastructure.Clients;
 using GoalService.Infrastructure.Persistence;
 using GoalService.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +36,25 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
     ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- Cross-Service HTTP Clients ---
+builder.Services.AddHttpClient<IPremiseClient, PremiseClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:PremiseService"] ?? "http://premise-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IAssessmentClient, AssessmentClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AssessmentService"] ?? "http://assessment-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IQgmGoalClient, QgmGoalClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:QgmGoalService"] ?? "http://qgm-goal-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
 
 // --- Controllers ---
 builder.Services.AddControllers();

@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GoalService.Domain\GoalService.Domain.csproj" />
+    <ProjectReference Include="..\GoalService.Application\GoalService.Application.csproj" />
   </ItemGroup>
 
 </Project>

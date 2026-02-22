@@ -1,5 +1,6 @@
 using FluentValidation;
 using GoalService.Application.DTOs;
+using Shared.Contracts;
 using GoalService.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,10 +23,10 @@ public class GoalController : ControllerBase
     /// Get all goals with their strategies and influences.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GoalResponse>>> GetAll()
+    public async Task<ActionResult<PaginationResponse<GoalResponse>>> GetAll([FromQuery] PaginationRequest request)
     {
-        var goals = await _goalService.GetAllAsync();
-        return Ok(goals);
+        var paginatedGoals = await _goalService.GetAllPaginatedAsync(request);
+        return Ok(paginatedGoals);
     }
 
     /// <summary>
@@ -39,6 +40,19 @@ public class GoalController : ControllerBase
             return NotFound(new { message = $"Goal with ID '{id}' was not found." });
 
         return Ok(goal);
+    }
+
+    /// <summary>
+    /// Get a specific goal by ID along with its related external data (Premises, Assessments, QGM Goals).
+    /// </summary>
+    [HttpGet("{id:guid}/details")]
+    public async Task<ActionResult<GoalDetailsResponse>> GetDetails(Guid id)
+    {
+        var details = await _goalService.GetGoalDetailsAsync(id);
+        if (details is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(details);
     }
 
     /// <summary>
