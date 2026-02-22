@@ -5,7 +5,7 @@ using GoalService.Domain.Exceptions;
 using GoalService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoalService.Application.Services;
+namespace GoalService.Infrastructure.Services;
 
 public class GoalInfluenceServiceImpl : IGoalInfluenceService
 {

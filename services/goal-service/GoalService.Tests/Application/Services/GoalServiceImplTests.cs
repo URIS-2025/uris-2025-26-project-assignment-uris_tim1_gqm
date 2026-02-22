@@ -1,11 +1,14 @@
 using FluentAssertions;
 using GoalService.Application.DTOs;
-using GoalService.Application.Services;
+using Shared.Contracts;
+using GoalService.Infrastructure.Services;
 using GoalService.Domain.Entities;
 using GoalService.Domain.Enums;
 using GoalService.Domain.Exceptions;
 using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Clients;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +20,9 @@ public class GoalServiceImplTests : IDisposable
 {
     private readonly GoalDbContext _context;
     private readonly GoalServiceImpl _service;
+    private readonly Mock<IPremiseClient> _premiseClientMock;
+    private readonly Mock<IAssessmentClient> _assessmentClientMock;
+    private readonly Mock<IQgmGoalClient> _qgmGoalClientMock;
 
     public GoalServiceImplTests()
     {
@@ -25,7 +31,15 @@ public class GoalServiceImplTests : IDisposable
             .Options;
 
         _context = new GoalDbContext(options);
-        _service = new GoalServiceImpl(_context);
+        _premiseClientMock = new Mock<IPremiseClient>();
+        _assessmentClientMock = new Mock<IAssessmentClient>();
+        _qgmGoalClientMock = new Mock<IQgmGoalClient>();
+
+        _service = new GoalServiceImpl(
+            _context, 
+            _premiseClientMock.Object, 
+            _assessmentClientMock.Object, 
+            _qgmGoalClientMock.Object);
     }
 
     public void Dispose()
@@ -35,7 +49,7 @@ public class GoalServiceImplTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllAsync_ShouldReturnAllGoals_WithEagerLoadedRelations()
+    public async Task GetAllPaginatedAsync_ShouldReturnPaginatedGoals_WithRelations()
     {
         // Arrange
         var goalId = Guid.NewGuid();
@@ -70,11 +84,15 @@ public class GoalServiceImplTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _service.GetAllAsync();
+        var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+        var result = await _service.GetAllPaginatedAsync(request);
 
         // Assert
-        result.Should().HaveCount(1);
-        var dto = result.First();
+        result.Should().NotBeNull();
+        result.Items.Should().HaveCount(1);
+        result.Total.Should().Be(1);
+        
+        var dto = result.Items.First();
         dto.Id.Should().Be(goalId);
         dto.Strategies.Should().HaveCount(1);
         dto.Strategies.First().Name.Should().Be("Strat");
