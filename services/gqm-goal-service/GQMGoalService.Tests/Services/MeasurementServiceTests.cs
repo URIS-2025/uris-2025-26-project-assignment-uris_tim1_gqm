@@ -2,6 +2,7 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs.Measurement;
+using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Application.Mappings;
 using GQMGoalService.Application.Services;
 using GQMGoalService.Domain.Entities;
@@ -26,7 +27,7 @@ public class MeasurementServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new MeasurementService(_dbContext, _mapper, new GQMGoalService.Application.Validators.MeasurementRequestValidator(_dbContext));
+        _service = new MeasurementService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.MeasurementRequestValidator(_dbContext));
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs.Question;
+using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Application.Mappings;
 using GQMGoalService.Application.Services;
 using GQMGoalService.Domain.Entities;
@@ -26,7 +27,7 @@ public class QuestionServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new QuestionService(_dbContext, _mapper, new GQMGoalService.Application.Validators.QuestionRequestValidator(_dbContext));
+        _service = new QuestionService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.QuestionRequestValidator(_dbContext));
     }
 
     [Fact]

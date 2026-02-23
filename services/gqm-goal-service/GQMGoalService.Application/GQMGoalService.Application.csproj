@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GQMGoalService.Domain\GQMGoalService.Domain.csproj" />
-    <ProjectReference Include="..\GQMGoalService.Infrastructure\GQMGoalService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
