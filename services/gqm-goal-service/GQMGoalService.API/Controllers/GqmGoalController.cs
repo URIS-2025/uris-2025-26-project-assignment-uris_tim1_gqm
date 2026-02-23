@@ -17,44 +17,44 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<GqmGoalResponse>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PagedResult<GqmGoalResponse>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetAllAsync(pageNumber, pageSize);
+        var result = await _service.GetAllAsync(pageNumber, pageSize, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<GqmGoalResponse>> GetById(Guid id)
+    public async Task<ActionResult<GqmGoalResponse>> GetById(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetByIdAsync(id);
+        var result = await _service.GetByIdAsync(id, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("by-goal/{goalId}")]
-    public async Task<ActionResult<IEnumerable<GqmGoalResponse>>> GetByGoalId(Guid goalId)
+    public async Task<ActionResult<IEnumerable<GqmGoalResponse>>> GetByGoalId(Guid goalId, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetByGoalIdAsync(goalId);
+        var result = await _service.GetByGoalIdAsync(goalId, cancellationToken);
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<GqmGoalResponse>> Create([FromBody] GqmGoalRequest request)
+    public async Task<ActionResult<GqmGoalResponse>> Create([FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<GqmGoalResponse>> Update(Guid id, [FromBody] GqmGoalRequest request)
+    public async Task<ActionResult<GqmGoalResponse>> Update(Guid id, [FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await _service.UpdateAsync(id, request);
+        var result = await _service.UpdateAsync(id, request, cancellationToken);
         return Ok(result);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
-        await _service.DeleteAsync(id);
+        await _service.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
 }

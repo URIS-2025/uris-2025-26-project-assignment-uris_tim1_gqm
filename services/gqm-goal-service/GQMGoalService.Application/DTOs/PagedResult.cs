@@ -1,11 +1,11 @@
 namespace GQMGoalService.Application.DTOs;
 
-public class PagedResult<T>
+public record PagedResult<T>
 {
-    public IEnumerable<T> Items { get; set; } = new List<T>();
-    public int TotalCount { get; set; }
-    public int PageNumber { get; set; }
-    public int PageSize { get; set; }
+    public IEnumerable<T> Items { get; init; } = new List<T>();
+    public int TotalCount { get; init; }
+    public int PageNumber { get; init; }
+    public int PageSize { get; init; }
 
     public PagedResult(IEnumerable<T> items, int totalCount, int pageNumber, int pageSize)
     {

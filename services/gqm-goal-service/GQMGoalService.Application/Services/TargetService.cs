@@ -22,26 +22,26 @@ public class TargetService : ITargetService
         _validator = validator;
     }
 
-    public async Task<PagedResult<TargetResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<PagedResult<TargetResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Targets.CountAsync();
+        var totalCount = await _dbContext.Targets.CountAsync(cancellationToken);
         var targets = await _dbContext.Targets
             .Include(t => t.Measurements)
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         var dtos = _mapper.Map<IEnumerable<TargetResponse>>(targets);
         return new PagedResult<TargetResponse>(dtos, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<TargetResponse> GetByIdAsync(Guid id)
+    public async Task<TargetResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var target = await _dbContext.Targets
             .Include(t => t.Measurements)
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             
         if (target == null)
             throw new NotFoundException(nameof(Target), id);
@@ -49,57 +49,57 @@ public class TargetService : ITargetService
         return _mapper.Map<TargetResponse>(target);
     }
 
-    public async Task<IEnumerable<TargetResponse>> GetByQuestionIdAsync(Guid questionId)
+    public async Task<IEnumerable<TargetResponse>> GetByQuestionIdAsync(Guid questionId, CancellationToken cancellationToken = default)
     {
         var targets = await _dbContext.Targets
             .Include(t => t.Measurements)
             .Where(t => t.QuestionId == questionId)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         return _mapper.Map<IEnumerable<TargetResponse>>(targets);
     }
 
-    public async Task<TargetResponse> CreateAsync(TargetRequest request)
+    public async Task<TargetResponse> CreateAsync(TargetRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var target = _mapper.Map<Target>(request);
 
         _dbContext.Targets.Add(target);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<TargetResponse>(target);
     }
 
-    public async Task<TargetResponse> UpdateAsync(Guid id, TargetRequest request)
+    public async Task<TargetResponse> UpdateAsync(Guid id, TargetRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
-        var target = await _dbContext.Targets.FindAsync(id);
+        var target = await _dbContext.Targets.FindAsync(new object[] { id }, cancellationToken);
         if (target == null)
             throw new NotFoundException(nameof(Target), id);
 
         _mapper.Map(request, target);
 
         _dbContext.Targets.Update(target);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<TargetResponse>(target);
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var target = await _dbContext.Targets.FindAsync(id);
+        var target = await _dbContext.Targets.FindAsync(new object[] { id }, cancellationToken);
         if (target == null)
             throw new NotFoundException(nameof(Target), id);
 
-        bool hasMeasurements = await _dbContext.Measurements.AnyAsync(m => m.TargetId == id);
+        bool hasMeasurements = await _dbContext.Measurements.AnyAsync(m => m.TargetId == id, cancellationToken);
         if (hasMeasurements)
-            throw new InvalidOperationException("Cannot delete Target because it has associated measurements.");
+            throw new ConflictException("Cannot delete Target because it has associated measurements.");
 
         _dbContext.Targets.Remove(target);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

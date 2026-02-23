@@ -22,26 +22,26 @@ public class QuestionService : IQuestionService
         _validator = validator;
     }
 
-    public async Task<PagedResult<QuestionResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<PagedResult<QuestionResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Questions.CountAsync();
+        var totalCount = await _dbContext.Questions.CountAsync(cancellationToken);
         var questions = await _dbContext.Questions
             .Include(q => q.Targets)
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         var dtos = _mapper.Map<IEnumerable<QuestionResponse>>(questions);
         return new PagedResult<QuestionResponse>(dtos, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<QuestionResponse> GetByIdAsync(Guid id)
+    public async Task<QuestionResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var question = await _dbContext.Questions
             .Include(q => q.Targets)
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.Id == id);
+            .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
             
         if (question == null)
             throw new NotFoundException(nameof(Question), id);
@@ -49,58 +49,58 @@ public class QuestionService : IQuestionService
         return _mapper.Map<QuestionResponse>(question);
     }
 
-    public async Task<IEnumerable<QuestionResponse>> GetByGqmGoalIdAsync(Guid gqmGoalId)
+    public async Task<IEnumerable<QuestionResponse>> GetByGqmGoalIdAsync(Guid gqmGoalId, CancellationToken cancellationToken = default)
     {
         var questions = await _dbContext.Questions
             .Include(q => q.Targets)
             .Where(q => q.GqmGoalId == gqmGoalId)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         return _mapper.Map<IEnumerable<QuestionResponse>>(questions);
     }
 
-    public async Task<QuestionResponse> CreateAsync(QuestionRequest request)
+    public async Task<QuestionResponse> CreateAsync(QuestionRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var question = _mapper.Map<Question>(request);
         question.CreatedAt = DateTime.UtcNow;
 
         _dbContext.Questions.Add(question);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<QuestionResponse>(question);
     }
 
-    public async Task<QuestionResponse> UpdateAsync(Guid id, QuestionRequest request)
+    public async Task<QuestionResponse> UpdateAsync(Guid id, QuestionRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
-        var question = await _dbContext.Questions.FindAsync(id);
+        var question = await _dbContext.Questions.FindAsync(new object[] { id }, cancellationToken);
         if (question == null)
             throw new NotFoundException(nameof(Question), id);
 
         _mapper.Map(request, question);
 
         _dbContext.Questions.Update(question);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<QuestionResponse>(question);
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var question = await _dbContext.Questions.FindAsync(id);
+        var question = await _dbContext.Questions.FindAsync(new object[] { id }, cancellationToken);
         if (question == null)
             throw new NotFoundException(nameof(Question), id);
 
-        bool hasTargets = await _dbContext.Targets.AnyAsync(t => t.QuestionId == id);
+        bool hasTargets = await _dbContext.Targets.AnyAsync(t => t.QuestionId == id, cancellationToken);
         if (hasTargets)
-            throw new InvalidOperationException("Cannot delete Question because it has associated targets.");
+            throw new ConflictException("Cannot delete Question because it has associated targets.");
 
         _dbContext.Questions.Remove(question);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

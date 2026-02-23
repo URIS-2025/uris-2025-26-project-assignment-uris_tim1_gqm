@@ -37,6 +37,7 @@ public class ExceptionHandlingMiddleware
         var response = exception switch
         {
             NotFoundException e => new { StatusCode = StatusCodes.Status404NotFound, Message = e.Message, Errors = (object?)null },
+            ConflictException e => new { StatusCode = StatusCodes.Status409Conflict, Message = e.Message, Errors = (object?)null },
             ValidationException e => new { StatusCode = StatusCodes.Status400BadRequest, Message = e.Message, Errors = (object?)e.Errors },
             FluentValidationException e => new { 
                 StatusCode = StatusCodes.Status400BadRequest, 
