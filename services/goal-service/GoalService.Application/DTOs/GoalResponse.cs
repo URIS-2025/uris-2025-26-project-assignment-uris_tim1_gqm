@@ -1,6 +1,6 @@
 namespace GoalService.Application.DTOs;
 
-public class GoalResponse
+public record GoalResponse
 {
     public Guid Id { get; set; }
     public string Focus { get; set; } = string.Empty;

@@ -1,6 +1,6 @@
 namespace GoalService.Application.DTOs;
 
-public class StrategyRequest
+public record StrategyRequest
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

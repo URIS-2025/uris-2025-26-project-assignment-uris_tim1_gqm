@@ -2,7 +2,7 @@ using GoalService.Domain.Enums;
 
 namespace GoalService.Application.DTOs;
 
-public class GoalRequest
+public record GoalRequest
 {
     public string Focus { get; set; } = string.Empty;
     public string Object { get; set; } = string.Empty;

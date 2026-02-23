@@ -1,6 +1,6 @@
 namespace GoalService.Application.DTOs;
 
-public class GoalInfluenceRequest
+public record GoalInfluenceRequest
 {
     public Guid GoalId { get; set; }
     public Guid StrategyId { get; set; }
