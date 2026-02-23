@@ -8,7 +8,11 @@ public class PremiseMappingProfile : Profile
 {
     public PremiseMappingProfile()
     {
-        CreateMap<Premise, PremiseResponse>();
+        CreateMap<Premise, PremiseResponse>()
+            .ForMember(dest => dest.NewVersionOf, opt => opt.MapFrom(src => src.NewVersionOfId));
+
+        CreateMap<Premise, PremiseActiveResponse>();
+
         CreateMap<PremiseRequest, Premise>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.IsActive, opt => opt.Ignore())

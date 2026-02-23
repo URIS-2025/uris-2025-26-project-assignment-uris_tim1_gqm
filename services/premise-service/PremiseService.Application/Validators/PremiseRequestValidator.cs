@@ -12,7 +12,7 @@ public class PremiseRequestValidator : AbstractValidator<PremiseRequest>
             .MaximumLength(1000).WithMessage("Description must not exceed 1000 characters.");
 
         RuleFor(x => x.Type)
-            .IsInEnum().WithMessage("Type must be a valid PremiseType (Assumption or Context).");
+            .IsInEnum().WithMessage("Type must be a valid PremiseType.");
 
         RuleFor(x => x.GoalId)
             .NotEmpty().WithMessage("GoalId is required.");

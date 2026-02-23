@@ -1,9 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using PremiseService.Application.Interfaces;
 using PremiseService.Domain.Entities;
 
 namespace PremiseService.Infrastructure.Persistence;
 
-public class PremiseDbContext : DbContext
+/// <summary>
+/// EF Core database context for the Premise aggregate.
+/// Implements IPremiseDbContext so Application services can query
+/// the database without depending on Infrastructure.
+/// </summary>
+public class PremiseDbContext : DbContext, IPremiseDbContext
 {
     public PremiseDbContext(DbContextOptions<PremiseDbContext> options)
         : base(options)

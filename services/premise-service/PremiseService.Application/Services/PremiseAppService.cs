@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
 using PremiseService.Domain.Entities;
@@ -8,57 +9,66 @@ namespace PremiseService.Application.Services;
 
 /// <summary>
 /// Application service implementing business logic for the Premise aggregate.
-/// Handles CRUD operations with built-in versioning support.
+/// Works directly with the database context — no repository layer.
 /// </summary>
 public class PremiseAppService : IPremiseService
 {
-    private readonly IPremiseRepository _repository;
+    private readonly IPremiseDbContext _dbContext;
     private readonly IMapper _mapper;
 
-    public PremiseAppService(IPremiseRepository repository, IMapper mapper)
+    public PremiseAppService(IPremiseDbContext dbContext, IMapper mapper)
     {
-        _repository = repository;
+        _dbContext = dbContext;
         _mapper = mapper;
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<PremiseResponse>> GetAllActiveAsync()
+    public async Task<PaginatedResponse<PremiseResponse>> GetAllAsync(int page, int size)
     {
-        var premises = await _repository.GetAllActiveAsync();
-        return _mapper.Map<IEnumerable<PremiseResponse>>(premises);
+        var total = await _dbContext.Premises.CountAsync();
+
+        var premises = await _dbContext.Premises
+            .OrderBy(p => p.Id)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var items = _mapper.Map<IEnumerable<PremiseResponse>>(premises);
+        return new PaginatedResponse<PremiseResponse>(items, page, size, total);
     }
 
     /// <inheritdoc />
     public async Task<PremiseResponse> GetByIdAsync(Guid id)
     {
-        var premise = await _repository.GetByIdAsync(id)
+        var premise = await _dbContext.Premises
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id)
             ?? throw new PremiseNotFoundException(id);
 
         return _mapper.Map<PremiseResponse>(premise);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<PremiseResponse>> GetByGoalIdAsync(Guid goalId)
+    public async Task<IEnumerable<PremiseActiveResponse>> GetActiveByGoalIdAsync(Guid goalId)
     {
-        var premises = await _repository.GetByGoalIdAsync(goalId);
-        return _mapper.Map<IEnumerable<PremiseResponse>>(premises);
+        var premises = await _dbContext.Premises
+            .Where(p => p.GoalId == goalId && p.IsActive)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<PremiseActiveResponse>>(premises);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<PremiseResponse>> GetByStrategyIdAsync(Guid strategyId)
+    public async Task<IEnumerable<PremiseActiveResponse>> GetActiveByStrategyIdAsync(Guid strategyId)
     {
-        var premises = await _repository.GetByStrategyIdAsync(strategyId);
-        return _mapper.Map<IEnumerable<PremiseResponse>>(premises);
-    }
+        var premises = await _dbContext.Premises
+            .Where(p => p.StrategyId == strategyId && p.IsActive)
+            .AsNoTracking()
+            .ToListAsync();
 
-    /// <inheritdoc />
-    public async Task<IEnumerable<PremiseResponse>> GetVersionHistoryAsync(Guid premiseId)
-    {
-        var premise = await _repository.GetByIdAsync(premiseId)
-            ?? throw new PremiseNotFoundException(premiseId);
-
-        var history = await _repository.GetVersionHistoryAsync(premiseId);
-        return _mapper.Map<IEnumerable<PremiseResponse>>(history);
+        return _mapper.Map<IEnumerable<PremiseActiveResponse>>(premises);
     }
 
     /// <inheritdoc />
@@ -68,48 +78,20 @@ public class PremiseAppService : IPremiseService
         premise.Id = Guid.NewGuid();
         premise.IsActive = true;
 
-        var created = await _repository.CreateAsync(premise);
-        await _repository.SaveChangesAsync();
+        await _dbContext.Premises.AddAsync(premise);
+        await _dbContext.SaveChangesAsync();
 
-        return _mapper.Map<PremiseResponse>(created);
+        return _mapper.Map<PremiseResponse>(premise);
     }
 
     /// <inheritdoc />
-    public async Task<PremiseResponse> UpdateAsync(Guid id, PremiseUpdateRequest request)
+    public async Task DeleteAsync(Guid id)
     {
-        var existingPremise = await _repository.GetByIdAsync(id)
-            ?? throw new PremiseNotFoundException(id);
-
-        // Deactivate the old version
-        existingPremise.IsActive = false;
-        await _repository.UpdateAsync(existingPremise);
-
-        // Create a new version with updated description, inheriting Type, GoalId, and StrategyId
-        var newVersion = new Premise
-        {
-            Id = Guid.NewGuid(),
-            Description = request.Description,
-            Type = existingPremise.Type,
-            IsActive = true,
-            NewVersionOfId = existingPremise.Id,
-            GoalId = existingPremise.GoalId,
-            StrategyId = existingPremise.StrategyId
-        };
-
-        var created = await _repository.CreateAsync(newVersion);
-        await _repository.SaveChangesAsync();
-
-        return _mapper.Map<PremiseResponse>(created);
-    }
-
-    /// <inheritdoc />
-    public async Task DeactivateAsync(Guid id)
-    {
-        var premise = await _repository.GetByIdAsync(id)
+        var premise = await _dbContext.Premises
+            .FirstOrDefaultAsync(p => p.Id == id)
             ?? throw new PremiseNotFoundException(id);
 
         premise.IsActive = false;
-        await _repository.UpdateAsync(premise);
-        await _repository.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
     }
 }

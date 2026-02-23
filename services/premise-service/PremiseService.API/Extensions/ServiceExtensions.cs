@@ -14,7 +14,7 @@ public static class ServiceExtensions
 {
     /// <summary>
     /// Registers application-level services: AutoMapper, FluentValidation,
-    /// business services, and repositories.
+    /// and business services.
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
@@ -27,15 +27,11 @@ public static class ServiceExtensions
         // Application services
         services.AddScoped<IPremiseService, PremiseAppService>();
 
-        // Repositories
-        services.AddScoped<IPremiseRepository, PremiseRepository>();
-
         return services;
     }
 
     /// <summary>
-    /// Configures the PostgreSQL database connection using Entity Framework Core.
-    /// Reads the connection string from DATABASE_URL (Docker) or ConnectionStrings:DefaultConnection (local).
+    /// Configures the PostgreSQL database connection and registers IPremiseDbContext.
     /// </summary>
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
@@ -45,6 +41,9 @@ public static class ServiceExtensions
 
         services.AddDbContext<PremiseDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        // Register IPremiseDbContext so Application services can use it
+        services.AddScoped<IPremiseDbContext>(sp => sp.GetRequiredService<PremiseDbContext>());
 
         return services;
     }

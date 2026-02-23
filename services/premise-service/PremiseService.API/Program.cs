@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PremiseService.API.Extensions;
 using PremiseService.API.Middleware;
@@ -7,8 +9,13 @@ using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add controllers
-builder.Services.AddControllers();
+// Add controllers with JSON enum serialization as UPPERCASE strings
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper));
+    });
 
 // OpenAPI documentation (built-in .NET 10)
 builder.Services.AddOpenApi();
