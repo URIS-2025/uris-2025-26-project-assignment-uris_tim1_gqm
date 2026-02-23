@@ -22,41 +22,41 @@ public class MeasurementService : IMeasurementService
         _validator = validator;
     }
 
-    public async Task<PagedResult<MeasurementResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<PagedResult<MeasurementResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Measurements.CountAsync();
+        var totalCount = await _dbContext.Measurements.CountAsync(cancellationToken);
         var measurements = await _dbContext.Measurements
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         var dtos = _mapper.Map<IEnumerable<MeasurementResponse>>(measurements);
         return new PagedResult<MeasurementResponse>(dtos, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<MeasurementResponse> GetByIdAsync(Guid id)
+    public async Task<MeasurementResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var measurement = await _dbContext.Measurements.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+        var measurement = await _dbContext.Measurements.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
         if (measurement == null)
             throw new NotFoundException(nameof(Measurement), id);
 
         return _mapper.Map<MeasurementResponse>(measurement);
     }
 
-    public async Task<IEnumerable<MeasurementResponse>> GetByTargetIdAsync(Guid targetId)
+    public async Task<IEnumerable<MeasurementResponse>> GetByTargetIdAsync(Guid targetId, CancellationToken cancellationToken = default)
     {
         var measurements = await _dbContext.Measurements
             .Where(m => m.TargetId == targetId)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         return _mapper.Map<IEnumerable<MeasurementResponse>>(measurements);
     }
 
-    public async Task<MeasurementResponse> CreateAsync(MeasurementRequest request)
+    public async Task<MeasurementResponse> CreateAsync(MeasurementRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var measurement = _mapper.Map<Measurement>(request);
         if (!request.MeasuredAt.HasValue)
@@ -65,16 +65,16 @@ public class MeasurementService : IMeasurementService
         }
 
         _dbContext.Measurements.Add(measurement);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<MeasurementResponse>(measurement);
     }
 
-    public async Task<MeasurementResponse> UpdateAsync(Guid id, MeasurementRequest request)
+    public async Task<MeasurementResponse> UpdateAsync(Guid id, MeasurementRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
-        var measurement = await _dbContext.Measurements.FindAsync(id);
+        var measurement = await _dbContext.Measurements.FindAsync(new object[] { id }, cancellationToken);
         if (measurement == null)
             throw new NotFoundException(nameof(Measurement), id);
 
@@ -85,19 +85,19 @@ public class MeasurementService : IMeasurementService
         }
 
         _dbContext.Measurements.Update(measurement);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<MeasurementResponse>(measurement);
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var measurement = await _dbContext.Measurements.FindAsync(id);
+        var measurement = await _dbContext.Measurements.FindAsync(new object[] { id }, cancellationToken);
         if (measurement == null)
             throw new NotFoundException(nameof(Measurement), id);
 
         _dbContext.Measurements.Remove(measurement);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

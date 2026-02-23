@@ -22,26 +22,26 @@ public class GqmGoalService : IGqmGoalService
         _validator = validator;
     }
 
-    public async Task<PagedResult<GqmGoalResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<PagedResult<GqmGoalResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.GqmGoals.CountAsync();
+        var totalCount = await _dbContext.GqmGoals.CountAsync(cancellationToken);
         var goals = await _dbContext.GqmGoals
             .Include(g => g.Questions)
             .AsNoTracking()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         var dtos = _mapper.Map<IEnumerable<GqmGoalResponse>>(goals);
         return new PagedResult<GqmGoalResponse>(dtos, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<GqmGoalResponse> GetByIdAsync(Guid id)
+    public async Task<GqmGoalResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var goal = await _dbContext.GqmGoals
             .Include(g => g.Questions)
             .AsNoTracking()
-            .FirstOrDefaultAsync(g => g.Id == id);
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
             
         if (goal == null)
             throw new NotFoundException(nameof(GqmGoal), id);
@@ -49,58 +49,58 @@ public class GqmGoalService : IGqmGoalService
         return _mapper.Map<GqmGoalResponse>(goal);
     }
 
-    public async Task<IEnumerable<GqmGoalResponse>> GetByGoalIdAsync(Guid goalId)
+    public async Task<IEnumerable<GqmGoalResponse>> GetByGoalIdAsync(Guid goalId, CancellationToken cancellationToken = default)
     {
         var goals = await _dbContext.GqmGoals
             .Include(g => g.Questions)
             .Where(g => g.GoalId == goalId)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
             
         return _mapper.Map<IEnumerable<GqmGoalResponse>>(goals);
     }
 
-    public async Task<GqmGoalResponse> CreateAsync(GqmGoalRequest request)
+    public async Task<GqmGoalResponse> CreateAsync(GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var goal = _mapper.Map<GqmGoal>(request);
         goal.CreatedAt = DateTime.UtcNow;
 
         _dbContext.GqmGoals.Add(goal);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<GqmGoalResponse>(goal);
     }
 
-    public async Task<GqmGoalResponse> UpdateAsync(Guid id, GqmGoalRequest request)
+    public async Task<GqmGoalResponse> UpdateAsync(Guid id, GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
-        await _validator.ValidateAndThrowAsync(request);
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
-        var goal = await _dbContext.GqmGoals.FindAsync(id);
+        var goal = await _dbContext.GqmGoals.FindAsync(new object[] { id }, cancellationToken);
         if (goal == null)
             throw new NotFoundException(nameof(GqmGoal), id);
 
         _mapper.Map(request, goal);
         
         _dbContext.GqmGoals.Update(goal);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<GqmGoalResponse>(goal);
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var goal = await _dbContext.GqmGoals.FindAsync(id);
+        var goal = await _dbContext.GqmGoals.FindAsync(new object[] { id }, cancellationToken);
         if (goal == null)
             throw new NotFoundException(nameof(GqmGoal), id);
 
-        bool hasQuestions = await _dbContext.Questions.AnyAsync(q => q.GqmGoalId == id);
+        bool hasQuestions = await _dbContext.Questions.AnyAsync(q => q.GqmGoalId == id, cancellationToken);
         if (hasQuestions)
-            throw new InvalidOperationException("Cannot delete GqmGoal because it has associated questions.");
+            throw new ConflictException("Cannot delete GqmGoal because it has associated questions.");
 
         _dbContext.GqmGoals.Remove(goal);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

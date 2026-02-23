@@ -17,44 +17,44 @@ public class TargetController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<TargetResponse>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PagedResult<TargetResponse>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetAllAsync(pageNumber, pageSize);
+        var result = await _service.GetAllAsync(pageNumber, pageSize, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TargetResponse>> GetById(Guid id)
+    public async Task<ActionResult<TargetResponse>> GetById(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetByIdAsync(id);
+        var result = await _service.GetByIdAsync(id, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("by-question/{questionId}")]
-    public async Task<ActionResult<IEnumerable<TargetResponse>>> GetByQuestionId(Guid questionId)
+    public async Task<ActionResult<IEnumerable<TargetResponse>>> GetByQuestionId(Guid questionId, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetByQuestionIdAsync(questionId);
+        var result = await _service.GetByQuestionIdAsync(questionId, cancellationToken);
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<TargetResponse>> Create([FromBody] TargetRequest request)
+    public async Task<ActionResult<TargetResponse>> Create([FromBody] TargetRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TargetResponse>> Update(Guid id, [FromBody] TargetRequest request)
+    public async Task<ActionResult<TargetResponse>> Update(Guid id, [FromBody] TargetRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await _service.UpdateAsync(id, request);
+        var result = await _service.UpdateAsync(id, request, cancellationToken);
         return Ok(result);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
-        await _service.DeleteAsync(id);
+        await _service.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
 }
