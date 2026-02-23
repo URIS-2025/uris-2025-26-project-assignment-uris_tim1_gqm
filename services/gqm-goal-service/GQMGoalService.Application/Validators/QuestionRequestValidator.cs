@@ -1,15 +1,15 @@
 using FluentValidation;
 using GQMGoalService.Application.DTOs.Question;
-using GQMGoalService.Infrastructure.Persistence;
+using GQMGoalService.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace GQMGoalService.Application.Validators;
 
 public class QuestionRequestValidator : AbstractValidator<QuestionRequest>
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IApplicationDbContext _dbContext;
 
-    public QuestionRequestValidator(ApplicationDbContext dbContext)
+    public QuestionRequestValidator(IApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
 

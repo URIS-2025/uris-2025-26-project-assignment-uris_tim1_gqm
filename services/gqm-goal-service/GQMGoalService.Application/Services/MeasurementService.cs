@@ -5,18 +5,17 @@ using GQMGoalService.Application.DTOs.Measurement;
 using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Domain.Entities;
 using GQMGoalService.Domain.Exceptions;
-using GQMGoalService.Infrastructure.Persistence;
 using FluentValidation;
 
 namespace GQMGoalService.Application.Services;
 
 public class MeasurementService : IMeasurementService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IApplicationDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly IValidator<MeasurementRequest> _validator;
 
-    public MeasurementService(ApplicationDbContext dbContext, IMapper mapper, IValidator<MeasurementRequest> validator)
+    public MeasurementService(IApplicationDbContext dbContext, IMapper mapper, IValidator<MeasurementRequest> validator)
     {
         _dbContext = dbContext;
         _mapper = mapper;

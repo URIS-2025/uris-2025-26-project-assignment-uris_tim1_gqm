@@ -1,15 +1,15 @@
 using FluentValidation;
 using GQMGoalService.Application.DTOs.Measurement;
-using GQMGoalService.Infrastructure.Persistence;
+using GQMGoalService.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace GQMGoalService.Application.Validators;
 
 public class MeasurementRequestValidator : AbstractValidator<MeasurementRequest>
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IApplicationDbContext _dbContext;
 
-    public MeasurementRequestValidator(ApplicationDbContext dbContext)
+    public MeasurementRequestValidator(IApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
 

@@ -2,6 +2,7 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs.Target;
+using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Application.Mappings;
 using GQMGoalService.Application.Services;
 using GQMGoalService.Domain.Entities;
@@ -27,7 +28,7 @@ public class TargetServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new TargetService(_dbContext, _mapper, new GQMGoalService.Application.Validators.TargetRequestValidator(_dbContext));
+        _service = new TargetService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.TargetRequestValidator(_dbContext));
     }
 
     [Fact]

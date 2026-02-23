@@ -4,9 +4,9 @@ namespace GQMGoalService.Application.DTOs.Question;
 
 public record QuestionResponse
 {
-    public Guid Id { get; set; }
-    public string Text { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public Guid GqmGoalId { get; set; }
-    public ICollection<TargetResponse> Targets { get; set; } = new List<TargetResponse>();
+    public Guid Id { get; init; }
+    public string Text { get; init; } = string.Empty;
+    public DateTime CreatedAt { get; init; }
+    public Guid GqmGoalId { get; init; }
+    public ICollection<TargetResponse> Targets { get; init; } = new List<TargetResponse>();
 }

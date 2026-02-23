@@ -5,18 +5,17 @@ using GQMGoalService.Application.DTOs.Question;
 using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Domain.Entities;
 using GQMGoalService.Domain.Exceptions;
-using GQMGoalService.Infrastructure.Persistence;
 using FluentValidation;
 
 namespace GQMGoalService.Application.Services;
 
 public class QuestionService : IQuestionService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IApplicationDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly IValidator<QuestionRequest> _validator;
 
-    public QuestionService(ApplicationDbContext dbContext, IMapper mapper, IValidator<QuestionRequest> validator)
+    public QuestionService(IApplicationDbContext dbContext, IMapper mapper, IValidator<QuestionRequest> validator)
     {
         _dbContext = dbContext;
         _mapper = mapper;

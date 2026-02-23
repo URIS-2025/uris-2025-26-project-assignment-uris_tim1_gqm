@@ -47,6 +47,8 @@ public static class ServiceExtensions
             }
         });
 
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+
         return services;
     }
 }
