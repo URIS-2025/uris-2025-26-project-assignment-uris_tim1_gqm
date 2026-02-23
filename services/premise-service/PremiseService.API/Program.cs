@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add controllers
 builder.Services.AddControllers();
 
-// OpenAPI / Swagger
+// OpenAPI documentation (built-in .NET 10)
 builder.Services.AddOpenApi();
 
 // Database
@@ -50,7 +50,14 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
+    // OpenAPI JSON document at /openapi/v1.json
     app.MapOpenApi();
+
+    // Swagger UI — uses relative path so it works behind nginx reverse proxy
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("../openapi/v1.json", "Premise Service API v1");
+    });
 }
 
 app.UseHttpsRedirection();
@@ -58,8 +65,11 @@ app.UseHttpsRedirection();
 // Custom exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// HMAC middleware for service-to-service authentication
-app.UseMiddleware<HmacMiddleware>();
+// HMAC middleware — skip in Development for local testing
+if (!app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<HmacMiddleware>();
+}
 
 app.MapControllers();
 
