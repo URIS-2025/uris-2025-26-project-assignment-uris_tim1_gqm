@@ -106,7 +106,7 @@ services:
   gqm-goal-service:
     build:
       context: .
-      dockerfile: ./services/gqm-goal-service/gqmGoalService.API/Dockerfile
+      dockerfile: ./services/gqm-goal-service/GQMGoalService.API/Dockerfile
     container_name: gqm-goal-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

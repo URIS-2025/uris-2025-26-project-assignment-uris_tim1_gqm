@@ -192,9 +192,9 @@ jobs:
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
       - name: Build gqm-Goal Service
-        run: dotnet build services/gqm-goal-service/gqmGoalService.API/gqmGoalService.API.csproj --configuration Release
+        run: dotnet build services/gqm-goal-service/GQMGoalService.API/GQMGoalService.API.csproj --configuration Release
       - name: Run gqm-Goal Service Tests
-        run: dotnet test services/gqm-goal-service/gqmGoalService.Tests/gqmGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+        run: dotnet test services/gqm-goal-service/GQMGoalService.Tests/GQMGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
       - name: Publish Test Results
         uses: dorny/test-reporter@v1
         if: always()
