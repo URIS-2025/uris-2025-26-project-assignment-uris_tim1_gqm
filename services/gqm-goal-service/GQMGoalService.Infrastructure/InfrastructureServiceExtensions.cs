@@ -9,6 +9,10 @@ namespace GQMGoalService.Infrastructure;
 
 public static class InfrastructureServiceExtensions
 {
+    /// <summary>
+    /// Registers infrastructure services: EF Core DbContext (PostgreSQL or InMemory based on
+    /// configuration) and database health checks.
+    /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         bool inMemory = configuration.GetValue<bool>("UseInMemoryDatabase");
@@ -36,6 +40,10 @@ public static class InfrastructureServiceExtensions
         return services;
     }
 
+    /// <summary>
+    /// Applies pending EF Core migrations with retry logic and seeds initial data.
+    /// Skips migrations when using an in-memory database.
+    /// </summary>
     public static async Task UseInfrastructureAsync(this Microsoft.AspNetCore.Builder.WebApplication app)
     {
         using var scope = app.Services.CreateScope();

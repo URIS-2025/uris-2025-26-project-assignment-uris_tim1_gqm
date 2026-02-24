@@ -63,6 +63,8 @@ public class MeasurementService : IMeasurementService
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var measurement = _mapper.Map<Measurement>(request);
+
+        // Default to current UTC time if the client did not supply a measurement timestamp
         if (!request.MeasuredAt.HasValue)
         {
             measurement.MeasuredAt = DateTime.UtcNow;
@@ -83,6 +85,8 @@ public class MeasurementService : IMeasurementService
             throw new NotFoundException(nameof(Measurement), id);
 
         _mapper.Map(request, measurement);
+
+        // Preserve existing timestamp unless the client explicitly provides a new one
         if (!request.MeasuredAt.HasValue)
         {
             measurement.MeasuredAt = DateTime.UtcNow;

@@ -4,6 +4,10 @@ using GQMGoalService.Domain.Enums;
 
 namespace GQMGoalService.Infrastructure.Persistence;
 
+/// <summary>
+/// Seeds the database with initial demo data for development and testing.
+/// Idempotent — skips execution if data already exists.
+/// </summary>
 public static class DataSeeder
 {
     public static async Task SeedAsync(ApplicationDbContext context)

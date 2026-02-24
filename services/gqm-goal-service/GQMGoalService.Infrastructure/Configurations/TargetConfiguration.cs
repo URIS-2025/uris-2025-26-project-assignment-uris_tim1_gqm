@@ -20,6 +20,7 @@ public class TargetConfiguration : IEntityTypeConfiguration<Target>
         builder.Property(t => t.Description)
             .HasMaxLength(1000);
 
+        // Store Unit enum as a string for readability in the database
         builder.Property(t => t.Unit)
             .IsRequired()
             .HasConversion(
