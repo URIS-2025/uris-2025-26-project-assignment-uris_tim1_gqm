@@ -10,6 +10,10 @@ namespace GQMGoalService.Application;
 
 public static class ApplicationServiceExtensions
 {
+    /// <summary>
+    /// Registers application-layer services: AutoMapper profiles, FluentValidation validators,
+    /// and scoped service implementations for dependency injection.
+    /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddAutoMapper(typeof(MappingProfile).Assembly);

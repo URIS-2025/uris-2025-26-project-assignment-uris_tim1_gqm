@@ -7,6 +7,9 @@ using GQMGoalService.Domain.Entities;
 
 namespace GQMGoalService.Application.Mappings;
 
+/// <summary>
+/// Centralized AutoMapper profile that defines all entity ↔ DTO mappings for the application layer.
+/// </summary>
 public class MappingProfile : Profile
 {
     public MappingProfile()
