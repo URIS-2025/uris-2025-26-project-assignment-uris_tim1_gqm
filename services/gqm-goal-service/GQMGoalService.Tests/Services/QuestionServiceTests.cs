@@ -46,6 +46,16 @@ public class QuestionServiceTests : IDisposable
         result.Text.Should().Be(request.Text);
     }
 
+    [Fact]
+    public async Task GetByGqmGoalIdAsync_ShouldThrowNotFoundException_WhenGqmGoalDoesNotExist()
+    {
+        var nonExistentId = Guid.NewGuid();
+
+        var act = () => _service.GetByGqmGoalIdAsync(nonExistentId);
+
+        await act.Should().ThrowAsync<GQMGoalService.Domain.Exceptions.NotFoundException>();
+    }
+
     public void Dispose()
     {
         _dbContext.Database.EnsureDeleted();

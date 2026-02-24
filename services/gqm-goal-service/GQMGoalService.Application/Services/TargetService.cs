@@ -51,6 +51,10 @@ public class TargetService : ITargetService
 
     public async Task<IEnumerable<TargetResponse>> GetByQuestionIdAsync(Guid questionId, CancellationToken cancellationToken = default)
     {
+        var questionExists = await _dbContext.Questions.AnyAsync(q => q.Id == questionId, cancellationToken);
+        if (!questionExists)
+            throw new NotFoundException(nameof(Question), questionId);
+
         var targets = await _dbContext.Targets
             .Include(t => t.Measurements)
             .Where(t => t.QuestionId == questionId)

@@ -56,6 +56,9 @@ public class GqmGoalService : IGqmGoalService
             .Where(g => g.GoalId == goalId)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+
+        if (goals.Count == 0)
+            throw new NotFoundException("GqmGoal", $"GoalId: {goalId}");
             
         return _mapper.Map<IEnumerable<GqmGoalResponse>>(goals);
     }

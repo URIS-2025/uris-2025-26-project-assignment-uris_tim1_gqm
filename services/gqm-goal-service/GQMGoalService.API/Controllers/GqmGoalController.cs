@@ -6,7 +6,7 @@ using GQMGoalService.Application.Interfaces;
 namespace GQMGoalService.API.Controllers;
 
 [ApiController]
-[Route("api/v1/GQM-goal/[controller]")]
+[Route("[controller]")]
 public class GqmGoalController : ControllerBase
 {
     private readonly IGqmGoalService _service;

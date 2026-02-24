@@ -47,6 +47,16 @@ public class MeasurementServiceTests : IDisposable
         result.MeasuredAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
+    [Fact]
+    public async Task GetByTargetIdAsync_ShouldThrowNotFoundException_WhenTargetDoesNotExist()
+    {
+        var nonExistentId = Guid.NewGuid();
+
+        var act = () => _service.GetByTargetIdAsync(nonExistentId);
+
+        await act.Should().ThrowAsync<GQMGoalService.Domain.Exceptions.NotFoundException>();
+    }
+
     public void Dispose()
     {
         _dbContext.Database.EnsureDeleted();
