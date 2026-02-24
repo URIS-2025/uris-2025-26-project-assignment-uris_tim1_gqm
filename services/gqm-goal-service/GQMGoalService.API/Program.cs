@@ -18,6 +18,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GQM Goal Service API", Version = "v1" });
+    c.AddServer(new Microsoft.OpenApi.Models.OpenApiServer { Url = "/api/v1/GQM-goal" });
 });
 
 // Add HMAC authentication
@@ -36,8 +37,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/api/v1/gqm-goal/swagger/v1/swagger.json", "GQM Goal Service API v1");
-        c.RoutePrefix = "swagger"; // Let's simplify this since it's going through nginx or direct, /swagger is standard
+        c.SwaggerEndpoint("v1/swagger.json", "GQM Goal Service API v1");
+        c.RoutePrefix = "swagger";
+        // http://localhost/api/v1/GQM-goal/swagger
     });
 }
 

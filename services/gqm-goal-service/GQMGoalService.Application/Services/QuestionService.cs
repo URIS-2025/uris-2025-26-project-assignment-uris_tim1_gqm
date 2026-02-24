@@ -51,6 +51,10 @@ public class QuestionService : IQuestionService
 
     public async Task<IEnumerable<QuestionResponse>> GetByGqmGoalIdAsync(Guid gqmGoalId, CancellationToken cancellationToken = default)
     {
+        var gqmGoalExists = await _dbContext.GqmGoals.AnyAsync(g => g.Id == gqmGoalId, cancellationToken);
+        if (!gqmGoalExists)
+            throw new NotFoundException(nameof(GqmGoal), gqmGoalId);
+
         var questions = await _dbContext.Questions
             .Include(q => q.Targets)
             .Where(q => q.GqmGoalId == gqmGoalId)

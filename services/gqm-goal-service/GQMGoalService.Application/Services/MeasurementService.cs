@@ -46,6 +46,10 @@ public class MeasurementService : IMeasurementService
 
     public async Task<IEnumerable<MeasurementResponse>> GetByTargetIdAsync(Guid targetId, CancellationToken cancellationToken = default)
     {
+        var targetExists = await _dbContext.Targets.AnyAsync(t => t.Id == targetId, cancellationToken);
+        if (!targetExists)
+            throw new NotFoundException(nameof(Target), targetId);
+
         var measurements = await _dbContext.Measurements
             .Where(m => m.TargetId == targetId)
             .AsNoTracking()
