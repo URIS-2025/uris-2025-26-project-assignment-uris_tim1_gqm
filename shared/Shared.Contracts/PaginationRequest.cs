@@ -1,8 +1,8 @@
 namespace Shared.Contracts;
 
-public class PaginationRequest
+public record PaginationRequest
 {
-    public int PageNumber { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public string? OrderBy { get; set; }
+    public int PageNumber { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+    public string? OrderBy { get; init; }
 }

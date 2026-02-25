@@ -2,10 +2,10 @@ namespace GoalService.Application.DTOs;
 
 public record GoalInfluenceRequest
 {
-    public Guid GoalId { get; set; }
-    public Guid StrategyId { get; set; }
-    public string InfluenceType { get; set; } = "Positive";
-    public decimal Strength { get; set; }
-    public decimal Confidence { get; set; }
-    public string? Notes { get; set; }
+    public Guid GoalId { get; init; }
+    public Guid StrategyId { get; init; }
+    public string InfluenceType { get; init; }
+    public decimal Strength { get; init; }
+    public decimal Confidence { get; init; }
+    public string? Notes { get; init; }
 }

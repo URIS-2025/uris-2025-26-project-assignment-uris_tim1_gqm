@@ -12,7 +12,10 @@ public class GoalDbContextFactory : IDesignTimeDbContextFactory<GoalDbContext>
     public GoalDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<GoalDbContext>();
-        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=goaldb;Username=postgres;Password=postgres");
+        
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new GoalDbContext(optionsBuilder.Options);
     }

@@ -1,9 +1,9 @@
 namespace GoalService.Application.DTOs.External;
 
-public class QgmGoalDto
+public record QgmGoalDto
 {
-    public Guid Id { get; set; }
-    public string Description { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public Guid GoalId { get; set; }
+    public Guid Id { get; init; }
+    public string Description { get; init; } = string.Empty;
+    public DateTime CreatedAt { get; init; }
+    public Guid GoalId { get; init; }
 }

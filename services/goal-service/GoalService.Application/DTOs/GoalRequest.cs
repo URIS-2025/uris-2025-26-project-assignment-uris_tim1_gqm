@@ -4,13 +4,13 @@ namespace GoalService.Application.DTOs;
 
 public record GoalRequest
 {
-    public string Focus { get; set; } = string.Empty;
-    public string Object { get; set; } = string.Empty;
-    public DateTime ActiveFrom { get; set; }
-    public DateTime ActiveTo { get; set; }
-    public string Magnitude { get; set; } = string.Empty;
-    public string Constraints { get; set; } = string.Empty;
-    public string Status { get; set; } = "Draft";
-    public decimal BaselineProbability { get; set; }
-    public Guid DepartmentId { get; set; }
+    public string Focus { get; init; } = string.Empty;
+    public string Object { get; init; } = string.Empty;
+    public DateTime ActiveFrom { get; init; }
+    public DateTime ActiveTo { get; init; }
+    public string Magnitude { get; init; } = string.Empty;
+    public string Constraints { get; init; } = string.Empty;
+    public string Status { get; init; }
+    public decimal BaselineProbability { get; init; }
+    public Guid DepartmentId { get; init; }
 }
