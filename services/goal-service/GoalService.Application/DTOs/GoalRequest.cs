@@ -10,7 +10,7 @@ public record GoalRequest
     public DateTime ActiveTo { get; init; }
     public string Magnitude { get; init; } = string.Empty;
     public string Constraints { get; init; } = string.Empty;
-    public string Status { get; init; }
+    public string Status { get; init; } = "Draft";
     public decimal BaselineProbability { get; init; }
     public Guid DepartmentId { get; init; }
 }
