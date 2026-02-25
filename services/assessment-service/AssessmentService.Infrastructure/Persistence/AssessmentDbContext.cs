@@ -1,3 +1,4 @@
+using AssessmentService.Application.Interfaces;
 using AssessmentService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

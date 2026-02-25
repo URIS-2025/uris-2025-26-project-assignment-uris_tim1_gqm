@@ -1,7 +1,7 @@
 using AssessmentService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace AssessmentService.Infrastructure.Persistence;
+namespace AssessmentService.Application.Interfaces;
 
 public interface IAssessmentDbContext
 {
