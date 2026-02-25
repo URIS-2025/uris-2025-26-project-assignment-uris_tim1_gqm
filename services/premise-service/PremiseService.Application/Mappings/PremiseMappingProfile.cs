@@ -19,5 +19,12 @@ public class PremiseMappingProfile : Profile
             .ForMember(dest => dest.NewVersionOfId, opt => opt.Ignore())
             .ForMember(dest => dest.NewVersionOf, opt => opt.Ignore())
             .ForMember(dest => dest.NewerVersion, opt => opt.Ignore());
+
+        CreateMap<PremiseUpdateRequest, Premise>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.IsActive, opt => opt.Ignore())
+            .ForMember(dest => dest.NewVersionOfId, opt => opt.Ignore())
+            .ForMember(dest => dest.NewVersionOf, opt => opt.Ignore())
+            .ForMember(dest => dest.NewerVersion, opt => opt.Ignore());
     }
 }

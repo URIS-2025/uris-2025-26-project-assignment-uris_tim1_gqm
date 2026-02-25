@@ -7,10 +7,7 @@ using PremiseService.Domain.Exceptions;
 
 namespace PremiseService.Application.Services;
 
-/// <summary>
-/// Application service implementing business logic for the Premise aggregate.
-/// Works directly with the database context — no repository layer.
-/// </summary>
+
 public class PremiseAppService : IPremiseService
 {
     private readonly IPremiseDbContext _dbContext;
@@ -22,7 +19,7 @@ public class PremiseAppService : IPremiseService
         _mapper = mapper;
     }
 
-    /// <inheritdoc />
+
     public async Task<PaginatedResponse<PremiseResponse>> GetAllAsync(int page, int size)
     {
         var total = await _dbContext.Premises.CountAsync();
@@ -57,6 +54,9 @@ public class PremiseAppService : IPremiseService
             .AsNoTracking()
             .ToListAsync();
 
+        if (premises.Count == 0)
+            throw new PremisesNotFoundByGoalException(goalId);
+
         return _mapper.Map<IEnumerable<PremiseActiveResponse>>(premises);
     }
 
@@ -67,6 +67,9 @@ public class PremiseAppService : IPremiseService
             .Where(p => p.StrategyId == strategyId && p.IsActive)
             .AsNoTracking()
             .ToListAsync();
+
+        if (premises.Count == 0)
+            throw new PremisesNotFoundByStrategyException(strategyId);
 
         return _mapper.Map<IEnumerable<PremiseActiveResponse>>(premises);
     }
@@ -82,6 +85,29 @@ public class PremiseAppService : IPremiseService
         await _dbContext.SaveChangesAsync();
 
         return _mapper.Map<PremiseResponse>(premise);
+    }
+
+    /// <inheritdoc />
+    public async Task<PremiseResponse> UpdateAsync(Guid id, PremiseUpdateRequest request)
+    {
+        var oldPremise = await _dbContext.Premises
+            .FirstOrDefaultAsync(p => p.Id == id)
+            ?? throw new PremiseNotFoundException(id);
+
+        if (!oldPremise.IsActive)
+            throw new PremiseAlreadyDeactivatedException(id);
+
+        oldPremise.IsActive = false;
+
+        var newPremise = _mapper.Map<Premise>(request);
+        newPremise.Id = Guid.NewGuid();
+        newPremise.IsActive = true;
+        newPremise.NewVersionOfId = oldPremise.Id;
+
+        await _dbContext.Premises.AddAsync(newPremise);
+        await _dbContext.SaveChangesAsync();
+
+        return _mapper.Map<PremiseResponse>(newPremise);
     }
 
     /// <inheritdoc />

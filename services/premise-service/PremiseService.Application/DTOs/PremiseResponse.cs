@@ -13,6 +13,6 @@ public record PremiseResponse
     public PremiseType Type { get; init; }
     public bool IsActive { get; init; }
     public Guid? NewVersionOf { get; init; }
-    public Guid GoalId { get; init; }
-    public Guid StrategyId { get; init; }
+    public Guid? GoalId { get; init; }
+    public Guid? StrategyId { get; init; }
 }

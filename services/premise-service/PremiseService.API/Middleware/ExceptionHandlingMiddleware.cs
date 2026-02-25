@@ -1,13 +1,11 @@
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 using PremiseService.Domain.Exceptions;
 
 namespace PremiseService.API.Middleware;
 
-/// <summary>
-/// Global exception handling middleware that catches unhandled exceptions
-/// and returns standardized JSON error responses with appropriate HTTP status codes.
-/// </summary>
+
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -19,9 +17,7 @@ public class ExceptionHandlingMiddleware
         _logger = logger;
     }
 
-    /// <summary>
-    /// Processes the HTTP request and catches any exceptions thrown downstream.
-    /// </summary>
+
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -34,15 +30,16 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    /// <summary>
-    /// Maps domain exceptions to HTTP status codes and writes a JSON error response.
-    /// PremiseNotFoundException → 404, ArgumentException → 400, all others → 500.
-    /// </summary>
+
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var (statusCode, message) = exception switch
         {
             PremiseNotFoundException => (HttpStatusCode.NotFound, exception.Message),
+            PremisesNotFoundByGoalException => (HttpStatusCode.NotFound, exception.Message),
+            PremisesNotFoundByStrategyException => (HttpStatusCode.NotFound, exception.Message),
+            PremiseAlreadyDeactivatedException => (HttpStatusCode.Conflict, exception.Message),
+            ValidationException validationEx => (HttpStatusCode.BadRequest, FormatValidationErrors(validationEx)),
             ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
         };
@@ -72,4 +69,12 @@ public class ExceptionHandlingMiddleware
 
         await context.Response.WriteAsync(json);
     }
+
+
+    private static string FormatValidationErrors(ValidationException ex)
+    {
+        var errors = ex.Errors.Select(e => e.ErrorMessage);
+        return string.Join(" ", errors);
+    }
 }
+

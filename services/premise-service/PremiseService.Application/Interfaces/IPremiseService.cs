@@ -22,6 +22,9 @@ public interface IPremiseService
     /// <summary>Creates a new premise.</summary>
     Task<PremiseResponse> CreateAsync(PremiseRequest request);
 
+    /// <summary>Updates a premise by creating a new version and deactivating the old one.</summary>
+    Task<PremiseResponse> UpdateAsync(Guid id, PremiseUpdateRequest request);
+
     /// <summary>Deletes a premise (soft-delete: sets IsActive to false).</summary>
     Task DeleteAsync(Guid id);
 }

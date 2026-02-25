@@ -39,13 +39,13 @@ public class PremiseConfiguration : IEntityTypeConfiguration<Premise>
 
         builder.Property(p => p.GoalId)
             .HasColumnName("goal_id")
-            .IsRequired();
+            .IsRequired(false);
 
         builder.Property(p => p.StrategyId)
             .HasColumnName("strategy_id")
-            .IsRequired();
+            .IsRequired(false);
 
-        // Self-referencing relationship for version history
+        // Self-referencing relationship for version history (0/1 → 0/1: each premise has at most one newer version)
         builder.HasOne(p => p.NewVersionOf)
             .WithOne(p => p.NewerVersion)
             .HasForeignKey<Premise>(p => p.NewVersionOfId)

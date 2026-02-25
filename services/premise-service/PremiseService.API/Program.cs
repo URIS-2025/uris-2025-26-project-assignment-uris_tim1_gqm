@@ -1,15 +1,53 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using PremiseService.API.Extensions;
+using Microsoft.OpenApi;
 using PremiseService.API.Middleware;
+using PremiseService.Application.Interfaces;
+using PremiseService.Application.Services;
 using PremiseService.Infrastructure.Persistence;
 using PremiseService.Infrastructure.Seed;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add controllers with JSON enum serialization as UPPERCASE strings
+// --- Database ---
+var connectionString = builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Database connection string not configured.");
+
+builder.Services.AddDbContext<PremiseDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IPremiseDbContext>(provider => provider.GetRequiredService<PremiseDbContext>());
+
+// --- Application Services ---
+builder.Services.AddScoped<IPremiseService, PremiseAppService>();
+builder.Services.AddAutoMapper(typeof(PremiseAppService).Assembly);
+
+// --- FluentValidation ---
+builder.Services.AddValidatorsFromAssemblyContaining<PremiseAppService>();
+
+// --- Swagger ---
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Premise Service API",
+        Version = "v1"
+    });
+    options.AddServer(new OpenApiServer { Url = "/api/v1/premise" });
+});
+
+// --- HMAC Authentication ---
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
+    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+builder.Services.AddHmacAuthentication(hmacSecretKey);
+builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- Controllers ---
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -17,67 +55,97 @@ builder.Services.AddControllers()
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper));
     });
 
-// OpenAPI documentation (built-in .NET 10)
-builder.Services.AddOpenApi();
-
-// Database
-builder.Services.AddPersistence(builder.Configuration);
-
-// Application services (AutoMapper, FluentValidation, services, repositories)
-builder.Services.AddApplicationServices();
-
-// HMAC authentication
-var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
-    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
-builder.Services.AddHmacAuthentication(hmacSecretKey);
-builder.Services.AddTransient<HmacDelegatingHandler>();
-
 var app = builder.Build();
 
-// Apply migrations and seed data on startup
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<PremiseDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+// --- Global Exception Handler (first in pipeline) ---
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-    try
-    {
-        await dbContext.Database.MigrateAsync();
-        logger.LogInformation("Database migration applied successfully.");
-
-        await PremiseSeeder.SeedAsync(dbContext, logger);
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
-        throw;
-    }
-}
-
-// Configure the HTTP request pipeline
+// --- Seed Data & Migrations (development only) ---
 if (app.Environment.IsDevelopment())
 {
-    // OpenAPI JSON document at /openapi/v1.json
-    app.MapOpenApi();
+    // Middleware to patch OpenAPI version (3.0.4 -> 3.0.1) for SwaggerUI compatibility
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.Value?.Contains("swagger") == true
+            && context.Request.Path.Value.EndsWith(".json"))
+        {
+            var originalBody = context.Response.Body;
+            using var memStream = new MemoryStream();
+            context.Response.Body = memStream;
 
-    // Swagger UI — uses relative path so it works behind nginx reverse proxy
+            await next();
+
+            memStream.Position = 0;
+            var json = await new StreamReader(memStream).ReadToEndAsync();
+
+            json = System.Text.RegularExpressions.Regex.Replace(
+                json,
+                @"""openapi""\s*:\s*""3\.0\.4""",
+                @"""openapi"": ""3.0.1""");
+
+            var buffer = System.Text.Encoding.UTF8.GetBytes(json);
+            context.Response.Body = originalBody;
+            context.Response.ContentLength = buffer.Length;
+            await context.Response.Body.WriteAsync(buffer);
+        }
+        else
+        {
+            await next();
+        }
+    });
+
+    app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("../openapi/v1.json", "Premise Service API v1");
+        options.RoutePrefix = "swagger";
+        options.SwaggerEndpoint("./v1/swagger.json", "Premise Service API v1");
     });
+    var retries = 10;
+    while (retries > 0)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PremiseDbContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Database migration applied successfully.");
+            await PremiseSeeder.SeedAsync(dbContext, logger);
+            break;
+        }
+        catch (Exception ex) when (retries > 1)
+        {
+            retries--;
+            Console.WriteLine($"Database not ready, retrying in 3 seconds... ({retries} retries left)");
+            await Task.Delay(3000);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to connect to database after all retries: {ex.Message}");
+            throw;
+        }
+    }
 }
+
 
 app.UseHttpsRedirection();
 
-// Custom exception handling middleware
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-// HMAC middleware — skip in Development for local testing
-if (!app.Environment.IsDevelopment())
+app.UseWhen(ctx =>
 {
-    app.UseMiddleware<HmacMiddleware>();
-}
+    var p = ctx.Request.Path.Value?.ToLower() ?? "";
+    return !(p.StartsWith("/swagger") || p.StartsWith("/health"));
+},
+branch =>
+{
+    branch.UseMiddleware<HmacMiddleware>();
+});
 
+// --- Map Controllers ---
 app.MapControllers();
+
+// --- Health Check ---
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "premise-service" }))
+    .WithName("HealthCheck");
 
 app.Run();

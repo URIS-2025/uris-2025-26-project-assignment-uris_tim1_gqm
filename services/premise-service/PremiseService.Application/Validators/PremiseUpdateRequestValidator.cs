@@ -3,9 +3,9 @@ using PremiseService.Application.DTOs;
 
 namespace PremiseService.Application.Validators;
 
-public class PremiseRequestValidator : AbstractValidator<PremiseRequest>
+public class PremiseUpdateRequestValidator : AbstractValidator<PremiseUpdateRequest>
 {
-    public PremiseRequestValidator()
+    public PremiseUpdateRequestValidator()
     {
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("Description is required.")

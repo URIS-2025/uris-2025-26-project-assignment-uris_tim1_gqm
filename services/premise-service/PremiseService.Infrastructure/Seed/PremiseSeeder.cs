@@ -36,7 +36,7 @@ public static class PremiseSeeder
             {
                 Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                 Description = "Organization operates in a regulated industry requiring compliance tracking",
-                Type = PremiseType.Constraint,
+                Type = PremiseType.Context,
                 IsActive = true,
                 GoalId = goalId,
                 StrategyId = strategyId

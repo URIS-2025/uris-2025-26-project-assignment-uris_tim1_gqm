@@ -18,13 +18,10 @@ public static class ServiceExtensions
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // AutoMapper profiles
         services.AddAutoMapper(typeof(PremiseMappingProfile).Assembly);
 
-        // FluentValidation validators
         services.AddValidatorsFromAssemblyContaining<PremiseService.Application.Validators.PremiseRequestValidator>();
 
-        // Application services
         services.AddScoped<IPremiseService, PremiseAppService>();
 
         return services;
