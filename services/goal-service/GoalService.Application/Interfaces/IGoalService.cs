@@ -1,0 +1,15 @@
+using GoalService.Application.DTOs;
+using Shared.Contracts;
+
+namespace GoalService.Application.Interfaces;
+
+public interface IGoalService
+{
+    Task<PaginationResponse<GoalResponse>> GetAllPaginatedAsync(PaginationRequest request);
+    Task<GoalResponse?> GetByIdAsync(Guid id);
+    Task<GoalResponse> CreateAsync(GoalRequest request);
+    Task<GoalResponse?> UpdateAsync(Guid id, GoalRequest request);
+    Task<bool> DeleteAsync(Guid id);
+    Task<IEnumerable<GoalResponse>> GetByDepartmentIdAsync(Guid departmentId);
+    Task<GoalDetailsResponse?> GetGoalDetailsAsync(Guid id);
+}
