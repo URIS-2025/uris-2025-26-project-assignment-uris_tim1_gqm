@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using PremiseService.API.Middleware;
 using PremiseService.Application.Interfaces;
+using PremiseService.Application.Interfaces.Clients;
 using PremiseService.Application.Services;
+using PremiseService.Infrastructure.Clients;
 using PremiseService.Infrastructure.Persistence;
 using PremiseService.Infrastructure.Seed;
 using Shared.HMAC;
@@ -51,6 +53,20 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
     ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- HTTP Clients for inter-service communication ---
+var goalServiceUrl = builder.Configuration["ServiceUrls:GoalService"]
+    ?? "http://goal-service:8080";
+
+builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
+{
+    client.BaseAddress = new Uri(goalServiceUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IStrategyClient, StrategyClient>(client =>
+{
+    client.BaseAddress = new Uri(goalServiceUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
 
 // --- Controllers ---
 builder.Services.AddControllers()
