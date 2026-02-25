@@ -19,4 +19,8 @@
     <ProjectReference Include="..\PremiseService.Application\PremiseService.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Remove="**/*.resx" />
+  </ItemGroup>
+
 </Project>
