@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PremiseService.Domain\PremiseService.Domain.csproj" />
+    <ProjectReference Include="..\..\..\shared\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

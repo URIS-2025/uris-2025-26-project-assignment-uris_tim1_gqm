@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
+using Shared.Contracts;
 
 namespace PremiseService.API.Controllers;
 
@@ -17,15 +18,17 @@ public class PremiseController : ControllerBase
     }
 
 
+    /// <summary>Returns a paginated list of all premises.</summary>
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<PremiseResponse>>> GetAll(
-        [FromQuery] int page = 1, [FromQuery] int size = 20)
+    public async Task<ActionResult<PaginationResponse<PremiseResponse>>> GetAll(
+        [FromQuery] PaginationRequest request)
     {
-        var result = await _premiseService.GetAllAsync(page, size);
+        var result = await _premiseService.GetAllAsync(request);
         return Ok(result);
     }
 
 
+    /// <summary>Returns a single premise by its unique identifier.</summary>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PremiseResponse>> GetById(Guid id)
     {
@@ -34,6 +37,7 @@ public class PremiseController : ControllerBase
     }
 
 
+    /// <summary>Returns active premises associated with a specific goal.</summary>
     [HttpGet("active/goal/{goalId:guid}")]
     public async Task<ActionResult<IEnumerable<PremiseActiveResponse>>> GetActiveByGoal(Guid goalId)
     {
@@ -42,6 +46,7 @@ public class PremiseController : ControllerBase
     }
 
 
+    /// <summary>Returns active premises associated with a specific strategy.</summary>
     [HttpGet("active/strategy/{strategyId:guid}")]
     public async Task<ActionResult<IEnumerable<PremiseActiveResponse>>> GetActiveByStrategy(Guid strategyId)
     {
@@ -50,6 +55,7 @@ public class PremiseController : ControllerBase
     }
 
 
+    /// <summary>Creates a new premise.</summary>
     [HttpPost]
     public async Task<ActionResult<PremiseResponse>> Create([FromBody] PremiseRequest request)
     {
@@ -58,6 +64,7 @@ public class PremiseController : ControllerBase
     }
 
 
+    /// <summary>Updates a premise by creating a new version and deactivating the old one.</summary>
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<PremiseResponse>> Update(Guid id, [FromBody] PremiseUpdateRequest request)
     {
@@ -66,6 +73,7 @@ public class PremiseController : ControllerBase
     }
 
 
+    /// <summary>Soft-deletes a premise by setting IsActive to false.</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

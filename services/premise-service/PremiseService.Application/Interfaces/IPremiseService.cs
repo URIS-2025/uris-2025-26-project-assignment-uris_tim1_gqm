@@ -1,4 +1,5 @@
 using PremiseService.Application.DTOs;
+using Shared.Contracts;
 
 namespace PremiseService.Application.Interfaces;
 
@@ -8,7 +9,7 @@ namespace PremiseService.Application.Interfaces;
 public interface IPremiseService
 {
     /// <summary>Returns a paginated list of all premises.</summary>
-    Task<PaginatedResponse<PremiseResponse>> GetAllAsync(int page, int size);
+    Task<PaginationResponse<PremiseResponse>> GetAllAsync(PaginationRequest request);
 
     /// <summary>Returns a single premise by its unique identifier.</summary>
     Task<PremiseResponse> GetByIdAsync(Guid id);

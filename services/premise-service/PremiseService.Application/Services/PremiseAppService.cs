@@ -4,6 +4,7 @@ using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
 using PremiseService.Domain.Entities;
 using PremiseService.Domain.Exceptions;
+using Shared.Contracts;
 
 namespace PremiseService.Application.Services;
 
@@ -20,19 +21,25 @@ public class PremiseAppService : IPremiseService
     }
 
 
-    public async Task<PaginatedResponse<PremiseResponse>> GetAllAsync(int page, int size)
+    public async Task<PaginationResponse<PremiseResponse>> GetAllAsync(PaginationRequest request)
     {
         var total = await _dbContext.Premises.CountAsync();
 
         var premises = await _dbContext.Premises
             .OrderBy(p => p.Id)
-            .Skip((page - 1) * size)
-            .Take(size)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .AsNoTracking()
             .ToListAsync();
 
         var items = _mapper.Map<IEnumerable<PremiseResponse>>(premises);
-        return new PaginatedResponse<PremiseResponse>(items, page, size, total);
+        return new PaginationResponse<PremiseResponse>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            Total = total
+        };
     }
 
     /// <inheritdoc />

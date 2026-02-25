@@ -101,11 +101,15 @@ public class PremiseAppServiceTests : IDisposable
         await _service.CreateAsync(new PremiseRequest("P1", PremiseType.Assumption, GoalId, null));
         await _service.CreateAsync(new PremiseRequest("P2", PremiseType.Context, null, StrategyId));
 
-        var result = await _service.GetAllAsync(1, 10);
+        var result = await _service.GetAllAsync(new Shared.Contracts.PaginationRequest
+        {
+            PageNumber = 1,
+            PageSize = 10
+        });
 
         Assert.Equal(2, result.Total);
-        Assert.Equal(1, result.Page);
-        Assert.Equal(10, result.Size);
+        Assert.Equal(1, result.PageNumber);
+        Assert.Equal(10, result.PageSize);
         Assert.Equal(2, result.Items.Count());
     }
 
