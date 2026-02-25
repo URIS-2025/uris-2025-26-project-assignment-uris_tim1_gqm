@@ -32,20 +32,36 @@ builder.Services.AddValidationServices();
 
 var app = builder.Build();
 
-// Apply pending migrations and seed data in development
+// Apply database schema and seed data in development
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<AssessmentDbContext>();
-    await dbContext.Database.MigrateAsync();
-    await AssessmentSeeder.SeedAsync(dbContext);
+    var retryCount = 0;
+    const int maxRetries = 10;
+
+    while (retryCount < maxRetries)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AssessmentDbContext>();
+            await dbContext.Database.EnsureCreatedAsync();
+            await AssessmentSeeder.SeedAsync(dbContext);
+            break;
+        }
+        catch (Exception ex)
+        {
+            retryCount++;
+            app.Logger.LogWarning(ex, "Database not ready (attempt {Attempt}/{Max}). Retrying in 3 seconds...", retryCount, maxRetries);
+            await Task.Delay(3000);
+        }
+    }
 }
 
 // Configure the HTTP request pipeline
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Assessment Service API v1");
+    options.SwaggerEndpoint("v1/swagger.json", "Assessment Service API v1");
     options.RoutePrefix = "swagger";
 });
 

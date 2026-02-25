@@ -17,6 +17,13 @@ public class AssessmentServiceImpl : IAssessmentService
 
     public async Task<AssessmentResponse> CreateAsync(CreateAssessmentRequest request)
     {
+        var exists = await _dbContext.GoalProbabilityAssessments
+            .AsNoTracking()
+            .AnyAsync(a => a.GoalId == request.GoalId);
+
+        if (exists)
+            throw new AssessmentAlreadyExistsException(request.GoalId);
+
         var assessment = new GoalProbabilityAssessment
         {
             Id = Guid.NewGuid(),
@@ -28,7 +35,15 @@ public class AssessmentServiceImpl : IAssessmentService
         };
 
         await _dbContext.GoalProbabilityAssessments.AddAsync(assessment);
-        await _dbContext.SaveChangesAsync();
+        
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new AssessmentAlreadyExistsException(request.GoalId);
+        }
 
         return MapToResponse(assessment);
     }
@@ -50,8 +65,11 @@ public class AssessmentServiceImpl : IAssessmentService
         var assessment = await _dbContext.GoalProbabilityAssessments
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.GoalId == goalId);
+        
+        if (assessment is null)
+            throw new AssessmentByGoalNotFoundException(goalId);
 
-        return assessment is null ? null : MapToResponse(assessment);
+        return MapToResponse(assessment);
     }
 
     public async Task<AssessmentResponse> UpdateAsync(Guid id, UpdateAssessmentRequest request)

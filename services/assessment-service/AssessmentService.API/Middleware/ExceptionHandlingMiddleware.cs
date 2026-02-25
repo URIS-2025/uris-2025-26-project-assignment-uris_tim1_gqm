@@ -26,6 +26,21 @@ public class ExceptionHandlingMiddleware
             _logger.LogWarning(ex, "Assessment not found.");
             await WriteErrorResponse(context, HttpStatusCode.NotFound, ex.Message);
         }
+        catch (AssessmentByGoalNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Assessment not found for goal.");
+            await WriteErrorResponse(context, HttpStatusCode.NotFound, ex.Message);
+        }
+        catch (AssessmentAlreadyExistsException ex)
+        {
+            _logger.LogWarning(ex, "Assessment already exists for goal.");
+            await WriteErrorResponse(context, HttpStatusCode.Conflict, ex.Message);
+        }
+        catch (InvalidProbabilityException ex)
+        {
+            _logger.LogWarning(ex, "Invalid probability value.");
+            await WriteErrorResponse(context, HttpStatusCode.BadRequest, ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred.");
