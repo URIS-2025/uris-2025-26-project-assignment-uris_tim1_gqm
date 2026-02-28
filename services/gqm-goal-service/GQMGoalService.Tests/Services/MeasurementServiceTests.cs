@@ -24,7 +24,7 @@ public class MeasurementServiceTests : IDisposable
             
         _dbContext = new ApplicationDbContext(options);
 
-        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MeasurementMappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
         _service = new MeasurementService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.MeasurementRequestValidator(_dbContext));

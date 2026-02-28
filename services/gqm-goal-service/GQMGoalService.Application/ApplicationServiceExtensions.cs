@@ -16,7 +16,12 @@ public static class ApplicationServiceExtensions
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddAutoMapper(typeof(MappingProfile).Assembly);
+        services.AddAutoMapper(
+            typeof(GqmGoalMappingProfile),
+            typeof(QuestionMappingProfile),
+            typeof(TargetMappingProfile),
+            typeof(MeasurementMappingProfile)
+        );
 
         services.AddFluentValidationAutoValidation()
                 .AddFluentValidationClientsideAdapters();

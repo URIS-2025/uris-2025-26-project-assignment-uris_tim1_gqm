@@ -24,7 +24,7 @@ public class QuestionServiceTests : IDisposable
             
         _dbContext = new ApplicationDbContext(options);
 
-        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<QuestionMappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
         _service = new QuestionService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.QuestionRequestValidator(_dbContext));

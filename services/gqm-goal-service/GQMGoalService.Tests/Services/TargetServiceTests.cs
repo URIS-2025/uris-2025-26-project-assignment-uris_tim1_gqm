@@ -25,7 +25,7 @@ public class TargetServiceTests : IDisposable
             
         _dbContext = new ApplicationDbContext(options);
 
-        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<TargetMappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
         _service = new TargetService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.TargetRequestValidator(_dbContext));

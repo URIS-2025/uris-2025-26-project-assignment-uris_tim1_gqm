@@ -25,7 +25,7 @@ public class GqmGoalServiceTests : IDisposable
             
         _dbContext = new ApplicationDbContext(options);
 
-        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+        var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<GqmGoalMappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
         _service = new GqmGoalService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.GqmGoalRequestValidator());
