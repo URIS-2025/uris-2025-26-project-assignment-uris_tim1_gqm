@@ -1,5 +1,6 @@
 using DepartmentService.API.Controllers;
 using DepartmentService.Application.DTOs;
+using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -23,26 +24,26 @@ public class OrganizationControllerTests
     [Fact]
     public async Task GetAll_ReturnsOk_WithPagedResponse()
     {
-        var pagedResponse = new PagedResponse<OrganizationResponse>
+        var pagedResponse = new PaginationResponse<OrganizationResponse>
         {
             Items = [new OrganizationResponse { Id = Guid.NewGuid(), Name = "Org 1" }],
-            TotalCount = 1, Page = 1, Size = 20, TotalPages = 1
+            Total = 1, PageNumber = 1, PageSize = 20
         };
         _serviceMock.Setup(s => s.GetAllAsync(1, 20)).ReturnsAsync(pagedResponse);
 
         var result = await _sut.GetAll();
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var value = okResult.Value.Should().BeOfType<PagedResponse<OrganizationResponse>>().Subject;
+        var value = okResult.Value.Should().BeOfType<PaginationResponse<OrganizationResponse>>().Subject;
         value.Items.Should().HaveCount(1);
-        value.TotalCount.Should().Be(1);
+        value.Total.Should().Be(1);
     }
 
     [Fact]
     public async Task GetAll_CallsServiceWithCorrectPagination()
     {
         _serviceMock.Setup(s => s.GetAllAsync(3, 10))
-            .ReturnsAsync(new PagedResponse<OrganizationResponse>());
+            .ReturnsAsync(new PaginationResponse<OrganizationResponse>());
 
         await _sut.GetAll(page: 3, size: 10);
 

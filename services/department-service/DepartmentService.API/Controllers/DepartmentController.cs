@@ -1,4 +1,5 @@
 using DepartmentService.Application.DTOs;
+using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ public class DepartmentController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<DepartmentResponse>>> GetAll(
+    public async Task<ActionResult<PaginationResponse<DepartmentResponse>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int size = 20)
     {
@@ -34,7 +35,7 @@ public class DepartmentController : ControllerBase
     }
 
     [HttpGet("organization/{organizationId:guid}")]
-    public async Task<ActionResult<PagedResponse<DepartmentResponse>>> GetByOrganizationId(
+    public async Task<ActionResult<PaginationResponse<DepartmentResponse>>> GetByOrganizationId(
         Guid organizationId,
         [FromQuery] int page = 1,
         [FromQuery] int size = 20)

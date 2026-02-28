@@ -1,5 +1,6 @@
 using AutoMapper;
 using DepartmentService.Application.DTOs;
+using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
 using DepartmentService.Domain.Entities;
 using DepartmentService.Domain.Exceptions;
@@ -21,12 +22,11 @@ public class OrganizationService : IOrganizationService
         _validator = validator;
     }
 
-    public async Task<PagedResponse<OrganizationResponse>> GetAllAsync(int page, int size)
+    public async Task<PaginationResponse<OrganizationResponse>> GetAllAsync(int page, int size)
     {
         var query = _context.Set<Organization>().AsNoTracking();
 
         var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalCount / (double)size);
 
         var items = await query
             .OrderBy(o => o.Name)
@@ -34,13 +34,12 @@ public class OrganizationService : IOrganizationService
             .Take(size)
             .ToListAsync();
 
-        return new PagedResponse<OrganizationResponse>
+        return new PaginationResponse<OrganizationResponse>
         {
             Items = _mapper.Map<List<OrganizationResponse>>(items),
-            TotalCount = totalCount,
-            Page = page,
-            Size = size,
-            TotalPages = totalPages
+            Total = totalCount,
+            PageNumber = page,
+            PageSize = size
         };
     }
 

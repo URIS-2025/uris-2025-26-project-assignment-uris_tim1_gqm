@@ -1,5 +1,6 @@
 using DepartmentService.API.Controllers;
 using DepartmentService.Application.DTOs;
+using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -23,17 +24,17 @@ public class DepartmentControllerTests
     [Fact]
     public async Task GetAll_ReturnsOk_WithPagedResponse()
     {
-        var pagedResponse = new PagedResponse<DepartmentResponse>
+        var pagedResponse = new PaginationResponse<DepartmentResponse>
         {
             Items = [new DepartmentResponse { Id = Guid.NewGuid(), Name = "Dept 1" }],
-            TotalCount = 1, Page = 1, Size = 20, TotalPages = 1
+            Total = 1, PageNumber = 1, PageSize = 20
         };
         _serviceMock.Setup(s => s.GetAllAsync(1, 20)).ReturnsAsync(pagedResponse);
 
         var result = await _sut.GetAll();
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var value = okResult.Value.Should().BeOfType<PagedResponse<DepartmentResponse>>().Subject;
+        var value = okResult.Value.Should().BeOfType<PaginationResponse<DepartmentResponse>>().Subject;
         value.Items.Should().HaveCount(1);
     }
 
@@ -41,7 +42,7 @@ public class DepartmentControllerTests
     public async Task GetAll_CallsServiceWithCorrectPagination()
     {
         _serviceMock.Setup(s => s.GetAllAsync(2, 5))
-            .ReturnsAsync(new PagedResponse<DepartmentResponse>());
+            .ReturnsAsync(new PaginationResponse<DepartmentResponse>());
 
         await _sut.GetAll(page: 2, size: 5);
 
@@ -70,17 +71,17 @@ public class DepartmentControllerTests
     public async Task GetByOrganizationId_ReturnsOk_WithPagedResponse()
     {
         var orgId = Guid.NewGuid();
-        var pagedResponse = new PagedResponse<DepartmentResponse>
+        var pagedResponse = new PaginationResponse<DepartmentResponse>
         {
             Items = [new DepartmentResponse { OrganizationId = orgId }],
-            TotalCount = 1, Page = 1, Size = 20, TotalPages = 1
+            Total = 1, PageNumber = 1, PageSize = 20
         };
         _serviceMock.Setup(s => s.GetByOrganizationIdAsync(orgId, 1, 20)).ReturnsAsync(pagedResponse);
 
         var result = await _sut.GetByOrganizationId(orgId);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var value = okResult.Value.Should().BeOfType<PagedResponse<DepartmentResponse>>().Subject;
+        var value = okResult.Value.Should().BeOfType<PaginationResponse<DepartmentResponse>>().Subject;
         value.Items.Should().HaveCount(1);
     }
 

@@ -1,4 +1,5 @@
 using DepartmentService.Application.DTOs;
+using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ public class OrganizationController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<OrganizationResponse>>> GetAll(
+    public async Task<ActionResult<PaginationResponse<OrganizationResponse>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int size = 20)
     {

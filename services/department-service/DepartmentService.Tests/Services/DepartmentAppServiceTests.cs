@@ -77,8 +77,7 @@ public class DepartmentAppServiceTests : IDisposable
         var result = await _sut.GetAllAsync(1, 20);
 
         result.Items.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
-        result.TotalPages.Should().Be(0);
+        result.Total.Should().Be(0);
     }
 
     [Fact]
@@ -92,8 +91,7 @@ public class DepartmentAppServiceTests : IDisposable
         var result = await _sut.GetAllAsync(1, 2);
 
         result.Items.Should().HaveCount(2);
-        result.TotalCount.Should().Be(3);
-        result.TotalPages.Should().Be(2);
+        result.Total.Should().Be(3);
     }
 
     [Fact]
@@ -141,7 +139,7 @@ public class DepartmentAppServiceTests : IDisposable
         var result = await _sut.GetByOrganizationIdAsync(org.Id, 1, 20);
 
         result.Items.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
+        result.Total.Should().Be(0);
     }
 
     // ── GetByIdAsync ──

@@ -62,9 +62,8 @@ public class OrganizationServiceTests : IDisposable
         var result = await _sut.GetAllAsync(1, 20);
 
         result.Items.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
-        result.Page.Should().Be(1);
-        result.TotalPages.Should().Be(0);
+        result.Total.Should().Be(0);
+        result.PageNumber.Should().Be(1);
     }
 
     [Fact]
@@ -77,10 +76,9 @@ public class OrganizationServiceTests : IDisposable
         var result = await _sut.GetAllAsync(1, 2);
 
         result.Items.Should().HaveCount(2);
-        result.TotalCount.Should().Be(3);
-        result.TotalPages.Should().Be(2);
-        result.Page.Should().Be(1);
-        result.Size.Should().Be(2);
+        result.Total.Should().Be(3);
+        result.PageNumber.Should().Be(1);
+        result.PageSize.Should().Be(2);
     }
 
     [Fact]
@@ -93,7 +91,7 @@ public class OrganizationServiceTests : IDisposable
         var result = await _sut.GetAllAsync(2, 2);
 
         result.Items.Should().HaveCount(1);
-        result.Page.Should().Be(2);
+        result.PageNumber.Should().Be(2);
     }
 
     [Fact]

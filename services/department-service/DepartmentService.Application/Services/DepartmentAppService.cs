@@ -1,5 +1,6 @@
 using AutoMapper;
 using DepartmentService.Application.DTOs;
+using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
 using DepartmentService.Domain.Entities;
 using DepartmentService.Domain.Exceptions;
@@ -21,12 +22,11 @@ public class DepartmentAppService : IDepartmentService
         _validator = validator;
     }
 
-    public async Task<PagedResponse<DepartmentResponse>> GetAllAsync(int page, int size)
+    public async Task<PaginationResponse<DepartmentResponse>> GetAllAsync(int page, int size)
     {
         var query = _context.Set<Department>().AsNoTracking();
 
         var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalCount / (double)size);
 
         var items = await query
             .OrderBy(d => d.Name)
@@ -34,17 +34,16 @@ public class DepartmentAppService : IDepartmentService
             .Take(size)
             .ToListAsync();
 
-        return new PagedResponse<DepartmentResponse>
+        return new PaginationResponse<DepartmentResponse>
         {
             Items = _mapper.Map<List<DepartmentResponse>>(items),
-            TotalCount = totalCount,
-            Page = page,
-            Size = size,
-            TotalPages = totalPages
+            Total = totalCount,
+            PageNumber = page,
+            PageSize = size
         };
     }
 
-    public async Task<PagedResponse<DepartmentResponse>> GetByOrganizationIdAsync(Guid organizationId, int page, int size)
+    public async Task<PaginationResponse<DepartmentResponse>> GetByOrganizationIdAsync(Guid organizationId, int page, int size)
     {
         var organizationExists = await _context.Set<Organization>()
             .AnyAsync(o => o.Id == organizationId);
@@ -57,7 +56,6 @@ public class DepartmentAppService : IDepartmentService
             .Where(d => d.OrganizationId == organizationId);
 
         var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalCount / (double)size);
 
         var items = await query
             .OrderBy(d => d.Name)
@@ -65,13 +63,12 @@ public class DepartmentAppService : IDepartmentService
             .Take(size)
             .ToListAsync();
 
-        return new PagedResponse<DepartmentResponse>
+        return new PaginationResponse<DepartmentResponse>
         {
             Items = _mapper.Map<List<DepartmentResponse>>(items),
-            TotalCount = totalCount,
-            Page = page,
-            Size = size,
-            TotalPages = totalPages
+            Total = totalCount,
+            PageNumber = page,
+            PageSize = size
         };
     }
 
