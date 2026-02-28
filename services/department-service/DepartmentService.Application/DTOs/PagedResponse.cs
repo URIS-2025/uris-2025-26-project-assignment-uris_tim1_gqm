@@ -1,6 +1,6 @@
 namespace DepartmentService.Application.DTOs;
 
-public class PagedResponse<T>
+public record PagedResponse<T>
 {
     public List<T> Items { get; set; } = new();
     public int TotalCount { get; set; }

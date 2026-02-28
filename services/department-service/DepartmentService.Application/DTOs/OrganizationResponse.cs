@@ -1,6 +1,6 @@
 namespace DepartmentService.Application.DTOs;
 
-public class OrganizationResponse
+public record OrganizationResponse
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
