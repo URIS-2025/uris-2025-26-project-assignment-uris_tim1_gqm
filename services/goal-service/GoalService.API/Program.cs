@@ -1,51 +1,94 @@
+using FluentValidation;
+using GoalService.API.Middleware;
+using GoalService.Application.Interfaces;
+using GoalService.Application.Interfaces.Clients;
+using GoalService.Infrastructure.Clients;
+using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Persistence;
+using GoalService.Application.Services;
+using GoalService.Infrastructure.Seed;
+using Microsoft.EntityFrameworkCore;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// --- Database ---
+var connectionString = builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Database connection string not configured.");
 
-// Add HMAC authentication
-var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+builder.Services.AddDbContext<GoalDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IGoalDbContext>(provider => provider.GetRequiredService<GoalDbContext>());
+
+// --- Application Services ---
+builder.Services.AddScoped<IGoalService, GoalServiceImpl>();
+builder.Services.AddScoped<IStrategyService, StrategyServiceImpl>();
+builder.Services.AddScoped<IGoalInfluenceService, GoalInfluenceServiceImpl>();
+
+// --- FluentValidation ---
+builder.Services.AddValidatorsFromAssemblyContaining<GoalServiceImpl>();
+
+// --- Swagger / OpenAPI ---
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// --- HMAC Authentication ---
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
+    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Cross-Service HTTP Clients ---
+builder.Services.AddHttpClient<IPremiseClient, PremiseClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:PremiseService"] ?? "http://premise-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IAssessmentClient, AssessmentClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AssessmentService"] ?? "http://assessment-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IQgmGoalClient, QgmGoalClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:QgmGoalService"] ?? "http://qgm-goal-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+// --- Controllers ---
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- Global Exception Handler (first in pipeline) ---
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+// --- Seed Data & Swagger (development only) ---
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    await GoalDbSeeder.SeedAsync(app.Services);
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Goal Service API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();
 
-// Add HMAC middleware
+// --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// --- Map Controllers ---
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// --- Health Check ---
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal-service" }))
+    .WithName("HealthCheck");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

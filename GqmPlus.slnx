@@ -13,6 +13,9 @@
   </Folder>
   <Folder Name="/services/goal-service/">
     <Project Path="services/goal-service/GoalService.API/GoalService.API.csproj" />
+    <Project Path="services/goal-service/GoalService.Application/GoalService.Application.csproj" />
+    <Project Path="services/goal-service/GoalService.Domain/GoalService.Domain.csproj" />
+    <Project Path="services/goal-service/GoalService.Infrastructure/GoalService.Infrastructure.csproj" />
     <Project Path="services/goal-service/GoalService.Tests/GoalService.Tests.csproj" />
   </Folder>
   <Folder Name="/services/premise-service/">
@@ -28,6 +31,7 @@
     <Project Path="services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj" />
   </Folder>
   <Folder Name="/shared/">
+    <Project Path="shared/Shared.Contracts/Shared.Contracts.csproj" />
     <Project Path="shared/Shared.HMAC/Shared.HMAC.csproj" />
   </Folder>
 </Solution>
