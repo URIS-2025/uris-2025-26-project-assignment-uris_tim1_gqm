@@ -26,8 +26,7 @@ public static class InfrastructureServiceExtensions
             else
             {
                 var connectionString = configuration["DATABASE_URL"]
-                    ?? configuration.GetConnectionString("DefaultConnection")
-                    ?? throw new InvalidOperationException("Database connection string is required.");
+                    ?? throw new InvalidOperationException("DATABASE_URL connection string is required.");
                 options.UseNpgsql(connectionString);
             }
         });
