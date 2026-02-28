@@ -1,3 +1,4 @@
+using Shared.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.GqmGoal;
@@ -17,9 +18,9 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<GqmGoalResponse>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PaginationResponse<GqmGoalResponse>>> GetAll([FromQuery] PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await _service.GetAllAsync(pageNumber, pageSize, cancellationToken);
+        var result = await _service.GetAllAsync(request, cancellationToken);
         return Ok(result);
     }
 

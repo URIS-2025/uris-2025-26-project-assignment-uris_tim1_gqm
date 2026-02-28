@@ -1,3 +1,4 @@
+using Shared.Contracts;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.Measurement;
 
@@ -8,7 +9,7 @@ namespace GQMGoalService.Application.Interfaces;
 /// </summary>
 public interface IMeasurementService
 {
-    Task<PagedResult<MeasurementResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default);
+    Task<PaginationResponse<MeasurementResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default);
     Task<MeasurementResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>

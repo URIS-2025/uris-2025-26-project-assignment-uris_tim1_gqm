@@ -1,3 +1,4 @@
+using Shared.Contracts;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs;
@@ -22,18 +23,24 @@ public class GqmGoalService : IGqmGoalService
         _validator = validator;
     }
 
-    public async Task<PagedResult<GqmGoalResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<PaginationResponse<GqmGoalResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var totalCount = await _dbContext.GqmGoals.CountAsync(cancellationToken);
         var goals = await _dbContext.GqmGoals
             .Include(g => g.Questions)
             .AsNoTracking()
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(cancellationToken);
             
         var dtos = _mapper.Map<IEnumerable<GqmGoalResponse>>(goals);
-        return new PagedResult<GqmGoalResponse>(dtos, totalCount, pageNumber, pageSize);
+        return new PaginationResponse<GqmGoalResponse>
+        {
+            Items = dtos,
+            Total = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
     }
 
     public async Task<GqmGoalResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

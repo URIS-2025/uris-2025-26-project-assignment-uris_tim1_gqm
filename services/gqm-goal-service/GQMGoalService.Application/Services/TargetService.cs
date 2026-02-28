@@ -1,3 +1,4 @@
+using Shared.Contracts;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs;
@@ -22,18 +23,24 @@ public class TargetService : ITargetService
         _validator = validator;
     }
 
-    public async Task<PagedResult<TargetResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<PaginationResponse<TargetResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
         var totalCount = await _dbContext.Targets.CountAsync(cancellationToken);
         var targets = await _dbContext.Targets
             .Include(t => t.Measurements)
             .AsNoTracking()
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(cancellationToken);
             
         var dtos = _mapper.Map<IEnumerable<TargetResponse>>(targets);
-        return new PagedResult<TargetResponse>(dtos, totalCount, pageNumber, pageSize);
+        return new PaginationResponse<TargetResponse>
+        {
+            Items = dtos,
+            Total = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
     }
 
     public async Task<TargetResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

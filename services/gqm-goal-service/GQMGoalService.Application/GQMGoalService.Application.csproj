@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GQMGoalService.Domain\GQMGoalService.Domain.csproj" />
+    <ProjectReference Include="..\..\..\shared\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

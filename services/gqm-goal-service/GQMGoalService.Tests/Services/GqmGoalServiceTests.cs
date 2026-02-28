@@ -1,3 +1,4 @@
+using Shared.Contracts;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -56,6 +57,28 @@ public class GqmGoalServiceTests : IDisposable
         
         result.Should().NotBeNull();
         result.Id.Should().Be(goal.Id);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnPaginatedGoals()
+    {
+        // Arrange
+        var goals = Enumerable.Range(1, 15).Select(i => new GqmGoal { Id = Guid.NewGuid(), Description = $"Goal {i}", GoalId = Guid.NewGuid(), CreatedAt = DateTime.UtcNow }).ToList();
+        
+        await _dbContext.GqmGoals.AddRangeAsync(goals);
+        await _dbContext.SaveChangesAsync();
+
+        var request = new PaginationRequest { PageNumber = 2, PageSize = 5 };
+
+        // Act
+        var result = await _service.GetAllAsync(request);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Total.Should().Be(15);
+        result.Items.Should().HaveCount(5);
+        result.PageNumber.Should().Be(2);
+        result.PageSize.Should().Be(5);
     }
 
     public void Dispose()

@@ -1,3 +1,4 @@
+using Shared.Contracts;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.Target;
 
@@ -8,7 +9,7 @@ namespace GQMGoalService.Application.Interfaces;
 /// </summary>
 public interface ITargetService
 {
-    Task<PagedResult<TargetResponse>> GetAllAsync(int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default);
+    Task<PaginationResponse<TargetResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default);
     Task<TargetResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
