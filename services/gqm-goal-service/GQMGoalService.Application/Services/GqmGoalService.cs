@@ -25,10 +25,27 @@ public class GqmGoalService : IGqmGoalService
 
     public async Task<PaginationResponse<GqmGoalResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.GqmGoals.CountAsync(cancellationToken);
-        var goals = await _dbContext.GqmGoals
+        var query = _dbContext.GqmGoals
             .Include(g => g.Questions)
-            .AsNoTracking()
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.OrderBy))
+        {
+            query = request.OrderBy.ToLower() switch
+            {
+                "description" => query.OrderBy(g => g.Description),
+                "createdat" => query.OrderBy(g => g.CreatedAt),
+                _ => query.OrderBy(g => g.Id)
+            };
+        }
+        else
+        {
+            query = query.OrderBy(g => g.Id);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var goals = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);

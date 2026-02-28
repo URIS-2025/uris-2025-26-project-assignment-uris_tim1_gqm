@@ -25,9 +25,26 @@ public class MeasurementService : IMeasurementService
 
     public async Task<PaginationResponse<MeasurementResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Measurements.CountAsync(cancellationToken);
-        var measurements = await _dbContext.Measurements
-            .AsNoTracking()
+        var query = _dbContext.Measurements
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.OrderBy))
+        {
+            query = request.OrderBy.ToLower() switch
+            {
+                "value" => query.OrderBy(m => m.Value),
+                "measuredat" => query.OrderBy(m => m.MeasuredAt),
+                _ => query.OrderBy(m => m.Id)
+            };
+        }
+        else
+        {
+            query = query.OrderBy(m => m.Id);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var measurements = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);

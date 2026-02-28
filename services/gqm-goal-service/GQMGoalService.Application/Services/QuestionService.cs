@@ -25,10 +25,27 @@ public class QuestionService : IQuestionService
 
     public async Task<PaginationResponse<QuestionResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Questions.CountAsync(cancellationToken);
-        var questions = await _dbContext.Questions
+        var query = _dbContext.Questions
             .Include(q => q.Targets)
-            .AsNoTracking()
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.OrderBy))
+        {
+            query = request.OrderBy.ToLower() switch
+            {
+                "text" => query.OrderBy(q => q.Text),
+                "createdat" => query.OrderBy(q => q.CreatedAt),
+                _ => query.OrderBy(q => q.Id)
+            };
+        }
+        else
+        {
+            query = query.OrderBy(q => q.Id);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var questions = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);

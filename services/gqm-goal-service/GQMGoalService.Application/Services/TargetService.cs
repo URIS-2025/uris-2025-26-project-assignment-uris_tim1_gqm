@@ -25,10 +25,27 @@ public class TargetService : ITargetService
 
     public async Task<PaginationResponse<TargetResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Targets.CountAsync(cancellationToken);
-        var targets = await _dbContext.Targets
+        var query = _dbContext.Targets
             .Include(t => t.Measurements)
-            .AsNoTracking()
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.OrderBy))
+        {
+            query = request.OrderBy.ToLower() switch
+            {
+                "name" => query.OrderBy(t => t.Name),
+                "description" => query.OrderBy(t => t.Description),
+                _ => query.OrderBy(t => t.Id)
+            };
+        }
+        else
+        {
+            query = query.OrderBy(t => t.Id);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var targets = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
