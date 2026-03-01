@@ -25,6 +25,9 @@
   </Folder>
   <Folder Name="/services/assessment-service/">
     <Project Path="services/assessment-service/AssessmentService.API/AssessmentService.API.csproj" />
+    <Project Path="services/assessment-service/AssessmentService.Application/AssessmentService.Application.csproj" />
+    <Project Path="services/assessment-service/AssessmentService.Domain/AssessmentService.Domain.csproj" />
+    <Project Path="services/assessment-service/AssessmentService.Infrastructure/AssessmentService.Infrastructure.csproj" />
     <Project Path="services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj" />
   </Folder>
   <Folder Name="/shared/">

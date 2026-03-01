@@ -3,6 +3,7 @@ using AssessmentService.Application.Interfaces;
 using AssessmentService.Domain.Entities;
 using AssessmentService.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using AssessmentService.Application.Mappings;
 
 namespace AssessmentService.Application.Services;
 
@@ -24,15 +25,7 @@ public class AssessmentServiceImpl : IAssessmentService
         if (exists)
             throw new AssessmentAlreadyExistsException(request.GoalId);
 
-        var assessment = new GoalProbabilityAssessment
-        {
-            Id = Guid.NewGuid(),
-            GoalId = request.GoalId,
-            Probability = request.Probability,
-            State = request.State,
-            Method = request.Method,
-            Notes = request.Notes
-        };
+        var assessment = request.ToEntity();    
 
         await _dbContext.GoalProbabilityAssessments.AddAsync(assessment);
         
@@ -45,7 +38,7 @@ public class AssessmentServiceImpl : IAssessmentService
             throw new AssessmentAlreadyExistsException(request.GoalId);
         }
 
-        return MapToResponse(assessment);
+        return assessment.ToResponse();
     }
 
     public async Task<AssessmentResponse> GetByIdAsync(Guid id)
@@ -57,7 +50,7 @@ public class AssessmentServiceImpl : IAssessmentService
         if (assessment is null)
             throw new AssessmentNotFoundException(id);
 
-        return MapToResponse(assessment);
+        return assessment.ToResponse();
     }
 
     public async Task<AssessmentResponse?> GetByGoalIdAsync(Guid goalId)
@@ -69,7 +62,7 @@ public class AssessmentServiceImpl : IAssessmentService
         if (assessment is null)
             throw new AssessmentByGoalNotFoundException(goalId);
 
-        return MapToResponse(assessment);
+        return assessment.ToResponse();
     }
 
     public async Task<AssessmentResponse> UpdateAsync(Guid id, UpdateAssessmentRequest request)
@@ -80,14 +73,11 @@ public class AssessmentServiceImpl : IAssessmentService
         if (assessment is null)
             throw new AssessmentNotFoundException(id);
 
-        assessment.Probability = request.Probability;
-        assessment.State = request.State;
-        assessment.Method = request.Method;
-        assessment.Notes = request.Notes;
+        request.UpdateEntity(assessment);
 
         await _dbContext.SaveChangesAsync();
 
-        return MapToResponse(assessment);
+        return assessment.ToResponse();
     }
 
     public async Task DeleteAsync(Guid id)
@@ -100,17 +90,5 @@ public class AssessmentServiceImpl : IAssessmentService
 
         _dbContext.GoalProbabilityAssessments.Remove(assessment);
         await _dbContext.SaveChangesAsync();
-    }
-
-    private static AssessmentResponse MapToResponse(GoalProbabilityAssessment assessment)
-    {
-        return new AssessmentResponse(
-            assessment.Id,
-            assessment.GoalId,
-            assessment.Probability,
-            assessment.State,
-            assessment.Method,
-            assessment.Notes
-        );
     }
 }

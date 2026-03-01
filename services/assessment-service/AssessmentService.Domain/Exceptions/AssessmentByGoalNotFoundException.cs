@@ -1,9 +1,10 @@
-namespace AssessmentService.Domain.Exceptions;
-
-public class AssessmentByGoalNotFoundException: Exception
+namespace AssessmentService.Domain.Exceptions
 {
-    public AssessmentByGoalNotFoundException(Guid goalId)
-        : base($"No assessment found for goal '{goalId}'.")
+    public class AssessmentByGoalNotFoundException : Exception
     {
+        public AssessmentByGoalNotFoundException(Guid goalId)
+            : base($"No assessment found for goal '{goalId}'.")
+        {
+        }
     }
 }

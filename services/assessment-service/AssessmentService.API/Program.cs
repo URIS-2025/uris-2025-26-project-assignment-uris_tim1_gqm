@@ -1,6 +1,11 @@
-using AssessmentService.API.Extensions;
 using AssessmentService.API.Middleware;
+using AssessmentService.Application.Interfaces;
+using AssessmentService.Application.Interfaces.Clients;
+using AssessmentService.Application.Services;
+using AssessmentService.Application.Validators;
+using AssessmentService.Infrastructure.Clients;
 using AssessmentService.Infrastructure.Persistence;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shared.HMAC;
 
@@ -25,10 +30,27 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
-// Add application services (DI)
-builder.Services.AddApplicationServices();
-builder.Services.AddInfrastructureServices(builder.Configuration);
-builder.Services.AddValidationServices();
+builder.Services.AddScoped<IAssessmentService, AssessmentServiceImpl>();
+
+var connectionString = builder.Configuration["DATABASE_URL"]
+    ?? throw new InvalidOperationException("DATABASE_URL is not configured.");
+
+builder.Services.AddDbContext<AssessmentDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IAssessmentDbContext>(sp =>
+    sp.GetRequiredService<AssessmentDbContext>());
+
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateAssessmentValidator>();
+
+// Goal client (HTTP)
+builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:GoalService"] ?? "http://goal-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+})
+.AddHttpMessageHandler<HmacDelegatingHandler>();
 
 var app = builder.Build();
 

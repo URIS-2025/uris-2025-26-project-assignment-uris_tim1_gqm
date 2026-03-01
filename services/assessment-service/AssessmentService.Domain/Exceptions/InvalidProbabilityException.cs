@@ -1,5 +1,4 @@
 namespace AssessmentService.Domain.Exceptions;
-
 public class InvalidProbabilityException : Exception
 {
     public InvalidProbabilityException(decimal probability)
