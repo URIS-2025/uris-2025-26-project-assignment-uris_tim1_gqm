@@ -4,6 +4,7 @@ using AssessmentService.Domain.Entities;
 using AssessmentService.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using AssessmentService.Application.Mappings;
+using Shared.Contracts;
 
 namespace AssessmentService.Application.Services;
 
@@ -63,6 +64,36 @@ public class AssessmentServiceImpl : IAssessmentService
             throw new AssessmentByGoalNotFoundException(goalId);
 
         return assessment.ToResponse();
+    }
+
+    public async Task<PaginationResponse<AssessmentResponse>> GetAllAsync(PaginationRequest pagination)
+    {
+        var query = _dbContext.GoalProbabilityAssessments.AsNoTracking();
+
+        query = pagination.OrderBy?.ToLowerInvariant() switch
+        {
+            "probability" => query.OrderByDescending(x => x.Probability),
+            "goalid" => query.OrderBy(x => x.GoalId),
+            _ => query.OrderBy(x => x.GoalId)
+        };
+
+        var total = await query.CountAsync();
+
+        var pageNumber = pagination.PageNumber < 1 ? 1 : pagination.PageNumber;
+        var pageSize = pagination.PageSize < 1 ? 20 : pagination.PageSize;
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginationResponse<AssessmentResponse>
+        {
+            Items = items.Select(a => a.ToResponse()).ToList(),
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            Total = total
+        };
     }
 
     public async Task<AssessmentResponse> UpdateAsync(Guid id, UpdateAssessmentRequest request)

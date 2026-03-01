@@ -2,6 +2,7 @@ using AssessmentService.Application.DTOs;
 using AssessmentService.Application.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts;
 
 namespace AssessmentService.API.Controllers;
 
@@ -76,11 +77,21 @@ public class AssessmentController : ControllerBase
     public async Task<IActionResult> GetByGoalId(Guid goalId)
     {
         var response = await _assessmentService.GetByGoalIdAsync(goalId);
-
-        if (response is null)
-            return NotFound(new { Message = $"No assessment found for goal '{goalId}'." });
-
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Retrieves all goal probability assessments with pagination.
+    /// </summary>
+    /// <param name="pagination">Pagination parameters.</param>
+    /// <returns>Paginated list of assessments.</returns>
+    /// <response code="200">Successfully retrieved assessments.</response>
+    [HttpGet]
+    [ProducesResponseType(typeof(PaginationResponse<AssessmentResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest pagination)
+    {
+        var result = await _assessmentService.GetAllAsync(pagination);
+        return Ok(result);
     }
 
     /// <summary>
