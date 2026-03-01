@@ -114,11 +114,10 @@ public class AssessmentServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetByGoalIdAsync_ShouldReturnNull_WhenNotExists()
+    public async Task GetByGoalIdAsync_ShouldThrow_WhenNotExists()
     {
-        var result = await _service.GetByGoalIdAsync(Guid.NewGuid());
-
-        Assert.Null(result);
+        await Assert.ThrowsAsync<AssessmentByGoalNotFoundException>(
+            () => _service.GetByGoalIdAsync(Guid.NewGuid()));
     }
 
     [Fact]
