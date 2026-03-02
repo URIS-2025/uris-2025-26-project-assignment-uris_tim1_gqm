@@ -12,7 +12,6 @@ public static class InfrastructureServiceExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration["DATABASE_URL"]
-            ?? configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Database connection string not configured.");
 
         services.AddDbContext<DepartmentServiceDbContext>(options =>
