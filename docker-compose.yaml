@@ -42,6 +42,8 @@ services:
       context: .
       dockerfile: ./services/department-service/DepartmentService.API/Dockerfile
     container_name: department-service
+    ports:
+      - "5015:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=department-db;Port=5432;Database=departmentdb;Username=postgres;Password=postgres

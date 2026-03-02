@@ -6,6 +6,9 @@
   </Folder>
   <Folder Name="/services/department-service/">
     <Project Path="services/department-service/DepartmentService.API/DepartmentService.API.csproj" />
+    <Project Path="services/department-service/DepartmentService.Domain/DepartmentService.Domain.csproj" />
+    <Project Path="services/department-service/DepartmentService.Application/DepartmentService.Application.csproj" />
+    <Project Path="services/department-service/DepartmentService.Infrastructure/DepartmentService.Infrastructure.csproj" />
     <Project Path="services/department-service/DepartmentService.Tests/DepartmentService.Tests.csproj" />
   </Folder>
   <Folder Name="/services/goal-service/">

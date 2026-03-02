@@ -8,10 +8,16 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../../shared/Shared.HMAC/Shared.HMAC.csproj" />
+    <ProjectReference Include="../DepartmentService.Domain/DepartmentService.Domain.csproj" />
+    <ProjectReference Include="../DepartmentService.Application/DepartmentService.Application.csproj" />
+    <ProjectReference Include="../DepartmentService.Infrastructure/DepartmentService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
