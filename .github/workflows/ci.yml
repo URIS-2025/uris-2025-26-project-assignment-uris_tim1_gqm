@@ -5,6 +5,9 @@ permissions:
   checks: write
   pull-requests: write
 
+env:
+  MSBUILDFAILONDRIVEENUMERATINGWILDCARD: 0
+
 on:
   push:
     branches: [ main, dev ]
