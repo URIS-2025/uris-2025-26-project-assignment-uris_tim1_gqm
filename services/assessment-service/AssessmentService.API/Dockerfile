@@ -7,8 +7,11 @@ WORKDIR /src
 
 # Copy shared library
 COPY ["shared/Shared.HMAC/Shared.HMAC.csproj", "shared/Shared.HMAC/"]
-# Copy service project
+# Copy service projects
 COPY ["services/assessment-service/AssessmentService.API/AssessmentService.API.csproj", "services/assessment-service/AssessmentService.API/"]
+COPY ["services/assessment-service/AssessmentService.Application/AssessmentService.Application.csproj", "services/assessment-service/AssessmentService.Application/"]
+COPY ["services/assessment-service/AssessmentService.Domain/AssessmentService.Domain.csproj", "services/assessment-service/AssessmentService.Domain/"]
+COPY ["services/assessment-service/AssessmentService.Infrastructure/AssessmentService.Infrastructure.csproj", "services/assessment-service/AssessmentService.Infrastructure/"]
 
 RUN dotnet restore "services/assessment-service/AssessmentService.API/AssessmentService.API.csproj"
 
