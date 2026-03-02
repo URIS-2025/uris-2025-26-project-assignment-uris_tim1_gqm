@@ -17,7 +17,7 @@ public static class InfrastructureServiceExtensions
         services.AddDbContext<DepartmentServiceDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddScoped<DbContext>(provider =>
+        services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<DepartmentServiceDbContext>());
 
         services.AddScoped<IOrganizationService, OrganizationService>();

@@ -11,11 +11,11 @@ namespace DepartmentService.Application.Services;
 
 public class DepartmentAppService : IDepartmentService
 {
-    private readonly DbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IValidator<DepartmentRequest> _validator;
 
-    public DepartmentAppService(DbContext context, IMapper mapper, IValidator<DepartmentRequest> validator)
+    public DepartmentAppService(IApplicationDbContext context, IMapper mapper, IValidator<DepartmentRequest> validator)
     {
         _context = context;
         _mapper = mapper;

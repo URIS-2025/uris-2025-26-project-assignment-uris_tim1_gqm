@@ -1,9 +1,11 @@
 using DepartmentService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
+using DepartmentService.Application.Interfaces;
+
 namespace DepartmentService.Infrastructure.Persistence;
 
-public class DepartmentServiceDbContext : DbContext
+public class DepartmentServiceDbContext : DbContext, IApplicationDbContext
 {
     public DepartmentServiceDbContext(DbContextOptions<DepartmentServiceDbContext> options)
         : base(options)

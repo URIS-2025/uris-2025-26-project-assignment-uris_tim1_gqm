@@ -11,11 +11,11 @@ namespace DepartmentService.Application.Services;
 
 public class OrganizationService : IOrganizationService
 {
-    private readonly DbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IValidator<OrganizationRequest> _validator;
 
-    public OrganizationService(DbContext context, IMapper mapper, IValidator<OrganizationRequest> validator)
+    public OrganizationService(IApplicationDbContext context, IMapper mapper, IValidator<OrganizationRequest> validator)
     {
         _context = context;
         _mapper = mapper;
