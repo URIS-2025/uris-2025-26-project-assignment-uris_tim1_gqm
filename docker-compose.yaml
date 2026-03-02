@@ -48,9 +48,6 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=department-db;Port=5432;Database=departmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
-      - JwtSettings__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!
-      - JwtSettings__Issuer=GqmPlus
-      - JwtSettings__Audience=GqmPlus
     depends_on:
       - department-db
 

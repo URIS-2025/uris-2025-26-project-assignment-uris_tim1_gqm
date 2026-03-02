@@ -1,14 +1,12 @@
 using DepartmentService.Application.DTOs;
 using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepartmentService.API.Controllers;
 
 [ApiController]
 [Route("departments")]
-[Authorize]
 public class DepartmentController : ControllerBase
 {
     private readonly IDepartmentService _departmentService;

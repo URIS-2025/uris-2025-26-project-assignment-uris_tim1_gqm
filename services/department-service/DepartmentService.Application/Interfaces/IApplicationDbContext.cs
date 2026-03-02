@@ -1,7 +1,5 @@
 using DepartmentService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DepartmentService.Application.Interfaces;
 
