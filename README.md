@@ -49,7 +49,7 @@ root/
 │   ├── department-service/
 │   ├── goal-service/
 │   ├── premise-service/
-│   └── qgm-goal-service/
+│   └── gqm-goal-service/
 │
 ├── shared/
 │   └── Shared.HMAC/
@@ -162,7 +162,7 @@ Host={service}-db;Port=5432;Database={service}db;Username=postgres;Password=post
 | `department-db` | `departmentdb` |
 | `goal-db` | `goaldb` |
 | `premise-db` | `premisedb` |
-| `qgm-goal-db` | `qgmgoaldb` |
+| `gqm-goal-db` | `gqmgoaldb` |
 | `assessment-db` | `assessmentdb` |
 
 ### Database Rules
