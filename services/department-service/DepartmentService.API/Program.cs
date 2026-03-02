@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT token from POST /auth/dev-token. Enter just the token value (without 'Bearer' prefix).",
+        Description = "JWT token. Enter just the token value (without 'Bearer' prefix).",
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT"
