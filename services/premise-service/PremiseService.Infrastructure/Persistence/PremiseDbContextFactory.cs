@@ -10,8 +10,8 @@ public class PremiseDbContextFactory : IDesignTimeDbContextFactory<PremiseDbCont
         var optionsBuilder = new DbContextOptionsBuilder<PremiseDbContext>();
 
         // Default connection string for design-time operations (migrations)
-        optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Database=premisedb;Username=postgres;Password=postgres");
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new PremiseDbContext(optionsBuilder.Options);
     }
