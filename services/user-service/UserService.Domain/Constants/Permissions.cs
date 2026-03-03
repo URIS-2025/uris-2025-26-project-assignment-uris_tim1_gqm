@@ -15,4 +15,19 @@ public static class Permissions
     public const string RecordMeasurements = "record_measurements";
     public const string ManageProbabilityAssessments = "manage_probability_assessments";
     public const string ViewAnalytics = "view_analytics";
+
+    public static bool IsSystemPermission(string name) =>
+        name is ManageOrganizations
+            or ManageUsers
+            or ManageRoles
+            or ManageDepartments
+            or ViewAllDepartments
+            or CreateGoals
+            or EditGoals
+            or DeleteGoals
+            or ViewGoals
+            or ManageGoalInfluences
+            or RecordMeasurements
+            or ManageProbabilityAssessments
+            or ViewAnalytics;
 }

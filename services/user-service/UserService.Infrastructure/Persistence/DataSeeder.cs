@@ -75,10 +75,10 @@ public static class DataSeeder
         var editGoals = CreatePermission("20000000-0000-0000-0000-000000000007", Permissions.EditGoals, "Edit existing goals.");
         var deleteGoals = CreatePermission("20000000-0000-0000-0000-000000000008", Permissions.DeleteGoals, "Delete goals.");
         var viewGoals = CreatePermission("20000000-0000-0000-0000-000000000009", Permissions.ViewGoals, "View goals.");
-        var manageGoalInfluences = CreatePermission("20000000-0000-0000-0000-0000000000010", Permissions.ManageGoalInfluences, "Manage goal influences and relationships.");
-        var recordMeasurements = CreatePermission("20000000-0000-0000-0000-0000000000011", Permissions.RecordMeasurements, "Record measurement values.");
-        var manageProbabilityAssessments = CreatePermission("20000000-0000-0000-0000-0000000000012", Permissions.ManageProbabilityAssessments, "Create and manage probability assessments.");
-        var viewAnalytics = CreatePermission("20000000-0000-0000-0000-0000000000013", Permissions.ViewAnalytics, "View analytics and reports.");
+        var manageGoalInfluences = CreatePermission("20000000-0000-0000-0000-000000000010", Permissions.ManageGoalInfluences, "Manage goal influences and relationships.");
+        var recordMeasurements = CreatePermission("20000000-0000-0000-0000-000000000011", Permissions.RecordMeasurements, "Record measurement values.");
+        var manageProbabilityAssessments = CreatePermission("20000000-0000-0000-0000-000000000012", Permissions.ManageProbabilityAssessments, "Create and manage probability assessments.");
+        var viewAnalytics = CreatePermission("20000000-0000-0000-0000-000000000013", Permissions.ViewAnalytics, "View analytics and reports.");
 
         context.Permissions.AddRange(
             manageOrganizations, manageUsers, manageRoles, manageDepartments,

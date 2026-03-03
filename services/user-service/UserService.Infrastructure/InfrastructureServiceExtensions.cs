@@ -1,4 +1,5 @@
 using UserService.Application.Interfaces;
+using UserService.Application.Services;
 using UserService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +19,13 @@ public static class InfrastructureServiceExtensions
 
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<UserServiceDbContext>());
+
+        services.AddScoped<IUserService, UserAppService>();
+        services.AddScoped<IRoleService, RoleAppService>();
+        services.AddScoped<IPermissionService, PermissionAppService>();
+        services.AddScoped<IUserOrganizationRoleService, UserOrganizationRoleAppService>();
+        services.AddScoped<IAuthService, AuthAppService>();
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }
