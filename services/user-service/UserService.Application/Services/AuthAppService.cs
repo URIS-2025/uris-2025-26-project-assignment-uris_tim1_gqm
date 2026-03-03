@@ -148,7 +148,7 @@ public class AuthAppService : IAuthService
 
         await _context.SaveChangesAsync();
 
-        var resetLink = $"{_configuration["App:BaseUrl"] ?? "https://localhost"}/reset-password?token={plainToken}";
+        var resetLink = $"{_configuration["App:FrontendBaseUrl"] ?? "http://localhost:3000"}/reset-password?token={plainToken}";
         await _emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
     }
 

@@ -1,0 +1,83 @@
+@UserService.API_HostAddress = http://localhost:5020
+
+### Health Check
+GET {{UserService.API_HostAddress}}/health
+Accept: application/json
+
+### Login
+POST {{UserService.API_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@gqmplus.com",
+  "password": "Admin@123"
+}
+
+### Refresh Token
+POST {{UserService.API_HostAddress}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": ""
+}
+
+### Forgot Password
+POST {{UserService.API_HostAddress}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "admin@gqmplus.com"
+}
+
+### Reset Password
+POST {{UserService.API_HostAddress}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "",
+  "newPassword": "NewAdmin@123",
+  "confirmNewPassword": "NewAdmin@123"
+}
+
+### Get All Users
+GET {{UserService.API_HostAddress}}/users?page=1&size=10
+Accept: application/json
+
+### Get User By ID
+GET {{UserService.API_HostAddress}}/users/30000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Create User
+POST {{UserService.API_HostAddress}}/users
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "password": "Password@123"
+}
+
+### Get All Roles
+GET {{UserService.API_HostAddress}}/roles
+Accept: application/json
+
+### Get All Permissions
+GET {{UserService.API_HostAddress}}/permissions
+Accept: application/json
+
+### Assign Role
+POST {{UserService.API_HostAddress}}/user-roles
+Content-Type: application/json
+
+{
+  "userId": "30000000-0000-0000-0000-000000000001",
+  "roleId": "10000000-0000-0000-0000-000000000001",
+  "organizationId": "00000000-0000-0000-0000-000000000001"
+}
+
+### Get User Roles
+GET {{UserService.API_HostAddress}}/user-roles/user/30000000-0000-0000-0000-000000000001
+Accept: application/json
+
+###
