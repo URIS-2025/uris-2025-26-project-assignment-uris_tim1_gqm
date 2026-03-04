@@ -53,7 +53,7 @@ public class AuthController : ControllerBase
     public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         await _authService.ForgotPasswordAsync(request);
-        return Ok();
+        return NoContent();
     }
 
     [HttpPost("reset-password")]

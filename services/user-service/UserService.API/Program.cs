@@ -91,6 +91,7 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
+// --- Authentication & Authorization ---
 app.UseAuthentication();
 app.UseAuthorization();
 

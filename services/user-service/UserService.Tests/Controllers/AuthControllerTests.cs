@@ -101,7 +101,7 @@ public class AuthControllerTests
 
         var result = await _sut.ForgotPassword(request);
 
-        result.Should().BeOfType<OkResult>();
+        result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
