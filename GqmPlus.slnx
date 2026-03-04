@@ -1,9 +1,5 @@
 <Solution>
   <Folder Name="/services/" />
-  <Folder Name="/services/access-service/">
-    <Project Path="services/access-service/AccessService.API/AccessService.API.csproj" />
-    <Project Path="services/access-service/AccessService.Tests/AccessService.Tests.csproj" />
-  </Folder>
   <Folder Name="/services/department-service/">
     <Project Path="services/department-service/DepartmentService.API/DepartmentService.API.csproj" />
     <Project Path="services/department-service/DepartmentService.Domain/DepartmentService.Domain.csproj" />

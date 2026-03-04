@@ -8,7 +8,6 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - access-service
       - department-service
       - goal-service
       - premise-service
@@ -44,28 +43,6 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - user-db-data:/var/lib/postgresql/data
-
-  access-service:
-    build:
-      context: .
-      dockerfile: ./services/access-service/AccessService.API/Dockerfile
-    container_name: access-service
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - DATABASE_URL=Host=access-db;Port=5432;Database=accessdb;Username=postgres;Password=postgres
-      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
-    depends_on:
-      - access-db
-
-  access-db:
-    image: postgres:17-alpine
-    container_name: access-db
-    environment:
-      - POSTGRES_DB=accessdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - access-db-data:/var/lib/postgresql/data
 
   department-service:
     build:
@@ -192,7 +169,6 @@ services:
       - assessment-db-data:/var/lib/postgresql/data
 
 volumes:
-  access-db-data:
   department-db-data:
   goal-db-data:
   premise-db-data:
