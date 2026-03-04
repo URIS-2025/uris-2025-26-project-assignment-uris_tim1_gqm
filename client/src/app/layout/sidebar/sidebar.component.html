@@ -1,0 +1,43 @@
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <span class="brand-icon material-icons-round">hub</span>
+        <span class="brand-name">GQM+</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        @for (item of navItems; track item.route) {
+        <ng-container *ngTemplateOutlet="navItemTpl; context: { item: item }"></ng-container>
+        }
+    </nav>
+
+    <div class="sidebar-footer">
+        <div
+            style="width: 32px; height: 32px; border-radius: 50%; background: var(--secondary); color: white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;">
+            AJ</div>
+        <div style="display:flex; flex-direction:column;">
+            <span style="font-size: 13px; font-weight: 600; color: white; line-height: 1.2;">Alice Johnson</span>
+            <span style="font-size: 11px; color: var(--primary-200);">Org Admin</span>
+        </div>
+    </div>
+</div>
+
+<ng-template #navItemTpl let-item="item">
+    <a class="nav-item" [routerLink]="item.route" routerLinkActive="active" [hasPermission]="item.permission"
+        permissionMode="hide" [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }" matRipple
+        matRippleColor="rgba(255,255,255,0.05)">
+        <span class="material-icons-round nav-icon">{{ item.icon }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+    </a>
+
+    @if (item.children) {
+    <div class="nav-children">
+        @for (child of item.children; track child.route) {
+        <a class="nav-item nav-child" [routerLink]="child.route" routerLinkActive="active" matRipple
+            matRippleColor="rgba(255,255,255,0.05)">
+            <span class="material-icons-round nav-icon">{{ child.icon }}</span>
+            <span class="nav-label">{{ child.label }}</span>
+        </a>
+        }
+    </div>
+    }
+</ng-template>

@@ -1,0 +1,81 @@
+.goal-detail-page {
+    max-width: 1100px;
+}
+
+.detail-header {
+    margin-bottom: 16px;
+}
+
+.loading-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 64px;
+}
+
+.error-state {
+    color: var(--error);
+    padding: 32px;
+    text-align: center;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 16px;
+}
+
+.info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.info-row {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+}
+
+.info-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.premise-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.premise-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.assessment-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.probability {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-400);
+    min-width: 50px;
+}
+
+.assessment-notes {
+    font-size: 14px;
+    color: var(--text-secondary);
+}

@@ -1,0 +1,16 @@
+<div class="layout-shell">
+    <app-topbar [sidenavOpened]="sidenavOpened" (toggleSidenav)="toggleSidenav()"></app-topbar>
+
+    <mat-sidenav-container class="sidenav-container">
+        <mat-sidenav [opened]="sidenavOpened" mode="side" class="app-sidenav">
+            <app-sidebar></app-sidebar>
+        </mat-sidenav>
+
+        <mat-sidenav-content class="main-content">
+            <app-breadcrumb></app-breadcrumb>
+            <div class="page-wrapper">
+                <router-outlet></router-outlet>
+            </div>
+        </mat-sidenav-content>
+    </mat-sidenav-container>
+</div>
