@@ -1,0 +1,55 @@
+<div class="dashboard page-enter">
+    <app-page-header [title]="'Welcome back, ' + userName"
+        subtitle="Here's an overview of your GQM+ workspace."></app-page-header>
+
+    <div class="stat-grid">
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon-wrap primary">
+                    <span class="material-icons-round">flag</span>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ loading ? '—' : stats.goals }}</div>
+                    <div class="stat-label">Total Goals</div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card" [hasPermission]="'manage_departments'" permissionMode="hide">
+            <mat-card-content>
+                <div class="stat-icon-wrap success">
+                    <span class="material-icons-round">business</span>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ loading ? '—' : stats.departments }}</div>
+                    <div class="stat-label">Departments</div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <div class="quick-actions-section">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="quick-actions-grid">
+            <a [hasPermission]="'create_goals'" permissionMode="hide" mat-stroked-button routerLink="/goals/new"
+                class="quick-action-btn" id="btn-new-goal">
+                <span class="material-icons-round">add_circle_outline</span>
+                New Goal
+            </a>
+            <a mat-stroked-button routerLink="/goals" class="quick-action-btn" id="btn-view-goals">
+                <span class="material-icons-round">flag</span>
+                View Goals
+            </a>
+            <a [hasPermission]="'manage_organizations'" permissionMode="hide" mat-stroked-button
+                routerLink="/admin/organizations" class="quick-action-btn" id="btn-organizations">
+                <span class="material-icons-round">corporate_fare</span>
+                Organizations
+            </a>
+            <a [hasPermission]="'manage_departments'" permissionMode="hide" mat-stroked-button
+                routerLink="/admin/departments" class="quick-action-btn" id="btn-departments">
+                <span class="material-icons-round">business</span>
+                Departments
+            </a>
+        </div>
+    </div>
+</div>
