@@ -30,7 +30,7 @@ The system follows a microservices architecture with:
 - API Gateway via Nginx reverse proxy
 - Container orchestration via Docker Compose
 
-**Total: 13 containers** — 6 services + 6 databases + 1 gateway
+**Total: 15 containers** — 7 services + 7 databases + 1 gateway
 
 ---
 
@@ -49,13 +49,15 @@ root/
 │   ├── department-service/
 │   ├── goal-service/
 │   ├── premise-service/
-│   └── gqm-goal-service/
+│   ├── gqm-goal-service/
+│   └── user-service/
 │
 ├── shared/
-│   └── Shared.HMAC/
+│   ├── Shared.HMAC/
+│   └── Shared.Contracts/
 │
 ├── .gitignore
-├── GqmPlus.sln
+├── GqmPlus.slnx
 ├── docker-compose.yaml
 └── nginx.conf
 ```
@@ -64,9 +66,10 @@ root/
 |------|-------------|
 | `services/` | All microservices |
 | `shared/Shared.HMAC/` | Shared HMAC authentication library |
+| `shared/Shared.Contracts/` | Shared DTOs and contracts library |
 | `docker-compose.yaml` | Container orchestration |
 | `nginx.conf` | API Gateway configuration |
-| `GqmPlus.sln` | .NET solution file |
+| `GqmPlus.slnx` | .NET solution file |
 
 ---
 
@@ -164,6 +167,7 @@ Host={service}-db;Port=5432;Database={service}db;Username=postgres;Password=post
 | `premise-db` | `premisedb` |
 | `gqm-goal-db` | `gqmgoaldb` |
 | `assessment-db` | `assessmentdb` |
+| `user-db` | `userdb` |
 
 ### Database Rules
 

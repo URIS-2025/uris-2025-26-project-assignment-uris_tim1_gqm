@@ -39,6 +39,13 @@
     <Project Path="services/assessment-service/AssessmentService.Infrastructure/AssessmentService.Infrastructure.csproj" />
     <Project Path="services/assessment-service/AssessmentService.Tests/AssessmentService.Tests.csproj" />
   </Folder>
+  <Folder Name="/services/user-service/">
+    <Project Path="services/user-service/UserService.API/UserService.API.csproj" />
+    <Project Path="services/user-service/UserService.Application/UserService.Application.csproj" />
+    <Project Path="services/user-service/UserService.Domain/UserService.Domain.csproj" />
+    <Project Path="services/user-service/UserService.Infrastructure/UserService.Infrastructure.csproj" />
+    <Project Path="services/user-service/UserService.Tests/UserService.Tests.csproj" />
+  </Folder>
   <Folder Name="/shared/">
     <Project Path="shared/Shared.Contracts/Shared.Contracts.csproj" />
     <Project Path="shared/Shared.HMAC/Shared.HMAC.csproj" />
