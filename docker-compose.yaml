@@ -8,34 +8,41 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - access-service
       - department-service
       - goal-service
       - premise-service
       - gqm-goal-service
       - assessment-service
+      - user-service
 
-  access-service:
+  user-service:
     build:
       context: .
-      dockerfile: ./services/access-service/AccessService.API/Dockerfile
-    container_name: access-service
+      dockerfile: ./services/user-service/UserService.API/Dockerfile
+    container_name: user-service
+    ports:
+      - "5020:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DATABASE_URL=Host=access-db;Port=5432;Database=accessdb;Username=postgres;Password=postgres
+      - DATABASE_URL=Host=user-db;Port=5432;Database=userdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
+      - Jwt__ExpiryMinutes=15
+      - App__FrontendBaseUrl=http://localhost:3000
     depends_on:
-      - access-db
+      - user-db
 
-  access-db:
+  user-db:
     image: postgres:17-alpine
-    container_name: access-db
+    container_name: user-db
     environment:
-      - POSTGRES_DB=accessdb
+      - POSTGRES_DB=userdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - access-db-data:/var/lib/postgresql/data
+      - user-db-data:/var/lib/postgresql/data
 
   department-service:
     build:
@@ -162,9 +169,9 @@ services:
       - assessment-db-data:/var/lib/postgresql/data
 
 volumes:
-  access-db-data:
   department-db-data:
   goal-db-data:
   premise-db-data:
   gqm-goal-db-data:
   assessment-db-data:
+  user-db-data:
