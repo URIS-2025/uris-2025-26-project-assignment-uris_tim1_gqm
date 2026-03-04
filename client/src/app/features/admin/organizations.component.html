@@ -1,0 +1,62 @@
+<div class="admin-page page-enter">
+    <app-page-header title="Organizations" subtitle="Manage organisations in the platform.">
+        <ng-template #actions>
+            <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-flat-button
+                (click)="openCreate()" id="btn-create-org">
+                <mat-icon>add</mat-icon> New Organization
+            </button>
+        </ng-template>
+    </app-page-header>
+
+    @if (showForm) {
+    <div class="form-card">
+        <h3>{{ editing ? 'Edit Organization' : 'New Organization' }}</h3>
+        <form [formGroup]="form" (ngSubmit)="save()" class="inline-form">
+            <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" id="org-name">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="description">
+            </mat-form-field>
+            <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="cancelForm()">Cancel</button>
+                <button mat-flat-button type="submit" [disabled]="form.invalid">{{ editing ? 'Update' : 'Create'
+                    }}</button>
+            </div>
+        </form>
+    </div>
+    }
+
+    @if (loading) {
+    <div class="loading-wrap"><mat-spinner diameter="36"></mat-spinner></div>
+    } @else {
+    <div class="table-card">
+        <table mat-table [dataSource]="orgs">
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let o"><strong>{{ o.name }}</strong></td>
+            </ng-container>
+            <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Description</th>
+                <td mat-cell *matCellDef="let o">{{ o.description || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let o" class="actions-cell">
+                    <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-icon-button
+                        (click)="openEdit(o)" title="Edit"><mat-icon>edit</mat-icon></button>
+                    <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-icon-button
+                        class="btn-danger" (click)="delete(o)"
+                        title="Delete"><mat-icon>delete_outline</mat-icon></button>
+                </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+        <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25]"
+            (page)="onPage($event)"></mat-paginator>
+    </div>
+    }
+</div>
