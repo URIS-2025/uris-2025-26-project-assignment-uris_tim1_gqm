@@ -1,0 +1,320 @@
+<div class="goal-new-page page-enter">
+    <app-page-header title="Create New Goal"
+        subtitle="Follow the steps to define a complete GQM+ goal."></app-page-header>
+
+    <mat-stepper linear class="goal-stepper" id="goal-wizard-stepper">
+
+        <!-- STEP 1: Department -->
+        <mat-step [stepControl]="step1" label="Department">
+            <form [formGroup]="step1" class="step-form">
+                <h3 class="step-title">Select Department</h3>
+                <mat-form-field appearance="outline">
+                    <mat-label>Department</mat-label>
+                    <mat-select formControlName="departmentId" id="select-department">
+                        @for (d of departments; track d.id) {
+                        <mat-option [value]="d.id">{{ d.name }}</mat-option>
+                        }
+                    </mat-select>
+                    @if (step1.get('departmentId')?.invalid && step1.touched) {
+                    <mat-error>Please select a department</mat-error>
+                    }
+                </mat-form-field>
+                <div class="step-actions">
+                    <button mat-flat-button matStepperNext [disabled]="step1.invalid">Next</button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 2: Goal Definition -->
+        <mat-step [stepControl]="step2" label="Goal Definition">
+            <form [formGroup]="step2" class="step-form">
+                <h3 class="step-title">Define the Goal</h3>
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Focus (what to measure)</mat-label>
+                        <input matInput formControlName="focus" id="input-focus" placeholder="e.g. Quality">
+                        @if (step2.get('focus')?.invalid && step2.touched) { <mat-error>Required</mat-error> }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Object (what is measured)</mat-label>
+                        <input matInput formControlName="object" id="input-object" placeholder="e.g. Software process">
+                        @if (step2.get('object')?.invalid && step2.touched) { <mat-error>Required</mat-error> }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Magnitude (how much improvement)</mat-label>
+                        <input matInput formControlName="magnitude" id="input-magnitude"
+                            placeholder="e.g. 30% reduction">
+                        @if (step2.get('magnitude')?.invalid && step2.touched) { <mat-error>Required</mat-error> }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Constraints</mat-label>
+                        <textarea matInput formControlName="constraints" rows="2"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Status</mat-label>
+                        <mat-select formControlName="status">
+                            @for (s of GOAL_STATUSES; track s) { <mat-option [value]="s">{{ s }}</mat-option> }
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Active From</mat-label>
+                        <input matInput [matDatepicker]="fromPicker" formControlName="activeFrom" id="date-from">
+                        <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #fromPicker></mat-datepicker>
+                        @if (step2.get('activeFrom')?.invalid && step2.touched) { <mat-error>Required</mat-error> }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Active To</mat-label>
+                        <input matInput [matDatepicker]="toPicker" formControlName="activeTo" id="date-to">
+                        <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #toPicker></mat-datepicker>
+                        @if (step2.get('activeTo')?.invalid && step2.touched) { <mat-error>Required</mat-error> }
+                    </mat-form-field>
+                    <div class="slider-field flex-col mt-2">
+                        <label>Baseline Probability: <strong>{{ getBaseline() }}%</strong></label>
+                        <div class="flex flex-align gap-2">
+                            <mat-slider min="0" max="1" step="0.01" class="flex-1">
+                                <input matSliderThumb formControlName="baselineProbability">
+                            </mat-slider>
+                            <mat-form-field appearance="outline" style="width: 80px; margin-bottom: -22px;">
+                                <input matInput type="number" formControlName="baselineProbability" min="0" max="1"
+                                    step="0.01">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-flat-button matStepperNext [disabled]="step2.invalid">Next</button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 3: Premises -->
+        <mat-step [stepControl]="step3" label="Premises">
+            <form [formGroup]="step3" class="step-form">
+                <h3 class="step-title">Define Premises (Assumptions & Context)</h3>
+                @for (p of premises.controls; track p; let i = $index) {
+                <div class="array-item" [formGroup]="$any(p)">
+                    <span class="array-index">{{ i + 1 }}</span>
+                    <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Description</mat-label>
+                        <input matInput formControlName="description" [id]="'premise-desc-' + i">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" style="width:160px">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="type" [id]="'premise-type-' + i">
+                            @for (t of PREMISE_TYPES; track t) { <mat-option [value]="t">{{ t }}</mat-option> }
+                        </mat-select>
+                    </mat-form-field>
+                    <button mat-icon-button type="button" (click)="removePremise(i)" [disabled]="premises.length === 1">
+                        <mat-icon>remove_circle_outline</mat-icon>
+                    </button>
+                </div>
+                }
+                <button mat-stroked-button type="button" (click)="addPremise()" id="btn-add-premise">
+                    <mat-icon>add</mat-icon> Add Premise
+                </button>
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-flat-button matStepperNext>Next</button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 4: Strategy -->
+        <mat-step [stepControl]="step4" label="Strategy">
+            <form [formGroup]="step4" class="step-form">
+                <h3 class="step-title">Define Strategy</h3>
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Strategy Name</mat-label>
+                        <input matInput formControlName="name" id="input-strategy-name">
+                        @if (step4.get('name')?.invalid && step4.touched) { <mat-error>Required</mat-error> }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Description</mat-label>
+                        <textarea matInput formControlName="description" rows="2"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Refinement Type</mat-label>
+                        <mat-select formControlName="refinementType" id="select-refinement">
+                            @for (r of REFINEMENT_TYPES; track r) { <mat-option [value]="r">{{ r }}</mat-option> }
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Origin Strategy (Optional)</mat-label>
+                        <mat-select formControlName="originStrategyId" id="select-origin-strategy">
+                            <mat-option [value]="''">None</mat-option>
+                            <!-- List of parent/origin strategies would go here -->
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-flat-button matStepperNext [disabled]="step4.invalid">Next</button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 5: Probability Assessment -->
+        <mat-step [stepControl]="step5" label="Assessment">
+            <form [formGroup]="step5" class="step-form">
+                <h3 class="step-title">Probability Assessment</h3>
+                <div class="slider-field large-slider flex-col mt-2 mb-3">
+                    <label class="flex flex-align gap-2">
+                        Probability of Goal Achievement:
+                        <strong class="probability-display">{{ getProbability() }}%</strong>
+                        <span class="chip" [class.chip-error]="getProbabilityLevel() === 'Low'"
+                            [class.chip-warning]="getProbabilityLevel() === 'Medium'"
+                            [class.chip-success]="getProbabilityLevel() === 'High'">
+                            {{ getProbabilityLevel() }}
+                        </span>
+                    </label>
+                    <mat-slider min="0" max="1" step="0.01">
+                        <input matSliderThumb formControlName="probability" id="slider-probability">
+                    </mat-slider>
+                </div>
+                <mat-form-field appearance="outline">
+                    <mat-label>Notes</mat-label>
+                    <textarea matInput formControlName="notes" rows="3" id="input-assessment-notes"></textarea>
+                </mat-form-field>
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-flat-button matStepperNext>Next</button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 6: GQM Builder -->
+        <mat-step [stepControl]="step6" label="GQM Builder">
+            <form [formGroup]="step6" class="step-form">
+                <h3 class="step-title">GQM Structure</h3>
+                <mat-form-field appearance="outline">
+                    <mat-label>GQM Goal Description</mat-label>
+                    <textarea matInput formControlName="gqmDescription" rows="2" id="input-gqm-desc"></textarea>
+                    @if (step6.get('gqmDescription')?.invalid && step6.touched) { <mat-error>Required</mat-error> }
+                </mat-form-field>
+
+                <div class="questions-section">
+                    @for (q of questions.controls; track q; let qi = $index) {
+                    <div class="question-block" [formGroup]="$any(q)">
+                        <div class="question-header">
+                            <span class="question-label">Question {{ qi + 1 }}</span>
+                            <button mat-icon-button type="button" (click)="removeQuestion(qi)"
+                                [disabled]="questions.length === 1">
+                                <mat-icon>remove_circle_outline</mat-icon>
+                            </button>
+                        </div>
+                        <mat-form-field appearance="outline">
+                            <mat-label>Question Text</mat-label>
+                            <input matInput formControlName="text" [id]="'q-text-' + qi">
+                        </mat-form-field>
+
+                        <div class="targets-section" formArrayName="targets">
+                            @for (t of getTargets(qi).controls; track t; let ti = $index) {
+                            <div class="target-row" [formGroupName]="ti">
+                                <mat-form-field appearance="outline" class="flex-1">
+                                    <mat-label>Target Value</mat-label>
+                                    <input matInput formControlName="value" [id]="'t-val-' + qi + '-' + ti">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" style="width:140px">
+                                    <mat-label>Unit</mat-label>
+                                    <mat-select formControlName="unit">
+                                        @for (group of UNIT_GROUPS; track group.group) {
+                                        <mat-optgroup [label]="group.group">
+                                            @for (u of group.units; track u) {
+                                            <mat-option [value]="u">{{ u }}</mat-option>
+                                            }
+                                        </mat-optgroup>
+                                        }
+                                    </mat-select>
+                                </mat-form-field>
+                                <button mat-icon-button type="button" (click)="removeTarget(qi, ti)"
+                                    [disabled]="getTargets(qi).length === 1">
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            </div>
+                            }
+                            <button mat-button type="button" (click)="addTarget(qi)">
+                                <mat-icon>add</mat-icon> Add Target
+                            </button>
+                        </div>
+                    </div>
+                    }
+                    <button mat-stroked-button type="button" (click)="addQuestion()" id="btn-add-question">
+                        <mat-icon>add</mat-icon> Add Question
+                    </button>
+                </div>
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-flat-button matStepperNext [disabled]="step6.invalid">Next</button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 7: Review & Submit -->
+        <mat-step label="Review & Submit">
+            <div class="step-form">
+                <h3 class="step-title">Review Your Goal</h3>
+
+                <div class="review-grid">
+                    <div class="review-block">
+                        <h4>Goal Definition</h4>
+                        <div class="review-row"><span>Focus:</span><strong>{{ step2.value.focus }}</strong></div>
+                        <div class="review-row"><span>Object:</span><strong>{{ step2.value.object }}</strong></div>
+                        <div class="review-row"><span>Magnitude:</span><strong>{{ step2.value.magnitude }}</strong>
+                        </div>
+                        <div class="review-row"><span>Status:</span><strong>{{ step2.value.status }}</strong></div>
+                        <div class="review-row"><span>Baseline Prob:</span><strong>{{ getBaseline() }}%</strong></div>
+                    </div>
+                    <div class="review-block">
+                        <h4>Strategy</h4>
+                        <div class="review-row"><span>Name:</span><strong>{{ step4.value.name }}</strong></div>
+                        <div class="review-row"><span>Refinement:</span><strong>{{ step4.value.refinementType
+                                }}</strong></div>
+                    </div>
+                    <div class="review-block">
+                        <h4>Premises ({{ premises.length }})</h4>
+                        @for (p of premises.value; track $index) {
+                        <div class="review-row">
+                            <span class="chip chip-default">{{ p.type }}</span>
+                            <span>{{ p.description }}</span>
+                        </div>
+                        }
+                    </div>
+                    <div class="review-block">
+                        <h4>Assessment</h4>
+                        <div class="review-row"><span>Probability:</span><strong>{{ getProbability() }}%</strong></div>
+                        <div class="review-row"><span>Notes:</span><strong>{{ step5.value.notes || '—' }}</strong></div>
+                    </div>
+                </div>
+
+                @if (submitError) {
+                <div class="error-banner">
+                    <span class="material-icons-round">error_outline</span>
+                    {{ submitError }}
+                </div>
+                }
+
+                <div class="step-actions mt-3">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <span class="spacer"></span>
+                    <button mat-stroked-button (click)="saveDraft()" [disabled]="submitting" id="btn-save-draft">
+                        Save as Draft
+                    </button>
+                    <button mat-flat-button color="primary" id="btn-submit-goal" (click)="submit()"
+                        [disabled]="submitting">
+                        @if (submitting) {
+                        <mat-spinner diameter="18" strokeWidth="2"></mat-spinner>
+                        } @else {
+                        <mat-icon>check_circle</mat-icon>
+                        }
+                        {{ submitting ? 'Creating...' : 'Create Goal' }}
+                    </button>
+                </div>
+            </div>
+        </mat-step>
+
+    </mat-stepper>
+</div>
