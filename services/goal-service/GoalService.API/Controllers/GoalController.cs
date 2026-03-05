@@ -3,12 +3,15 @@ using GoalService.Application.DTOs;
 using Shared.Contracts;
 using GoalService.Application.Interfaces;
 using GoalService.Application.Interfaces.Clients;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 
 namespace GoalService.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class GoalController : ControllerBase
 {
     private readonly IGoalService _goalService;
@@ -72,6 +75,7 @@ public class GoalController : ControllerBase
     /// Create a new goal.
     /// </summary>
     [HttpPost]
+    [RequirePermission("manage_goals")]
     public async Task<ActionResult<GoalResponse>> Create([FromBody] GoalRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -87,6 +91,7 @@ public class GoalController : ControllerBase
     /// Update an existing goal.
     /// </summary>
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_goals")]
     public async Task<ActionResult<GoalResponse>> Update(Guid id, [FromBody] GoalRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -140,6 +145,7 @@ public class GoalController : ControllerBase
     /// Delete a goal and all its strategies and influences (cascade).
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_goals")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _goalService.DeleteAsync(id);

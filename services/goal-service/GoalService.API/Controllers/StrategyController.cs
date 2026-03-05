@@ -2,12 +2,15 @@ using FluentValidation;
 using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
 using GoalService.Application.Interfaces.Clients;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 
 namespace GoalService.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class StrategyController : ControllerBase
 {
     private readonly IStrategyService _strategyService;
@@ -48,6 +51,7 @@ public class StrategyController : ControllerBase
     /// Create a new strategy for a goal.
     /// </summary>
     [HttpPost]
+    [RequirePermission("manage_goals")]
     public async Task<ActionResult<StrategyResponse>> Create([FromBody] StrategyRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -63,6 +67,7 @@ public class StrategyController : ControllerBase
     /// Update an existing strategy.
     /// </summary>
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_goals")]
     public async Task<ActionResult<StrategyResponse>> Update(Guid id, [FromBody] StrategyRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -80,6 +85,7 @@ public class StrategyController : ControllerBase
     /// Delete a strategy and its influences (cascade).
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_goals")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _strategyService.DeleteAsync(id);

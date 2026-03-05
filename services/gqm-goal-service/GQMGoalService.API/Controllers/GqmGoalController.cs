@@ -1,14 +1,17 @@
 using Shared.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.GqmGoal;
 using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Application.Interfaces.Clients;
+using Shared.Auth;
 
 namespace GQMGoalService.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class GqmGoalController : ControllerBase
 {
     private readonly IGqmGoalService _service;
@@ -42,6 +45,7 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_gqm_goals")]
     public async Task<ActionResult<GqmGoalResponse>> Create([FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.CreateAsync(request, cancellationToken);
@@ -50,6 +54,7 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [RequirePermission("manage_gqm_goals")]
     public async Task<ActionResult<GqmGoalResponse>> Update(Guid id, [FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.UpdateAsync(id, request, cancellationToken);
@@ -57,6 +62,7 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [RequirePermission("manage_gqm_goals")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         await _service.DeleteAsync(id, cancellationToken);

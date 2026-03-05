@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using Shared.Auth;
 
 namespace UserService.API.Controllers;
 
 [ApiController]
 [Route("permissions")]
+[Authorize]
 public class PermissionController : ControllerBase
 {
     private readonly IPermissionService _permissionService;
@@ -30,6 +33,7 @@ public class PermissionController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_permissions")]
     public async Task<ActionResult<PermissionResponse>> Create([FromBody] PermissionRequest request)
     {
         var response = await _permissionService.CreateAsync(request);
@@ -37,6 +41,7 @@ public class PermissionController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_permissions")]
     public async Task<ActionResult<PermissionResponse>> Update(Guid id, [FromBody] PermissionRequest request)
     {
         var response = await _permissionService.UpdateAsync(id, request);
@@ -44,6 +49,7 @@ public class PermissionController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_permissions")]
     public async Task<ActionResult> Delete(Guid id)
     {
         await _permissionService.DeleteAsync(id);
