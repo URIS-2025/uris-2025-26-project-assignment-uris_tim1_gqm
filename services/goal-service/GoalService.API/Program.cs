@@ -65,6 +65,12 @@ builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
+builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
 // --- Controllers ---
 builder.Services.AddControllers();
 
