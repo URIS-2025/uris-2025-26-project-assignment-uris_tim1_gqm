@@ -76,7 +76,7 @@ public class GoalController : ControllerBase
     /// Create a new goal.
     /// </summary>
     [HttpPost]
-    [RequirePermission("manage_goals")]
+    [RequirePermission("create_goals")]
     public async Task<ActionResult<GoalResponse>> Create([FromBody] GoalRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -92,7 +92,7 @@ public class GoalController : ControllerBase
     /// Update an existing goal.
     /// </summary>
     [HttpPut("{id:guid}")]
-    [RequirePermission("manage_goals")]
+    [RequirePermission("edit_goals")]
     public async Task<ActionResult<GoalResponse>> Update(Guid id, [FromBody] GoalRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -146,7 +146,7 @@ public class GoalController : ControllerBase
     /// Delete a goal and all its strategies and influences (cascade).
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [RequirePermission("manage_goals")]
+    [RequirePermission("delete_goals")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _goalService.DeleteAsync(id);
