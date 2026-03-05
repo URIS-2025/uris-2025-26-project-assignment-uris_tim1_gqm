@@ -12,6 +12,7 @@ using GoalService.Application.Services;
 using GoalService.Infrastructure.Seed;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<GoalServiceImpl>();
 // --- Swagger / OpenAPI ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // --- HMAC Authentication ---
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
@@ -134,6 +138,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
 
 // --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();
