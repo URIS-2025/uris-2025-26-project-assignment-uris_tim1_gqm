@@ -173,6 +173,20 @@
                     }
                 </mat-form-field>
 
+                <mat-form-field appearance="outline">
+                    <mat-label>Password</mat-label>
+                    <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+                        id="login-password" autocomplete="current-password">
+                    <mat-icon matPrefix>lock_outline</mat-icon>
+                    <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword"
+                        [attr.aria-label]="'Toggle password visibility'">
+                        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                    @if (passwordCtrl.hasError('required') && passwordCtrl.touched) {
+                    <mat-error>Password is required</mat-error>
+                    }
+                </mat-form-field>
+
                 <button mat-flat-button type="submit" class="submit-btn" id="login-submit" [disabled]="loading">
                     @if (loading) {
                     <mat-spinner diameter="20" strokeWidth="2"></mat-spinner>
