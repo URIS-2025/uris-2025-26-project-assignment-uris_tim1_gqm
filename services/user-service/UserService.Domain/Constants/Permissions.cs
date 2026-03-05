@@ -14,7 +14,6 @@ public static class Permissions
     public const string DeleteGoals = "delete_goals";
     public const string ViewGoals = "view_goals";
     public const string ManageGoalInfluences = "manage_goal_influences";
-    public const string ManageGqmGoals = "manage_gqm_goals";
     public const string ManagePremises = "manage_premises";
     public const string RecordMeasurements = "record_measurements";
     public const string ManageProbabilityAssessments = "manage_probability_assessments";
@@ -33,7 +32,6 @@ public static class Permissions
             or DeleteGoals
             or ViewGoals
             or ManageGoalInfluences
-            or ManageGqmGoals
             or ManagePremises
             or RecordMeasurements
             or ManageProbabilityAssessments
