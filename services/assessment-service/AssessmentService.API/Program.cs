@@ -58,6 +58,12 @@ builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
+builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
 var app = builder.Build();
 
 // Apply database schema and seed data in development

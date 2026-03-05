@@ -1,5 +1,6 @@
 using AssessmentService.Application.DTOs;
 using AssessmentService.Application.Interfaces;
+using AssessmentService.Application.Interfaces.Clients;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Contracts;
@@ -17,15 +18,18 @@ public class AssessmentController : ControllerBase
     private readonly IAssessmentService _assessmentService;
     private readonly IValidator<CreateAssessmentRequest> _createValidator;
     private readonly IValidator<UpdateAssessmentRequest> _updateValidator;
+    private readonly IAuditClient _auditClient;
 
     public AssessmentController(
         IAssessmentService assessmentService,
         IValidator<CreateAssessmentRequest> createValidator,
-        IValidator<UpdateAssessmentRequest> updateValidator)
+        IValidator<UpdateAssessmentRequest> updateValidator,
+        IAuditClient auditClient)
     {
         _assessmentService = assessmentService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _auditClient = auditClient;
     }
 
     /// <summary>
@@ -45,6 +49,7 @@ public class AssessmentController : ControllerBase
             return BadRequest(validationResult.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
         var response = await _assessmentService.CreateAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "AssessmentCreated", "Assessment", response.Id, new { response.GoalId });
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
@@ -114,6 +119,8 @@ public class AssessmentController : ControllerBase
             return BadRequest(validationResult.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
         var response = await _assessmentService.UpdateAsync(id, request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "AssessmentStateChanged", "Assessment", response.Id,
+            new { newState = request.State.ToString() });
         return Ok(response);
     }
 
