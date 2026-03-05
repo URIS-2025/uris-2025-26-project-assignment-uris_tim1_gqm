@@ -39,7 +39,7 @@ public class AssessmentController : ControllerBase
     /// <response code="201">Assessment successfully created.</response>
     /// <response code="400">Invalid input data.</response>
     [HttpPost]
-    [RequirePermission("manage_assessments")]
+    [RequirePermission("manage_probability_assessments")]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateAssessmentRequest request)
@@ -108,7 +108,7 @@ public class AssessmentController : ControllerBase
     /// <response code="400">Invalid input data.</response>
     /// <response code="404">Assessment not found.</response>
     [HttpPut("{id:guid}")]
-    [RequirePermission("manage_assessments")]
+    [RequirePermission("manage_probability_assessments")]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -129,7 +129,7 @@ public class AssessmentController : ControllerBase
     /// <response code="204">Assessment successfully deleted.</response>
     /// <response code="404">Assessment not found.</response>
     [HttpDelete("{id:guid}")]
-    [RequirePermission("manage_assessments")]
+    [RequirePermission("manage_probability_assessments")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
