@@ -15,6 +15,7 @@ services:
       - assessment-service
       - user-service
       - orchestration-service
+      - audit-service
 
   user-service:
     build:
@@ -195,6 +196,32 @@ services:
     volumes:
       - orchestration-db-data:/var/lib/postgresql/data
 
+  audit-service:
+    build:
+      context: .
+      dockerfile: ./services/audit-service/AuditService.API/Dockerfile
+    container_name: audit-service
+    ports:
+      - "5025:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=audit-db;Port=5432;Database=auditdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - audit-db
+
+  audit-db:
+    image: postgres:17-alpine
+    container_name: audit-db
+    environment:
+      - POSTGRES_DB=auditdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - audit-db-data:/var/lib/postgresql/data
+
 volumes:
   department-db-data:
   goal-db-data:
@@ -203,3 +230,4 @@ volumes:
   assessment-db-data:
   user-db-data:
   orchestration-db-data:
+  audit-db-data:
