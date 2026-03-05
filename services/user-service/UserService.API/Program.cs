@@ -1,6 +1,3 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using UserService.API.Middleware;
 using UserService.Application.Mappings;
 using UserService.Application.Validators;
@@ -8,6 +5,7 @@ using UserService.Infrastructure;
 using UserService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,28 +17,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- JWT Authentication ---
-var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
-    ?? throw new InvalidOperationException("Jwt:SecretKey not configured");
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSecretKey)),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-
-builder.Services.AddAuthorization();
+// --- JWT Authentication & Authorization (via Shared.Auth) ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // --- HMAC Authentication ---
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
@@ -94,6 +72,9 @@ app.UseSwaggerUI(options =>
 // --- Authentication & Authorization ---
 app.UseAuthentication();
 app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
 
 // --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();

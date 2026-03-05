@@ -1,6 +1,7 @@
 using GQMGoalService.API.Middleware;
 using GQMGoalService.Application;
 using GQMGoalService.Infrastructure;
+using Shared.Auth;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,9 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GQM Goal Service API", Version = "v1" });
     c.AddServer(new Microsoft.OpenApi.Models.OpenApiServer { Url = "/api/v1/GQM-goal" });
 });
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // Add HMAC authentication
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? "dev-secret-key-for-local";
@@ -46,10 +50,15 @@ await app.UseInfrastructureAsync();
 
 app.UseHttpsRedirection();
 
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
+
 // Add HMAC middleware
 app.UseMiddleware<HmacMiddleware>();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

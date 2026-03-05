@@ -10,6 +10,7 @@ using PremiseService.Application.Services;
 using PremiseService.Infrastructure.Clients;
 using PremiseService.Infrastructure.Persistence;
 using PremiseService.Infrastructure.Seed;
+using Shared.Auth;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +48,9 @@ builder.Services.AddSwaggerGen(options =>
     if (File.Exists(xmlPath))
         options.IncludeXmlComments(xmlPath);
 });
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // --- HMAC Authentication ---
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
@@ -151,6 +155,13 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
 
 app.UseWhen(ctx =>
 {
