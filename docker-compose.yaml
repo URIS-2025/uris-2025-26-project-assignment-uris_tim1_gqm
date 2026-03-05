@@ -57,6 +57,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=department-db;Port=5432;Database=departmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - department-db
 
@@ -81,6 +84,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=goal-db;Port=5432;Database=goaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - goal-db
 
@@ -105,6 +111,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=premise-db;Port=5432;Database=premisedb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - premise-db
 
@@ -129,6 +138,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=gqm-goal-db;Port=5432;Database=gqmgoaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - gqm-goal-db
 
@@ -153,6 +165,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=assessment-db;Port=5432;Database=assessmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     ports:
       - "5006:8080"
     depends_on:

@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\Shared.Auth\Shared.Auth.csproj" />
     <ProjectReference Include="..\..\..\shared\Shared.HMAC\Shared.HMAC.csproj" />
     <ProjectReference Include="..\GQMGoalService.Application\GQMGoalService.Application.csproj" />
     <ProjectReference Include="..\GQMGoalService.Infrastructure\GQMGoalService.Infrastructure.csproj" />

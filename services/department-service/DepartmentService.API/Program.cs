@@ -5,6 +5,7 @@ using DepartmentService.Infrastructure;
 using DepartmentService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,9 @@ builder.Services.AddControllers();
 // --- Swagger / OpenAPI ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // --- HMAC Authentication ---
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
@@ -64,6 +68,13 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Department Service API v1");
     options.RoutePrefix = "swagger";
 });
+
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
 
 // --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();

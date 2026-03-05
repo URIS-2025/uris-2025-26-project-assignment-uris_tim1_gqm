@@ -7,6 +7,7 @@ using AssessmentService.Infrastructure.Clients;
 using AssessmentService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,9 @@ builder.Services.AddSwaggerGen(options =>
     if (File.Exists(xmlPath))
         options.IncludeXmlComments(xmlPath);
 });
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // Add HMAC authentication
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
@@ -88,6 +92,14 @@ app.UseSwaggerUI(options =>
 });
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
+
 app.UseMiddleware<HmacMiddleware>();
 
 app.MapControllers();
