@@ -9,6 +9,7 @@ WORKDIR /src
 # Copy shared libraries
 COPY ["shared/Shared.HMAC/Shared.HMAC.csproj", "shared/Shared.HMAC/"]
 COPY ["shared/Shared.Contracts/Shared.Contracts.csproj", "shared/Shared.Contracts/"]
+COPY ["shared/Shared.Auth/Shared.Auth.csproj", "shared/Shared.Auth/"]
 # Copy service projects
 COPY ["services/user-service/UserService.Domain/UserService.Domain.csproj", "services/user-service/UserService.Domain/"]
 COPY ["services/user-service/UserService.Application/UserService.Application.csproj", "services/user-service/UserService.Application/"]
