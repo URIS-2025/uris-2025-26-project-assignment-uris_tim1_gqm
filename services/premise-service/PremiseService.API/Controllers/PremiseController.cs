@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
+using PremiseService.Application.Interfaces.Clients;
 using Shared.Contracts;
 
 namespace PremiseService.API.Controllers;
@@ -11,10 +12,12 @@ namespace PremiseService.API.Controllers;
 public class PremiseController : ControllerBase
 {
     private readonly IPremiseService _premiseService;
+    private readonly IAuditClient _auditClient;
 
-    public PremiseController(IPremiseService premiseService)
+    public PremiseController(IPremiseService premiseService, IAuditClient auditClient)
     {
         _premiseService = premiseService;
+        _auditClient = auditClient;
     }
 
 
@@ -60,6 +63,7 @@ public class PremiseController : ControllerBase
     public async Task<ActionResult<PremiseResponse>> Create([FromBody] PremiseRequest request)
     {
         var created = await _premiseService.CreateAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "PremiseCreated", "Premise", created.Id);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -69,6 +73,7 @@ public class PremiseController : ControllerBase
     public async Task<ActionResult<PremiseResponse>> Update(Guid id, [FromBody] PremiseUpdateRequest request)
     {
         var updated = await _premiseService.UpdateAsync(id, request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "PremiseVersioned", "Premise", updated.Id, new { previousId = id });
         return Ok(updated);
     }
 
@@ -78,6 +83,7 @@ public class PremiseController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         await _premiseService.DeleteAsync(id);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "PremiseDeactivated", "Premise", id);
         return NoContent();
     }
 }
