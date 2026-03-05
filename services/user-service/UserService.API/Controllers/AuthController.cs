@@ -35,7 +35,7 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<ActionResult<UserContextResponse>> GetCurrentUser()
     {
-        var userId = GetUserIdFromClaims();
+        var userId = User.GetUserId();
         var response = await _authService.GetCurrentUserAsync(userId);
         return Ok(response);
     }
