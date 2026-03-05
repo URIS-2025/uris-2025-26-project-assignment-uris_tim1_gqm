@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.GqmGoal;
 using GQMGoalService.Application.Interfaces;
+using GQMGoalService.Application.Interfaces.Clients;
 using GQMGoalService.Domain.Entities;
 using GQMGoalService.Domain.Exceptions;
 using FluentValidation;
@@ -15,12 +16,14 @@ public class GqmGoalService : IGqmGoalService
     private readonly IApplicationDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly IValidator<GqmGoalRequest> _validator;
+    private readonly IOrchestrationClient _orchestrationClient;
 
-    public GqmGoalService(IApplicationDbContext dbContext, IMapper mapper, IValidator<GqmGoalRequest> validator)
+    public GqmGoalService(IApplicationDbContext dbContext, IMapper mapper, IValidator<GqmGoalRequest> validator, IOrchestrationClient orchestrationClient)
     {
         _dbContext = dbContext;
         _mapper = mapper;
         _validator = validator;
+        _orchestrationClient = orchestrationClient;
     }
 
     public async Task<PaginationResponse<GqmGoalResponse>> GetAllAsync(PaginationRequest request, CancellationToken cancellationToken = default)
@@ -96,6 +99,8 @@ public class GqmGoalService : IGqmGoalService
 
         _dbContext.GqmGoals.Add(goal);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _orchestrationClient.RecordStepAsync(request.GoalId, "GQMBuilt", $"api/GqmGoal/by-goal/{request.GoalId}", "{}");
 
         return _mapper.Map<GqmGoalResponse>(goal);
     }
