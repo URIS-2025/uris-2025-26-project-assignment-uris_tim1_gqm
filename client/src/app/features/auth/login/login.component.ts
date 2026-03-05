@@ -26,15 +26,17 @@ export class LoginComponent {
     form: FormGroup;
     loading = false;
     error = '';
+    hidePassword = true;
 
     constructor(
         private fb: FormBuilder,
         private auth: AuthService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
     ) {
         this.form = this.fb.group({
             email: ['', [Validators.required, Validators.email]],
+            password: ['', [Validators.required]],
         });
     }
 
@@ -48,11 +50,12 @@ export class LoginComponent {
             const returnUrl = this.route.snapshot.queryParams['returnUrl'] ?? '/dashboard';
             this.router.navigateByUrl(returnUrl);
         } catch {
-            this.error = 'Login failed. Please try again.';
+            this.error = 'Invalid email or password. Please try again.';
         } finally {
             this.loading = false;
         }
     }
 
     get emailCtrl() { return this.form.get('email')!; }
+    get passwordCtrl() { return this.form.get('password')!; }
 }

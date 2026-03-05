@@ -1,34 +1,19 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthState, LoginRequest, User, ALL_PERMISSIONS } from './auth.models';
+import { environment } from '../../../environments/environment';
+import {
+    AuthState,
+    LoginRequest,
+    LoginResponse,
+    RefreshResponse,
+    User,
+} from './auth.models';
 
-const STORAGE_KEY = 'gqm_auth';
-
-// -------------------------------------------------------
-// Mock admin user — swap with real API when access-service
-// implements JWT endpoints.
-// -------------------------------------------------------
-const MOCK_ADMIN_USER: User = {
-    id: '00000000-0000-0000-0000-000000000001',
-    email: 'admin@gqm.local',
-    firstName: 'Admin',
-    lastName: 'User',
-    organizationId: '00000000-0000-0000-0000-000000000010',
-    permissions: [...ALL_PERMISSIONS],
-    managedDepartmentIds: [],
-};
-
-const MOCK_VIEWER_USER: User = {
-    id: '00000000-0000-0000-0000-000000000002',
-    email: 'viewer@gqm.local',
-    firstName: 'Viewer',
-    lastName: 'User',
-    organizationId: '00000000-0000-0000-0000-000000000010',
-    permissions: ['view_goals', 'view_premises', 'view_assessments', 'view_gqm', 'view_all_departments'],
-    managedDepartmentIds: [],
-};
+const ACCESS_TOKEN_KEY = 'gqm_access_token';
+const REFRESH_TOKEN_KEY = 'gqm_refresh_token';
 
 const INITIAL_STATE: AuthState = {
     user: null,
@@ -40,14 +25,18 @@ const INITIAL_STATE: AuthState = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private readonly _state$ = new BehaviorSubject<AuthState>(INITIAL_STATE);
+    private readonly apiUrl = `${environment.apiBaseUrl}/user/auth`;
 
     readonly state$ = this._state$.asObservable();
     readonly user$: Observable<User | null> = this._state$.pipe(map(s => s.user));
     readonly isAuthenticated$: Observable<boolean> = this._state$.pipe(map(s => s.isAuthenticated));
     readonly token$: Observable<string | null> = this._state$.pipe(map(s => s.accessToken));
 
-    constructor(private router: Router) {
-        this._restoreFromStorage();
+    constructor(
+        private http: HttpClient,
+        private router: Router,
+    ) {
+        this._restoreTokensFromStorage();
     }
 
     get currentState(): AuthState {
@@ -62,63 +51,124 @@ export class AuthService {
         return this._state$.value.accessToken;
     }
 
+    get refreshToken(): string | null {
+        return this._state$.value.refreshToken;
+    }
+
     get organizationId(): string | null {
         return this._state$.value.user?.organizationId ?? null;
     }
 
     /**
-     * Mock login. Returns admin user for any credentials.
-     * Viewer mode: use viewer@gqm.local to simulate limited permissions.
+     * Login flow:
+     * 1. POST /auth/login → get tokens
+     * 2. Store tokens
+     * 3. GET /auth/me → load user context
+     * 4. Store user in state
      */
-    login(req: LoginRequest): Promise<void> {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const user = req.email === 'viewer@gqm.local' ? MOCK_VIEWER_USER : MOCK_ADMIN_USER;
-                const mockToken = `mock.jwt.${btoa(JSON.stringify({ sub: user.id, exp: Date.now() + 86400000 }))}`;
+    async login(req: LoginRequest): Promise<void> {
+        const response = await firstValueFrom(
+            this.http.post<LoginResponse>(`${this.apiUrl}/login`, req),
+        );
 
-                const newState: AuthState = {
-                    user,
-                    accessToken: mockToken,
-                    refreshToken: `mock.refresh.${user.id}`,
-                    isAuthenticated: true,
-                };
+        this._storeTokens(response.accessToken, response.refreshToken);
+        this._updateState({ accessToken: response.accessToken, refreshToken: response.refreshToken });
 
-                this._setState(newState);
-                this._persist(newState);
-                resolve();
-            }, 400); // Simulates network latency
-        });
+        await this.loadUser();
     }
 
+    /**
+     * Refresh flow:
+     * POST /auth/refresh → get new access token + rotated refresh token
+     */
+    async refresh(): Promise<void> {
+        const currentRefreshToken = this.refreshToken;
+        if (!currentRefreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        const response = await firstValueFrom(
+            this.http.post<RefreshResponse>(`${this.apiUrl}/refresh`, {
+                refreshToken: currentRefreshToken,
+            }),
+        );
+
+        this._storeTokens(response.accessToken, response.refreshToken);
+        this._updateState({ accessToken: response.accessToken, refreshToken: response.refreshToken });
+    }
+
+    /**
+     * Logout flow:
+     * POST /auth/logout → invalidate refresh token server-side
+     * Clear all local state
+     */
     logout(): void {
-        localStorage.removeItem(STORAGE_KEY);
-        this._setState(INITIAL_STATE);
+        const token = this.accessToken;
+        if (token) {
+            // Fire-and-forget: server-side cleanup
+            this.http
+                .post(`${this.apiUrl}/logout`, {})
+                .subscribe({ error: () => {} });
+        }
+
+        this._clearAll();
         this.router.navigate(['/auth/login']);
+    }
+
+    /**
+     * Load user context from backend.
+     * Called on app init (if tokens exist) and after login.
+     */
+    async loadUser(): Promise<void> {
+        try {
+            const user = await firstValueFrom(
+                this.http.get<User>(`${this.apiUrl}/me`),
+            );
+
+            this._setState({
+                user,
+                accessToken: this._state$.value.accessToken,
+                refreshToken: this._state$.value.refreshToken,
+                isAuthenticated: true,
+            });
+        } catch {
+            // Token is invalid or expired — clean up
+            this._clearAll();
+        }
+    }
+
+    private _updateState(partial: Partial<AuthState>): void {
+        this._setState({ ...this._state$.value, ...partial });
     }
 
     private _setState(state: AuthState): void {
         this._state$.next(state);
     }
 
-    private _persist(state: AuthState): void {
+    private _storeTokens(accessToken: string, refreshToken: string): void {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+            localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
         } catch {
             // Storage quota exceeded or private mode
         }
     }
 
-    private _restoreFromStorage(): void {
+    private _restoreTokensFromStorage(): void {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const state: AuthState = JSON.parse(raw);
-                if (state.isAuthenticated && state.accessToken) {
-                    this._setState(state);
-                }
+            const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+            const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+            if (accessToken && refreshToken) {
+                this._updateState({ accessToken, refreshToken });
             }
         } catch {
-            // Invalid JSON
+            // Invalid storage state
         }
+    }
+
+    private _clearAll(): void {
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        this._setState(INITIAL_STATE);
     }
 }
