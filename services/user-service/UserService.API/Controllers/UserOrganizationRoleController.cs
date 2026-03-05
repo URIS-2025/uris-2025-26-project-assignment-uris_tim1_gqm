@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using Shared.Auth;
 
 namespace UserService.API.Controllers;
 
 [ApiController]
 [Route("user-roles")]
+[Authorize]
 public class UserOrganizationRoleController : ControllerBase
 {
     private readonly IUserOrganizationRoleService _userOrganizationRoleService;
@@ -16,6 +19,7 @@ public class UserOrganizationRoleController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_user_roles")]
     public async Task<ActionResult<UserOrganizationRoleResponse>> AssignRole([FromBody] AssignRoleRequest request)
     {
         var response = await _userOrganizationRoleService.AssignRoleAsync(request);
@@ -23,6 +27,7 @@ public class UserOrganizationRoleController : ControllerBase
     }
 
     [HttpDelete]
+    [RequirePermission("manage_user_roles")]
     public async Task<ActionResult> RemoveRole(
         [FromQuery] Guid userId,
         [FromQuery] Guid roleId,

@@ -1,12 +1,15 @@
 using FluentValidation;
 using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 
 namespace GoalService.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class GoalInfluenceController : ControllerBase
 {
     private readonly IGoalInfluenceService _influenceService;
@@ -46,6 +49,7 @@ public class GoalInfluenceController : ControllerBase
     /// Validates: goal/strategy existence, no duplicate influence, no cycle in hierarchy.
     /// </summary>
     [HttpPost]
+    [RequirePermission("manage_goals")]
     public async Task<ActionResult<GoalInfluenceResponse>> Create([FromBody] GoalInfluenceRequest request)
     {
         var validation = await _validator.ValidateAsync(request);
@@ -60,6 +64,7 @@ public class GoalInfluenceController : ControllerBase
     /// Delete a goal influence record.
     /// </summary>
     [HttpDelete("{goalId:guid}")]
+    [RequirePermission("manage_goals")]
     public async Task<IActionResult> Delete(Guid goalId)
     {
         var deleted = await _influenceService.DeleteAsync(goalId);
