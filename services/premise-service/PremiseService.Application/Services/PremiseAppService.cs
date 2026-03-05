@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
+using PremiseService.Application.Interfaces.Clients;
 using PremiseService.Domain.Entities;
 using PremiseService.Domain.Exceptions;
 using Shared.Contracts;
@@ -13,11 +14,13 @@ public class PremiseAppService : IPremiseService
 {
     private readonly IPremiseDbContext _dbContext;
     private readonly IMapper _mapper;
+    private readonly IOrchestrationClient _orchestrationClient;
 
-    public PremiseAppService(IPremiseDbContext dbContext, IMapper mapper)
+    public PremiseAppService(IPremiseDbContext dbContext, IMapper mapper, IOrchestrationClient orchestrationClient)
     {
         _dbContext = dbContext;
         _mapper = mapper;
+        _orchestrationClient = orchestrationClient;
     }
 
 
@@ -90,6 +93,9 @@ public class PremiseAppService : IPremiseService
 
         await _dbContext.Premises.AddAsync(premise);
         await _dbContext.SaveChangesAsync();
+
+        if (request.GoalId.HasValue)
+            await _orchestrationClient.RecordStepAsync(request.GoalId.Value, "PremisesAdded", $"api/premises/by-goal/{request.GoalId.Value}", "{}");
 
         return _mapper.Map<PremiseResponse>(premise);
     }

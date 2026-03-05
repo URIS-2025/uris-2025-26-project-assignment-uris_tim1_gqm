@@ -68,6 +68,12 @@ builder.Services.AddHttpClient<IStrategyClient, StrategyClient>(client =>
     client.BaseAddress = new Uri(goalServiceUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
+builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
 // --- Controllers ---
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
