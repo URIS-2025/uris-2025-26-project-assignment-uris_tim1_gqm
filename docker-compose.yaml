@@ -60,6 +60,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=department-db;Port=5432;Database=departmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - department-db
 
@@ -89,6 +92,9 @@ services:
       - Services__QgmGoalService=http://gqm-goal-service:8080
       - Services__OrchestrationService=http://orchestration-service:8080
       - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - goal-db
 
@@ -115,6 +121,9 @@ services:
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
       - Services__OrchestrationService=http://orchestration-service:8080
       - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - premise-db
 
@@ -141,6 +150,9 @@ services:
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
       - Services__OrchestrationService=http://orchestration-service:8080
       - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - gqm-goal-db
 
@@ -168,6 +180,9 @@ services:
       - Services__GoalService=http://goal-service:8080
       - Services__OrchestrationService=http://orchestration-service:8080
       - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     ports:
       - "5006:8080"
     depends_on:
