@@ -52,6 +52,12 @@ builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
 })
 .AddHttpMessageHandler<HmacDelegatingHandler>();
 
+builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
 var app = builder.Build();
 
 // Apply database schema and seed data in development
