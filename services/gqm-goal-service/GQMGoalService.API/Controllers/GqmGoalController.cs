@@ -45,7 +45,7 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpPost]
-    [RequirePermission("manage_gqm_goals")]
+    [RequirePermission("create_goals")]
     public async Task<ActionResult<GqmGoalResponse>> Create([FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.CreateAsync(request, cancellationToken);
@@ -54,7 +54,7 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [RequirePermission("manage_gqm_goals")]
+    [RequirePermission("edit_goals")]
     public async Task<ActionResult<GqmGoalResponse>> Update(Guid id, [FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.UpdateAsync(id, request, cancellationToken);
@@ -62,7 +62,7 @@ public class GqmGoalController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [RequirePermission("manage_gqm_goals")]
+    [RequirePermission("delete_goals")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         await _service.DeleteAsync(id, cancellationToken);
