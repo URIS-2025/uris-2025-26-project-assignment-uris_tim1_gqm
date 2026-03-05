@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
 using UserService.Application.Interfaces.Clients;
+using Shared.Auth;
 using Shared.Contracts;
 
 namespace UserService.API.Controllers;
 
 [ApiController]
 [Route("users")]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -45,17 +47,17 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_users")]
     public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest request)
     {
         var response = await _userService.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
-    [Authorize]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<UserResponse>> UpdateProfile(Guid id, [FromBody] UpdateProfileRequest request)
     {
-        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var userId = User.GetUserId();
         if (userId != id)
             return Forbid();
 
@@ -75,6 +77,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_users")]
     public async Task<ActionResult> Delete(Guid id)
     {
         await _userService.DeleteAsync(id);

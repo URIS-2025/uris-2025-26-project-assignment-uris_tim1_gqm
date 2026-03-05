@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using Shared.Auth;
 
 namespace UserService.API.Controllers;
 
 [ApiController]
 [Route("roles")]
+[Authorize]
 public class RoleController : ControllerBase
 {
     private readonly IRoleService _roleService;
@@ -30,6 +33,7 @@ public class RoleController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_roles")]
     public async Task<ActionResult<RoleResponse>> Create([FromBody] RoleRequest request)
     {
         var response = await _roleService.CreateAsync(request);
@@ -37,6 +41,7 @@ public class RoleController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_roles")]
     public async Task<ActionResult<RoleResponse>> Update(Guid id, [FromBody] RoleRequest request)
     {
         var response = await _roleService.UpdateAsync(id, request);
@@ -44,6 +49,7 @@ public class RoleController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_roles")]
     public async Task<ActionResult> Delete(Guid id)
     {
         await _roleService.DeleteAsync(id);
