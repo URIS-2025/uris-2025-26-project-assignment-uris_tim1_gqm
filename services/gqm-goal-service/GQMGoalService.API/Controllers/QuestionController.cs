@@ -42,7 +42,7 @@ public class QuestionController : ControllerBase
     }
 
     [HttpPost]
-    [RequirePermission("manage_gqm_goals")]
+    [RequirePermission("create_goals")]
     public async Task<ActionResult<QuestionResponse>> Create([FromBody] QuestionRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.CreateAsync(request, cancellationToken);
@@ -50,7 +50,7 @@ public class QuestionController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [RequirePermission("manage_gqm_goals")]
+    [RequirePermission("edit_goals")]
     public async Task<ActionResult<QuestionResponse>> Update(Guid id, [FromBody] QuestionRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.UpdateAsync(id, request, cancellationToken);
@@ -58,7 +58,7 @@ public class QuestionController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [RequirePermission("manage_gqm_goals")]
+    [RequirePermission("delete_goals")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         await _service.DeleteAsync(id, cancellationToken);
