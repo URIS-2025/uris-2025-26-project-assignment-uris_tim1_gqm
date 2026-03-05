@@ -2,7 +2,9 @@ using AssessmentService.Application.DTOs;
 using AssessmentService.Application.Interfaces;
 using AssessmentService.Application.Interfaces.Clients;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 using Shared.Contracts;
 
 namespace AssessmentService.API.Controllers;
@@ -13,6 +15,7 @@ namespace AssessmentService.API.Controllers;
 [ApiController]
 [Route("assessments")]
 [Produces("application/json")]
+[Authorize]
 public class AssessmentController : ControllerBase
 {
     private readonly IAssessmentService _assessmentService;
@@ -40,6 +43,7 @@ public class AssessmentController : ControllerBase
     /// <response code="201">Assessment successfully created.</response>
     /// <response code="400">Invalid input data.</response>
     [HttpPost]
+    [RequirePermission("manage_assessments")]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateAssessmentRequest request)
@@ -109,6 +113,7 @@ public class AssessmentController : ControllerBase
     /// <response code="400">Invalid input data.</response>
     /// <response code="404">Assessment not found.</response>
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_assessments")]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -131,6 +136,7 @@ public class AssessmentController : ControllerBase
     /// <response code="204">Assessment successfully deleted.</response>
     /// <response code="404">Assessment not found.</response>
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_assessments")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)

@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
 using PremiseService.Application.Interfaces.Clients;
+using Shared.Auth;
 using Shared.Contracts;
 
 namespace PremiseService.API.Controllers;
@@ -9,6 +11,7 @@ namespace PremiseService.API.Controllers;
 
 [ApiController]
 [Route("premises")]
+[Authorize]
 public class PremiseController : ControllerBase
 {
     private readonly IPremiseService _premiseService;
@@ -60,6 +63,7 @@ public class PremiseController : ControllerBase
 
     /// <summary>Creates a new premise.</summary>
     [HttpPost]
+    [RequirePermission("manage_premises")]
     public async Task<ActionResult<PremiseResponse>> Create([FromBody] PremiseRequest request)
     {
         var created = await _premiseService.CreateAsync(request);
@@ -70,6 +74,7 @@ public class PremiseController : ControllerBase
 
     /// <summary>Updates a premise by creating a new version and deactivating the old one.</summary>
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_premises")]
     public async Task<ActionResult<PremiseResponse>> Update(Guid id, [FromBody] PremiseUpdateRequest request)
     {
         var updated = await _premiseService.UpdateAsync(id, request);
@@ -80,6 +85,7 @@ public class PremiseController : ControllerBase
 
     /// <summary>Soft-deletes a premise by setting IsActive to false.</summary>
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_premises")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _premiseService.DeleteAsync(id);
