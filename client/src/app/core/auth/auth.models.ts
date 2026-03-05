@@ -23,25 +23,30 @@ export interface LoginRequest {
 export interface LoginResponse {
     accessToken: string;
     refreshToken: string;
-    user: User;
+    expiresAt: string;
 }
 
+export interface RefreshResponse {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: string;
+}
+
+// Aligned with backend UserService.Domain.Constants.Permissions
 export const ALL_PERMISSIONS = [
-    'view_goals',
+    'manage_organizations',
+    'manage_users',
+    'manage_roles',
+    'manage_departments',
+    'view_all_departments',
     'create_goals',
     'edit_goals',
     'delete_goals',
-    'view_all_departments',
-    'manage_departments',
-    'manage_organizations',
-    'view_premises',
-    'create_premises',
-    'edit_premises',
-    'view_assessments',
-    'create_assessments',
-    'view_gqm',
-    'create_gqm',
-    'admin',
+    'view_goals',
+    'manage_goal_influences',
+    'record_measurements',
+    'manage_probability_assessments',
+    'view_analytics',
 ] as const;
 
 export type Permission = typeof ALL_PERMISSIONS[number];

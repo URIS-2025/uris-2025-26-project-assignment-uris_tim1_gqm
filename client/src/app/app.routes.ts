@@ -81,7 +81,7 @@ export const routes: Routes = [
             {
                 path: 'admin',
                 canActivate: [permissionGuard],
-                data: { permissions: ['admin'] },
+                data: { permissions: ['manage_organizations'] },
                 children: [
                     {
                         path: 'organizations',

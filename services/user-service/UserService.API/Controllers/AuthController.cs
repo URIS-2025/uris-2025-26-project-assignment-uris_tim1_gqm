@@ -32,6 +32,15 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserContextResponse>> GetCurrentUser()
+    {
+        var userId = GetUserIdFromClaims();
+        var response = await _authService.GetCurrentUserAsync(userId);
+        return Ok(response);
+    }
+
+    [Authorize]
     [HttpPost("logout")]
     public async Task<ActionResult> Logout()
     {
