@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5010",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DATABASE_URL": "Host=localhost;Port=5437;Database=orchestrationdb;Username=postgres;Password=postgres",
+        "HMAC_SECRET_KEY": "your-super-secret-hmac-key-change-in-production"
+      }
+    }
+  }
+}
