@@ -84,7 +84,8 @@ public class AuthAppService : IAuthService
         var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
         var accessToken = GenerateJwtToken(user, roleNames, permissionNames, expiresAt);
 
-        user.RefreshToken = GenerateRefreshToken();
+        var newRefreshToken = GenerateRefreshToken();
+        user.RefreshToken = newRefreshToken;
         user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
         user.UpdatedAt = DateTime.UtcNow;
 
@@ -93,6 +94,7 @@ public class AuthAppService : IAuthService
         return new RefreshTokenResponse
         {
             AccessToken = accessToken,
+            RefreshToken = newRefreshToken,
             ExpiresAt = expiresAt
         };
     }
@@ -110,6 +112,45 @@ public class AuthAppService : IAuthService
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<UserContextResponse> GetCurrentUserAsync(Guid userId)
+    {
+        var user = await _context.Set<User>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null)
+            throw new NotFoundException(nameof(User), userId);
+
+        var assignments = await _context.Set<UserOrganizationRole>()
+            .AsNoTracking()
+            .Include(uor => uor.Role)
+            .ThenInclude(r => r.RolePermissions)
+            .ThenInclude(rp => rp.Permission)
+            .Where(uor => uor.UserId == userId)
+            .ToListAsync();
+
+        var permissions = assignments
+            .SelectMany(uor => uor.Role.RolePermissions)
+            .Select(rp => rp.Permission.Name)
+            .Distinct()
+            .ToList();
+
+        var organizationId = assignments
+            .Select(a => a.OrganizationId)
+            .FirstOrDefault();
+
+        return new UserContextResponse
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            OrganizationId = organizationId,
+            Permissions = permissions,
+            ManagedDepartmentIds = new List<Guid>(),
+        };
     }
 
     public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
