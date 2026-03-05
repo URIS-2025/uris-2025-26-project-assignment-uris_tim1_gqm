@@ -69,6 +69,8 @@ public static class DataSeeder
         var manageOrganizations = CreatePermission("20000000-0000-0000-0000-000000000001", Permissions.ManageOrganizations, "Create, update, and delete organizations.");
         var manageUsers = CreatePermission("20000000-0000-0000-0000-000000000002", Permissions.ManageUsers, "Create, update, and delete users.");
         var manageRoles = CreatePermission("20000000-0000-0000-0000-000000000003", Permissions.ManageRoles, "Create, update, and delete roles.");
+        var managePermissions = CreatePermission("20000000-0000-0000-0000-000000000014", Permissions.ManagePermissions, "Create, update, and delete permissions.");
+        var manageUserRoles = CreatePermission("20000000-0000-0000-0000-000000000015", Permissions.ManageUserRoles, "Assign and remove user-organization-role mappings.");
         var manageDepartments = CreatePermission("20000000-0000-0000-0000-000000000004", Permissions.ManageDepartments, "Create, update, and delete departments.");
         var viewAllDepartments = CreatePermission("20000000-0000-0000-0000-000000000005", Permissions.ViewAllDepartments, "View all departments across the organization.");
         var createGoals = CreatePermission("20000000-0000-0000-0000-000000000006", Permissions.CreateGoals, "Create new goals.");
@@ -76,23 +78,28 @@ public static class DataSeeder
         var deleteGoals = CreatePermission("20000000-0000-0000-0000-000000000008", Permissions.DeleteGoals, "Delete goals.");
         var viewGoals = CreatePermission("20000000-0000-0000-0000-000000000009", Permissions.ViewGoals, "View goals.");
         var manageGoalInfluences = CreatePermission("20000000-0000-0000-0000-000000000010", Permissions.ManageGoalInfluences, "Manage goal influences and relationships.");
+        var manageGqmGoals = CreatePermission("20000000-0000-0000-0000-000000000016", Permissions.ManageGqmGoals, "Create, update, and delete GQM goals, questions, targets, and measurements.");
+        var managePremises = CreatePermission("20000000-0000-0000-0000-000000000017", Permissions.ManagePremises, "Create, update, and delete premises.");
         var recordMeasurements = CreatePermission("20000000-0000-0000-0000-000000000011", Permissions.RecordMeasurements, "Record measurement values.");
         var manageProbabilityAssessments = CreatePermission("20000000-0000-0000-0000-000000000012", Permissions.ManageProbabilityAssessments, "Create and manage probability assessments.");
         var viewAnalytics = CreatePermission("20000000-0000-0000-0000-000000000013", Permissions.ViewAnalytics, "View analytics and reports.");
 
         context.Permissions.AddRange(
-            manageOrganizations, manageUsers, manageRoles, manageDepartments,
-            viewAllDepartments, createGoals, editGoals, deleteGoals,
-            viewGoals, manageGoalInfluences, recordMeasurements,
-            manageProbabilityAssessments, viewAnalytics);
+            manageOrganizations, manageUsers, manageRoles, managePermissions,
+            manageUserRoles, manageDepartments, viewAllDepartments,
+            createGoals, editGoals, deleteGoals, viewGoals,
+            manageGoalInfluences, manageGqmGoals, managePremises,
+            recordMeasurements, manageProbabilityAssessments, viewAnalytics);
 
         // ── Role-Permission Mappings ──
         var rolePermissions = new List<RolePermission>
         {
-            // System Admin — all 13 permissions
+            // System Admin — all permissions
             Map(systemAdmin, manageOrganizations),
             Map(systemAdmin, manageUsers),
             Map(systemAdmin, manageRoles),
+            Map(systemAdmin, managePermissions),
+            Map(systemAdmin, manageUserRoles),
             Map(systemAdmin, manageDepartments),
             Map(systemAdmin, viewAllDepartments),
             Map(systemAdmin, createGoals),
@@ -100,6 +107,8 @@ public static class DataSeeder
             Map(systemAdmin, deleteGoals),
             Map(systemAdmin, viewGoals),
             Map(systemAdmin, manageGoalInfluences),
+            Map(systemAdmin, manageGqmGoals),
+            Map(systemAdmin, managePremises),
             Map(systemAdmin, recordMeasurements),
             Map(systemAdmin, manageProbabilityAssessments),
             Map(systemAdmin, viewAnalytics),
@@ -107,6 +116,7 @@ public static class DataSeeder
             // Organization Admin
             Map(orgAdmin, manageUsers),
             Map(orgAdmin, manageRoles),
+            Map(orgAdmin, manageUserRoles),
             Map(orgAdmin, manageDepartments),
             Map(orgAdmin, viewAllDepartments),
             Map(orgAdmin, createGoals),
@@ -114,6 +124,8 @@ public static class DataSeeder
             Map(orgAdmin, deleteGoals),
             Map(orgAdmin, viewGoals),
             Map(orgAdmin, manageGoalInfluences),
+            Map(orgAdmin, manageGqmGoals),
+            Map(orgAdmin, managePremises),
             Map(orgAdmin, recordMeasurements),
             Map(orgAdmin, manageProbabilityAssessments),
             Map(orgAdmin, viewAnalytics),
@@ -123,6 +135,8 @@ public static class DataSeeder
             Map(deptManager, editGoals),
             Map(deptManager, viewGoals),
             Map(deptManager, manageGoalInfluences),
+            Map(deptManager, manageGqmGoals),
+            Map(deptManager, managePremises),
             Map(deptManager, recordMeasurements),
             Map(deptManager, manageProbabilityAssessments),
             Map(deptManager, viewAnalytics),
