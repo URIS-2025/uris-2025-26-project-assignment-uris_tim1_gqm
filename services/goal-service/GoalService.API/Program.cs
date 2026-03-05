@@ -43,19 +43,19 @@ builder.Services.AddTransient<HmacDelegatingHandler>();
 // --- Cross-Service HTTP Clients ---
 builder.Services.AddHttpClient<IPremiseClient, PremiseClient>(client =>
 {
-    var baseUrl = builder.Configuration["Services:PremiseService"] ?? "http://premise-service";
+    var baseUrl = builder.Configuration["Services:PremiseService"] ?? "http://premise-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
 builder.Services.AddHttpClient<IAssessmentClient, AssessmentClient>(client =>
 {
-    var baseUrl = builder.Configuration["Services:AssessmentService"] ?? "http://assessment-service";
+    var baseUrl = builder.Configuration["Services:AssessmentService"] ?? "http://assessment-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
 builder.Services.AddHttpClient<IQgmGoalClient, QgmGoalClient>(client =>
 {
-    var baseUrl = builder.Configuration["Services:QgmGoalService"] ?? "http://qgm-goal-service";
+    var baseUrl = builder.Configuration["Services:QgmGoalService"] ?? "http://gqm-goal-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
