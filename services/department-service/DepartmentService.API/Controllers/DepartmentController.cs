@@ -1,12 +1,15 @@
 using DepartmentService.Application.DTOs;
 using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 
 namespace DepartmentService.API.Controllers;
 
 [ApiController]
 [Route("departments")]
+[Authorize]
 public class DepartmentController : ControllerBase
 {
     private readonly IDepartmentService _departmentService;
@@ -43,6 +46,7 @@ public class DepartmentController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_departments")]
     public async Task<ActionResult<DepartmentResponse>> Create([FromBody] DepartmentRequest request)
     {
         var result = await _departmentService.CreateAsync(request);
@@ -50,6 +54,7 @@ public class DepartmentController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_departments")]
     public async Task<ActionResult<DepartmentResponse>> Update(Guid id, [FromBody] DepartmentRequest request)
     {
         var result = await _departmentService.UpdateAsync(id, request);
@@ -57,6 +62,7 @@ public class DepartmentController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_departments")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _departmentService.DeleteAsync(id);

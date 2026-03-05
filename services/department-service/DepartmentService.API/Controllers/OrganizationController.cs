@@ -1,12 +1,15 @@
 using DepartmentService.Application.DTOs;
 using Shared.Contracts;
 using DepartmentService.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 
 namespace DepartmentService.API.Controllers;
 
 [ApiController]
 [Route("organizations")]
+[Authorize]
 public class OrganizationController : ControllerBase
 {
     private readonly IOrganizationService _organizationService;
@@ -33,6 +36,7 @@ public class OrganizationController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_organizations")]
     public async Task<ActionResult<OrganizationResponse>> Create([FromBody] OrganizationRequest request)
     {
         var result = await _organizationService.CreateAsync(request);
@@ -40,6 +44,7 @@ public class OrganizationController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [RequirePermission("manage_organizations")]
     public async Task<ActionResult<OrganizationResponse>> Update(Guid id, [FromBody] OrganizationRequest request)
     {
         var result = await _organizationService.UpdateAsync(id, request);
@@ -47,6 +52,7 @@ public class OrganizationController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission("manage_organizations")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _organizationService.DeleteAsync(id);

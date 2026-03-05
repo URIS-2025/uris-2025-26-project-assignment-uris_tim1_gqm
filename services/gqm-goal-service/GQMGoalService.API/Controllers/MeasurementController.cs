@@ -1,13 +1,16 @@
 using Shared.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.Measurement;
 using GQMGoalService.Application.Interfaces;
+using Shared.Auth;
 
 namespace GQMGoalService.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class MeasurementController : ControllerBase
 {
     private readonly IMeasurementService _service;
@@ -39,6 +42,7 @@ public class MeasurementController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("manage_gqm_goals")]
     public async Task<ActionResult<MeasurementResponse>> Create([FromBody] MeasurementRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.CreateAsync(request, cancellationToken);
@@ -46,6 +50,7 @@ public class MeasurementController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [RequirePermission("manage_gqm_goals")]
     public async Task<ActionResult<MeasurementResponse>> Update(Guid id, [FromBody] MeasurementRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.UpdateAsync(id, request, cancellationToken);
@@ -53,6 +58,7 @@ public class MeasurementController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [RequirePermission("manage_gqm_goals")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         await _service.DeleteAsync(id, cancellationToken);

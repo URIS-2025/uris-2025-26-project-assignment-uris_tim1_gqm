@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using Shared.Auth;
 
 namespace UserService.API.Controllers;
 
@@ -35,7 +35,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<ActionResult> Logout()
     {
-        var userId = GetUserIdFromClaims();
+        var userId = User.GetUserId();
         await _authService.LogoutAsync(userId);
         return NoContent();
     }
@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
     [HttpPut("change-password")]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        var userId = GetUserIdFromClaims();
+        var userId = User.GetUserId();
         await _authService.ChangePasswordAsync(userId, request);
         return NoContent();
     }
@@ -61,14 +61,5 @@ public class AuthController : ControllerBase
     {
         await _authService.ResetPasswordAsync(request);
         return Ok();
-    }
-
-    private Guid GetUserIdFromClaims()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user token.");
-
-        return userId;
     }
 }
