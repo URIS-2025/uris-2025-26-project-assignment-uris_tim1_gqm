@@ -165,11 +165,27 @@ public static class DataSeeder
 
         context.Users.Add(adminUser);
 
+        // ── Default Organization ──
+        var defaultOrganizationId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+        
+        // Note: The actual Organization entity seems to live in another service,
+        // but UserOrganizationRole just references the Guid.
+
+        // ── Map Admin User to Organization Admin Role ──
+        var adminMapping = new UserOrganizationRole
+        {
+            UserId = adminUser.Id,
+            RoleId = orgAdmin.Id,
+            OrganizationId = defaultOrganizationId
+        };
+
+        context.Set<UserOrganizationRole>().Add(adminMapping);
+
         await context.SaveChangesAsync();
 
         logger.LogInformation(
-            "Database seeded successfully with {RoleCount} roles, {PermissionCount} permissions, {MappingCount} role-permission mappings, and 1 admin user.",
-            5, 13, rolePermissions.Count);
+            "Database seeded successfully with roles, permissions, role-permission mappings, 1 admin user, and 1 user-role mapping."
+        );
     }
 
     private static Permission CreatePermission(string id, string name, string description)
