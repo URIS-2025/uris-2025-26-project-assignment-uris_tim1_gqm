@@ -2,6 +2,7 @@ using System.Security.Claims;
 using UserService.API.Controllers;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 using Shared.Contracts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -13,12 +14,15 @@ namespace UserService.Tests.Controllers;
 public class UserControllerTests
 {
     private readonly Mock<IUserService> _serviceMock;
+    private readonly Mock<IAuditClient> _auditClientMock;
     private readonly UserController _sut;
 
     public UserControllerTests()
     {
         _serviceMock = new Mock<IUserService>();
-        _sut = new UserController(_serviceMock.Object);
+        _auditClientMock = new Mock<IAuditClient>();
+        _auditClientMock.Setup(a => a.LogAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<object?>())).Returns(Task.CompletedTask);
+        _sut = new UserController(_serviceMock.Object, _auditClientMock.Object);
     }
 
     [Fact]
@@ -130,6 +134,17 @@ public class UserControllerTests
         var response = new UserResponse { Id = userId, IsActive = false };
 
         _serviceMock.Setup(s => s.ToggleIsActiveAsync(userId)).ReturnsAsync(response);
+
+        _sut.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                }, "Test"))
+            }
+        };
 
         var result = await _sut.ToggleIsActive(userId);
 

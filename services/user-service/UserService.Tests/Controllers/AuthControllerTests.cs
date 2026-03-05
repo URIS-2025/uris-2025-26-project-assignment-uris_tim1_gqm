@@ -1,6 +1,7 @@
 using UserService.API.Controllers;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -12,12 +13,15 @@ namespace UserService.Tests.Controllers;
 public class AuthControllerTests
 {
     private readonly Mock<IAuthService> _serviceMock;
+    private readonly Mock<IAuditClient> _auditClientMock;
     private readonly AuthController _sut;
 
     public AuthControllerTests()
     {
         _serviceMock = new Mock<IAuthService>();
-        _sut = new AuthController(_serviceMock.Object);
+        _auditClientMock = new Mock<IAuditClient>();
+        _auditClientMock.Setup(a => a.LogAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<object?>())).Returns(Task.CompletedTask);
+        _sut = new AuthController(_serviceMock.Object, _auditClientMock.Object);
     }
 
     [Fact]
