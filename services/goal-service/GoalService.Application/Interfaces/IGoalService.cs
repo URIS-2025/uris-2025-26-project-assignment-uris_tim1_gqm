@@ -12,4 +12,7 @@ public interface IGoalService
     Task<bool> DeleteAsync(Guid id);
     Task<IEnumerable<GoalResponse>> GetByDepartmentIdAsync(Guid departmentId);
     Task<GoalDetailsResponse?> GetGoalDetailsAsync(Guid id);
+    Task<ActivationReadinessResponse> ReadinessAsync(Guid id);
+    Task<GoalResponse?> ActivateAsync(Guid id);
+    Task<GoalResponse?> RevertToDraftAsync(Guid id);
 }

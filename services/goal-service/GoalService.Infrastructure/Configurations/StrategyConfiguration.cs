@@ -41,6 +41,11 @@ public class StrategyConfiguration : IEntityTypeConfiguration<Strategy>
             .HasColumnName("goal_id")
             .IsRequired();
 
+        builder.Property(s => s.IsActive)
+            .HasColumnName("is_active")
+            .IsRequired()
+            .HasDefaultValue(true);
+
         // Strategy 1:N GoalInfluence
         builder.HasMany(s => s.GoalInfluences)
             .WithOne(gi => gi.Strategy)

@@ -97,6 +97,42 @@ public class GoalController : ControllerBase
     }
 
     /// <summary>
+    /// Check whether a goal meets all prerequisites for activation.
+    /// </summary>
+    [HttpGet("{id:guid}/readiness")]
+    public async Task<ActionResult<ActivationReadinessResponse>> Readiness(Guid id)
+    {
+        var readiness = await _goalService.ReadinessAsync(id);
+        return Ok(readiness);
+    }
+
+    /// <summary>
+    /// Activate a goal, completing its saga workflow.
+    /// </summary>
+    [HttpPost("{id:guid}/activate")]
+    public async Task<ActionResult<GoalResponse>> Activate(Guid id)
+    {
+        var goal = await _goalService.ActivateAsync(id);
+        if (goal is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(goal);
+    }
+
+    /// <summary>
+    /// Revert an active goal back to Draft (saga compensation endpoint).
+    /// </summary>
+    [HttpPost("{id:guid}/revert-to-draft")]
+    public async Task<ActionResult<GoalResponse>> RevertToDraft(Guid id)
+    {
+        var goal = await _goalService.RevertToDraftAsync(id);
+        if (goal is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(goal);
+    }
+
+    /// <summary>
     /// Delete a goal and all its strategies and influences (cascade).
     /// </summary>
     [HttpDelete("{id:guid}")]

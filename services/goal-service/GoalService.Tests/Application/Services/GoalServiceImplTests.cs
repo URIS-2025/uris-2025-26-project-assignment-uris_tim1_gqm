@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GoalService.Application.DTOs;
+using GoalService.Application.DTOs.External;
 using Shared.Contracts;
 using GoalService.Application.Services;
 using GoalService.Domain.Entities;
@@ -23,6 +24,7 @@ public class GoalServiceImplTests : IDisposable
     private readonly Mock<IPremiseClient> _premiseClientMock;
     private readonly Mock<IAssessmentClient> _assessmentClientMock;
     private readonly Mock<IQgmGoalClient> _qgmGoalClientMock;
+    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
 
     public GoalServiceImplTests()
     {
@@ -34,12 +36,14 @@ public class GoalServiceImplTests : IDisposable
         _premiseClientMock = new Mock<IPremiseClient>();
         _assessmentClientMock = new Mock<IAssessmentClient>();
         _qgmGoalClientMock = new Mock<IQgmGoalClient>();
+        _orchestrationClientMock = new Mock<IOrchestrationClient>();
 
         _service = new GoalServiceImpl(
             _context, 
             _premiseClientMock.Object, 
             _assessmentClientMock.Object, 
-            _qgmGoalClientMock.Object);
+            _qgmGoalClientMock.Object,
+            _orchestrationClientMock.Object);
     }
 
     public void Dispose()
@@ -269,5 +273,160 @@ public class GoalServiceImplTests : IDisposable
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    // ---- ActivateAsync tests ----
+
+    private Goal CreateDraftGoal(Guid? id = null) => new Goal
+    {
+        Id = id ?? Guid.NewGuid(),
+        Focus = "Focus",
+        Object = "Object",
+        ActiveFrom = DateTime.UtcNow,
+        ActiveTo = DateTime.UtcNow.AddYears(1),
+        Magnitude = "Mag",
+        Constraints = "Con",
+        Status = GoalStatus.Draft,
+        BaselineProbability = 0.5m,
+        DepartmentId = Guid.NewGuid()
+    };
+
+    [Fact]
+    public async Task ActivateAsync_GoalNotFound_ReturnsNull()
+    {
+        var result = await _service.ActivateAsync(Guid.NewGuid());
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ActivateAsync_NotDraft_ThrowsInvalidGoalStateException()
+    {
+        var goal = CreateDraftGoal();
+        goal.Status = GoalStatus.Active;
+        _context.Goals.Add(goal);
+        await _context.SaveChangesAsync();
+
+        await _service.Invoking(s => s.ActivateAsync(goal.Id))
+            .Should().ThrowAsync<InvalidGoalStateException>();
+    }
+
+    [Fact]
+    public async Task ActivateAsync_NoActiveStrategy_ThrowsGoalActivationException()
+    {
+        var goal = CreateDraftGoal();
+        _context.Goals.Add(goal);
+        await _context.SaveChangesAsync();
+
+        _assessmentClientMock.Setup(x => x.GetAssessmentsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new AssessmentDto { GoalId = goal.Id, State = "Completed" } });
+        _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new QgmGoalDto { GoalId = goal.Id } });
+
+        var ex = await _service.Invoking(s => s.ActivateAsync(goal.Id))
+            .Should().ThrowAsync<GoalActivationException>();
+        ex.Which.Blockers.Should().Contain(b => b.Contains("strategy"));
+    }
+
+    [Fact]
+    public async Task ActivateAsync_NoAssessment_ThrowsGoalActivationException()
+    {
+        var goal = CreateDraftGoal();
+        _context.Goals.Add(goal);
+        _context.Strategies.Add(new Strategy { Id = Guid.NewGuid(), Name = "S", Description = "D",
+            Effectiveness = EffectivenessLevel.High, RefinementType = RefinementType.AND,
+            GoalId = goal.Id, IsActive = true });
+        await _context.SaveChangesAsync();
+
+        _assessmentClientMock.Setup(x => x.GetAssessmentsForGoalAsync(goal.Id))
+            .ReturnsAsync(Enumerable.Empty<AssessmentDto>());
+        _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new QgmGoalDto { GoalId = goal.Id } });
+
+        var ex = await _service.Invoking(s => s.ActivateAsync(goal.Id))
+            .Should().ThrowAsync<GoalActivationException>();
+        ex.Which.Blockers.Should().Contain(b => b.Contains("assessment"));
+    }
+
+    [Fact]
+    public async Task ActivateAsync_AssessmentNotCompleted_ThrowsGoalActivationException()
+    {
+        var goal = CreateDraftGoal();
+        _context.Goals.Add(goal);
+        _context.Strategies.Add(new Strategy { Id = Guid.NewGuid(), Name = "S", Description = "D",
+            Effectiveness = EffectivenessLevel.High, RefinementType = RefinementType.AND,
+            GoalId = goal.Id, IsActive = true });
+        await _context.SaveChangesAsync();
+
+        _assessmentClientMock.Setup(x => x.GetAssessmentsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new AssessmentDto { GoalId = goal.Id, State = "Draft" } });
+        _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new QgmGoalDto { GoalId = goal.Id } });
+
+        var ex = await _service.Invoking(s => s.ActivateAsync(goal.Id))
+            .Should().ThrowAsync<GoalActivationException>();
+        ex.Which.Blockers.Should().Contain(b => b.Contains("Completed"));
+    }
+
+    [Fact]
+    public async Task ActivateAsync_NoGqmGoal_ThrowsGoalActivationException()
+    {
+        var goal = CreateDraftGoal();
+        _context.Goals.Add(goal);
+        _context.Strategies.Add(new Strategy { Id = Guid.NewGuid(), Name = "S", Description = "D",
+            Effectiveness = EffectivenessLevel.High, RefinementType = RefinementType.AND,
+            GoalId = goal.Id, IsActive = true });
+        await _context.SaveChangesAsync();
+
+        _assessmentClientMock.Setup(x => x.GetAssessmentsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new AssessmentDto { GoalId = goal.Id, State = "Completed" } });
+        _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
+            .ReturnsAsync(Enumerable.Empty<QgmGoalDto>());
+
+        var ex = await _service.Invoking(s => s.ActivateAsync(goal.Id))
+            .Should().ThrowAsync<GoalActivationException>();
+        ex.Which.Blockers.Should().Contain(b => b.Contains("GQM"));
+    }
+
+    [Fact]
+    public async Task ActivateAsync_MultipleBlockers_ReturnsAllBlockers()
+    {
+        var goal = CreateDraftGoal();
+        _context.Goals.Add(goal);
+        await _context.SaveChangesAsync();
+
+        _assessmentClientMock.Setup(x => x.GetAssessmentsForGoalAsync(goal.Id))
+            .ReturnsAsync(Enumerable.Empty<AssessmentDto>());
+        _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
+            .ReturnsAsync(Enumerable.Empty<QgmGoalDto>());
+
+        var ex = await _service.Invoking(s => s.ActivateAsync(goal.Id))
+            .Should().ThrowAsync<GoalActivationException>();
+        ex.Which.Blockers.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task ActivateAsync_AllPrerequisitesMet_ReturnsActiveGoal()
+    {
+        var goal = CreateDraftGoal();
+        _context.Goals.Add(goal);
+        _context.Strategies.Add(new Strategy { Id = Guid.NewGuid(), Name = "S", Description = "D",
+            Effectiveness = EffectivenessLevel.High, RefinementType = RefinementType.AND,
+            GoalId = goal.Id, IsActive = true });
+        await _context.SaveChangesAsync();
+
+        _assessmentClientMock.Setup(x => x.GetAssessmentsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new AssessmentDto { GoalId = goal.Id, State = "Completed" } });
+        _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
+            .ReturnsAsync(new[] { new QgmGoalDto { GoalId = goal.Id } });
+        _orchestrationClientMock.Setup(x => x.RecordStepAsync(goal.Id, "Activated",
+            It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _service.ActivateAsync(goal.Id);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("Active");
+        var dbGoal = await _context.Goals.FindAsync(goal.Id);
+        dbGoal!.Status.Should().Be(GoalStatus.Active);
     }
 }
