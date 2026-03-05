@@ -43,6 +43,7 @@
     <Project Path="services/user-service/UserService.Tests/UserService.Tests.csproj" />
   </Folder>
   <Folder Name="/shared/">
+    <Project Path="shared/Shared.Auth/Shared.Auth.csproj" />
     <Project Path="shared/Shared.Contracts/Shared.Contracts.csproj" />
     <Project Path="shared/Shared.HMAC/Shared.HMAC.csproj" />
   </Folder>
