@@ -1,6 +1,7 @@
 using FluentValidation;
 using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
+using GoalService.Application.Interfaces.Clients;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GoalService.API.Controllers;
@@ -11,11 +12,13 @@ public class StrategyController : ControllerBase
 {
     private readonly IStrategyService _strategyService;
     private readonly IValidator<StrategyRequest> _validator;
+    private readonly IAuditClient _auditClient;
 
-    public StrategyController(IStrategyService strategyService, IValidator<StrategyRequest> validator)
+    public StrategyController(IStrategyService strategyService, IValidator<StrategyRequest> validator, IAuditClient auditClient)
     {
         _strategyService = strategyService;
         _validator = validator;
+        _auditClient = auditClient;
     }
 
     /// <summary>
@@ -52,6 +55,7 @@ public class StrategyController : ControllerBase
             return BadRequest(new { errors = validation.Errors.Select(e => e.ErrorMessage) });
 
         var strategy = await _strategyService.CreateAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "StrategyCreated", "Strategy", strategy.Id, new { strategy.GoalId });
         return CreatedAtAction(nameof(GetById), new { id = strategy.Id }, strategy);
     }
 

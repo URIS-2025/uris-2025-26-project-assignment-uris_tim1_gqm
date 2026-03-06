@@ -2,6 +2,7 @@ using FluentValidation;
 using GoalService.Application.DTOs;
 using Shared.Contracts;
 using GoalService.Application.Interfaces;
+using GoalService.Application.Interfaces.Clients;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GoalService.API.Controllers;
@@ -12,11 +13,13 @@ public class GoalController : ControllerBase
 {
     private readonly IGoalService _goalService;
     private readonly IValidator<GoalRequest> _validator;
+    private readonly IAuditClient _auditClient;
 
-    public GoalController(IGoalService goalService, IValidator<GoalRequest> validator)
+    public GoalController(IGoalService goalService, IValidator<GoalRequest> validator, IAuditClient auditClient)
     {
         _goalService = goalService;
         _validator = validator;
+        _auditClient = auditClient;
     }
 
     /// <summary>
@@ -76,6 +79,7 @@ public class GoalController : ControllerBase
             return BadRequest(new { errors = validation.Errors.Select(e => e.ErrorMessage) });
 
         var goal = await _goalService.CreateAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "GoalCreated", "Goal", goal.Id, new { goal.Focus });
         return CreatedAtAction(nameof(GetById), new { id = goal.Id }, goal);
     }
 

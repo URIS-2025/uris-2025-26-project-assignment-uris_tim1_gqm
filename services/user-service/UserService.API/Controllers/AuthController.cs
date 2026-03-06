@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 
 namespace UserService.API.Controllers;
 
@@ -11,16 +12,19 @@ namespace UserService.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IAuditClient _auditClient;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IAuditClient auditClient)
     {
         _authService = authService;
+        _auditClient = auditClient;
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
         var response = await _authService.LoginAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "Anonymous", "UserLoggedIn", "User", Guid.Empty, new { email = request.Email });
         return Ok(response);
     }
 
@@ -46,6 +50,7 @@ public class AuthController : ControllerBase
     {
         var userId = GetUserIdFromClaims();
         await _authService.ChangePasswordAsync(userId, request);
+        _ = _auditClient.LogAsync(userId, "User", "PasswordChanged", "User", userId);
         return NoContent();
     }
 
@@ -53,6 +58,7 @@ public class AuthController : ControllerBase
     public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         await _authService.ForgotPasswordAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "Anonymous", "PasswordResetRequested", "User", Guid.Empty, new { email = request.Email });
         return NoContent();
     }
 

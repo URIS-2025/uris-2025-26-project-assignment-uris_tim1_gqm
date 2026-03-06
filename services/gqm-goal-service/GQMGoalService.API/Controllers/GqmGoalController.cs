@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using GQMGoalService.Application.DTOs;
 using GQMGoalService.Application.DTOs.GqmGoal;
 using GQMGoalService.Application.Interfaces;
+using GQMGoalService.Application.Interfaces.Clients;
 
 namespace GQMGoalService.API.Controllers;
 
@@ -11,10 +12,12 @@ namespace GQMGoalService.API.Controllers;
 public class GqmGoalController : ControllerBase
 {
     private readonly IGqmGoalService _service;
+    private readonly IAuditClient _auditClient;
 
-    public GqmGoalController(IGqmGoalService service)
+    public GqmGoalController(IGqmGoalService service, IAuditClient auditClient)
     {
         _service = service;
+        _auditClient = auditClient;
     }
 
     [HttpGet]
@@ -42,6 +45,7 @@ public class GqmGoalController : ControllerBase
     public async Task<ActionResult<GqmGoalResponse>> Create([FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
         var result = await _service.CreateAsync(request, cancellationToken);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "GqmGoalCreated", "GqmGoal", result.Id, new { result.GoalId });
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 

@@ -2,9 +2,11 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using UserService.API.Middleware;
+using UserService.Application.Interfaces.Clients;
 using UserService.Application.Mappings;
 using UserService.Application.Validators;
 using UserService.Infrastructure;
+using UserService.Infrastructure.Clients;
 using UserService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +49,13 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
     ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- Audit Client ---
+builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
 
 // --- Infrastructure (DbContext, services) ---
 builder.Services.AddInfrastructure(builder.Configuration);

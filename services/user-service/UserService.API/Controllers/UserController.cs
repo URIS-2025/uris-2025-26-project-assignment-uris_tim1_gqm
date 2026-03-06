@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 using Shared.Contracts;
 
 namespace UserService.API.Controllers;
@@ -12,10 +13,12 @@ namespace UserService.API.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IAuditClient _auditClient;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IAuditClient auditClient)
     {
         _userService = userService;
+        _auditClient = auditClient;
     }
 
     [HttpGet]
@@ -65,6 +68,9 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserResponse>> ToggleIsActive(Guid id)
     {
         var response = await _userService.ToggleIsActiveAsync(id);
+        var actorId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var aid) ? aid : Guid.Empty;
+        var action = response.IsActive ? "UserActivated" : "UserDeactivated";
+        _ = _auditClient.LogAsync(actorId, "Admin", action, "User", id);
         return Ok(response);
     }
 

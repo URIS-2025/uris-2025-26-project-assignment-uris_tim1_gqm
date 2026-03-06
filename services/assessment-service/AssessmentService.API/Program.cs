@@ -47,7 +47,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateAssessmentValidator>(
 // Goal client (HTTP)
 builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
 {
-    var baseUrl = builder.Configuration["Services:GoalService"];
+    var baseUrl = builder.Configuration["Services:GoalService"] ?? "http://goal-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 })
 .AddHttpMessageHandler<HmacDelegatingHandler>();
@@ -55,6 +55,12 @@ builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
 builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 

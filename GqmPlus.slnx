@@ -49,6 +49,13 @@
     <Project Path="services/orchestration-service/OrchestrationService.Infrastructure/OrchestrationService.Infrastructure.csproj" />
     <Project Path="services/orchestration-service/OrchestrationService.Tests/OrchestrationService.Tests.csproj" />
   </Folder>
+  <Folder Name="/services/audit-service/">
+    <Project Path="services/audit-service/AuditService.API/AuditService.API.csproj" />
+    <Project Path="services/audit-service/AuditService.Application/AuditService.Application.csproj" />
+    <Project Path="services/audit-service/AuditService.Domain/AuditService.Domain.csproj" />
+    <Project Path="services/audit-service/AuditService.Infrastructure/AuditService.Infrastructure.csproj" />
+    <Project Path="services/audit-service/AuditService.Tests/AuditService.Tests.csproj" />
+  </Folder>
   <Folder Name="/shared/">
     <Project Path="shared/Shared.Contracts/Shared.Contracts.csproj" />
     <Project Path="shared/Shared.HMAC/Shared.HMAC.csproj" />

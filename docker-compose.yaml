@@ -15,6 +15,7 @@ services:
       - assessment-service
       - user-service
       - orchestration-service
+      - audit-service
 
   user-service:
     build:
@@ -32,6 +33,7 @@ services:
       - Jwt__Audience=gqmplus-app
       - Jwt__ExpiryMinutes=15
       - App__FrontendBaseUrl=http://localhost:3000
+      - Services__AuditService=http://audit-service:8080
     depends_on:
       - user-db
 
@@ -80,6 +82,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=goal-db;Port=5432;Database=goaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__PremiseService=http://premise-service:8080
+      - Services__AssessmentService=http://assessment-service:8080
+      - Services__QgmGoalService=http://gqm-goal-service:8080
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
     depends_on:
       - goal-db
 
@@ -104,6 +111,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=premise-db;Port=5432;Database=premisedb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
     depends_on:
       - premise-db
 
@@ -128,6 +137,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=gqm-goal-db;Port=5432;Database=gqmgoaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
     depends_on:
       - gqm-goal-db
 
@@ -152,6 +163,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=assessment-db;Port=5432;Database=assessmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__GoalService=http://goal-service:8080
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
     ports:
       - "5006:8080"
     depends_on:
@@ -180,6 +194,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=orchestration-db;Port=5432;Database=orchestrationdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__AuditService=http://audit-service:8080
     depends_on:
       - orchestration-db
 
@@ -195,6 +210,32 @@ services:
     volumes:
       - orchestration-db-data:/var/lib/postgresql/data
 
+  audit-service:
+    build:
+      context: .
+      dockerfile: ./services/audit-service/AuditService.API/Dockerfile
+    container_name: audit-service
+    ports:
+      - "5025:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=audit-db;Port=5432;Database=auditdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - audit-db
+
+  audit-db:
+    image: postgres:17-alpine
+    container_name: audit-db
+    environment:
+      - POSTGRES_DB=auditdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - audit-db-data:/var/lib/postgresql/data
+
 volumes:
   department-db-data:
   goal-db-data:
@@ -203,3 +244,4 @@ volumes:
   assessment-db-data:
   user-db-data:
   orchestration-db-data:
+  audit-db-data:

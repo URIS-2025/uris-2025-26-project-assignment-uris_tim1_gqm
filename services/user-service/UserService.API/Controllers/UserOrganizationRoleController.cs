@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 
 namespace UserService.API.Controllers;
 
@@ -9,16 +10,20 @@ namespace UserService.API.Controllers;
 public class UserOrganizationRoleController : ControllerBase
 {
     private readonly IUserOrganizationRoleService _userOrganizationRoleService;
+    private readonly IAuditClient _auditClient;
 
-    public UserOrganizationRoleController(IUserOrganizationRoleService userOrganizationRoleService)
+    public UserOrganizationRoleController(IUserOrganizationRoleService userOrganizationRoleService, IAuditClient auditClient)
     {
         _userOrganizationRoleService = userOrganizationRoleService;
+        _auditClient = auditClient;
     }
 
     [HttpPost]
     public async Task<ActionResult<UserOrganizationRoleResponse>> AssignRole([FromBody] AssignRoleRequest request)
     {
         var response = await _userOrganizationRoleService.AssignRoleAsync(request);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "RoleAssigned", "User", request.UserId,
+            new { request.RoleId, request.OrganizationId });
         return Created(string.Empty, response);
     }
 
@@ -29,6 +34,8 @@ public class UserOrganizationRoleController : ControllerBase
         [FromQuery] Guid organizationId)
     {
         await _userOrganizationRoleService.RemoveRoleAsync(userId, roleId, organizationId);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "RoleRemoved", "User", userId,
+            new { roleId, organizationId });
         return NoContent();
     }
 
