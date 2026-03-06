@@ -10,7 +10,7 @@ namespace PremiseService.API.Controllers;
 
 
 [ApiController]
-[Route("premises")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class PremiseController : ControllerBase
 {

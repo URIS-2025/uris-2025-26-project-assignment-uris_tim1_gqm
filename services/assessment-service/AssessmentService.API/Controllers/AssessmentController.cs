@@ -13,7 +13,7 @@ namespace AssessmentService.API.Controllers;
 /// Controller for managing Goal Probability Assessments.
 /// </summary>
 [ApiController]
-[Route("assessments")]
+[Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Authorize]
 public class AssessmentController : ControllerBase

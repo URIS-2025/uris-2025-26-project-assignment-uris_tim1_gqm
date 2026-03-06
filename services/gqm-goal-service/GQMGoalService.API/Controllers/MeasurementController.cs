@@ -9,7 +9,7 @@ using Shared.Auth;
 namespace GQMGoalService.API.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class MeasurementController : ControllerBase
 {
@@ -27,14 +27,14 @@ public class MeasurementController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<MeasurementResponse>> GetById(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await _service.GetByIdAsync(id, cancellationToken);
         return Ok(result);
     }
 
-    [HttpGet("by-target/{targetId}")]
+    [HttpGet("by-target/{targetId:guid}")]
     public async Task<ActionResult<IEnumerable<MeasurementResponse>>> GetByTargetId(Guid targetId, CancellationToken cancellationToken = default)
     {
         var result = await _service.GetByTargetIdAsync(targetId, cancellationToken);
@@ -49,7 +49,7 @@ public class MeasurementController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [RequirePermission("edit_goals")]
     public async Task<ActionResult<MeasurementResponse>> Update(Guid id, [FromBody] MeasurementRequest request, CancellationToken cancellationToken = default)
     {
@@ -57,7 +57,7 @@ public class MeasurementController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [RequirePermission("delete_goals")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {

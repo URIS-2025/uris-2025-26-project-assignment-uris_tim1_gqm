@@ -6,7 +6,7 @@ using Shared.Contracts;
 namespace AuditService.API.Controllers;
 
 [ApiController]
-[Route("audit")]
+[Route("api/v1/[controller]")]
 public class AuditLogController : ControllerBase
 {
     private readonly IAuditLogService _auditLogService;

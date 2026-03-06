@@ -10,7 +10,7 @@ using Shared.Contracts;
 namespace UserService.API.Controllers;
 
 [ApiController]
-[Route("users")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class UserController : ControllerBase
 {
