@@ -6,7 +6,7 @@ using OrchestrationService.Application.Interfaces;
 namespace OrchestrationService.API.Controllers;
 
 [ApiController]
-[Route("workflow")]
+[Route("api/v1/[controller]")]
 public class WorkflowController : ControllerBase
 {
     private readonly IWorkflowService _workflowService;

@@ -7,7 +7,7 @@ using Shared.Auth;
 namespace UserService.API.Controllers;
 
 [ApiController]
-[Route("permissions")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class PermissionController : ControllerBase
 {

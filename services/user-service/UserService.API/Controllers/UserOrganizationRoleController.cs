@@ -8,7 +8,7 @@ using Shared.Auth;
 namespace UserService.API.Controllers;
 
 [ApiController]
-[Route("user-roles")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class UserOrganizationRoleController : ControllerBase
 {
