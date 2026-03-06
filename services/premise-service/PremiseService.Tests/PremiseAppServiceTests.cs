@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using PremiseService.Application.DTOs;
 using PremiseService.Application.Interfaces;
+using PremiseService.Application.Interfaces.Clients;
 using PremiseService.Application.Mappings;
 using PremiseService.Application.Services;
 using PremiseService.Domain.Entities;
@@ -17,6 +18,7 @@ public class PremiseAppServiceTests : IDisposable
     private readonly DbContext _dbContext;
     private readonly IPremiseService _service;
     private readonly IMapper _mapper;
+    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
 
     private static readonly Guid GoalId = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
     private static readonly Guid StrategyId = Guid.Parse("b2c3d4e5-f6a7-8901-bcde-f12345678901");
@@ -35,7 +37,8 @@ public class PremiseAppServiceTests : IDisposable
         var config = new MapperConfiguration(cfg => cfg.AddProfile<PremiseMappingProfile>());
         _mapper = config.CreateMapper();
 
-        _service = new PremiseAppService(testContext, _mapper);
+        _orchestrationClientMock = new Mock<IOrchestrationClient>();
+        _service = new PremiseAppService(testContext, _mapper, _orchestrationClientMock.Object);
     }
 
     public void Dispose()

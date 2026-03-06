@@ -44,4 +44,10 @@ public class Strategy
     /// A strategy can produce multiple child goals.
     /// </summary>
     public ICollection<GoalInfluence> GoalInfluences { get; set; } = new List<GoalInfluence>();
+
+    /// <summary>
+    /// Indicates whether this strategy is currently active.
+    /// Defaults to true on creation; can be set to false to soft-disable the strategy.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
 }

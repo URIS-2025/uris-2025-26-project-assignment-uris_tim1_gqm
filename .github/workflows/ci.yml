@@ -30,6 +30,7 @@ jobs:
       gqm-goal: ${{ steps.filter.outputs.gqm-goal }}
       assessment: ${{ steps.filter.outputs.assessment }}
       user: ${{ steps.filter.outputs.user }}  
+      orchestration: ${{ steps.filter.outputs.orchestration }}
       shared: ${{ steps.filter.outputs.shared }}
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
     steps:
@@ -51,6 +52,8 @@ jobs:
               - 'services/assessment-service/**'
             user:
               - 'services/user-service/**'
+            orchestration:
+              - 'services/orchestration-service/**'
             shared:
               - 'shared/**'
             infrastructure:
@@ -239,6 +242,36 @@ jobs:
           path: test-results/*.trx
           reporter: dotnet-trx
   
+  build-orchestration:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.orchestration == 'true' || needs.detect-changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Build Shared.HMAC
+        run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
+      - name: Build Orchestration Service
+        run: dotnet build services/orchestration-service/OrchestrationService.API/OrchestrationService.API.csproj --configuration Release
+      - name: Run Orchestration Service Tests
+        run: dotnet test services/orchestration-service/OrchestrationService.Tests/OrchestrationService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Orchestration Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
+
   # docker-build:
   #   runs-on: ubuntu-latest
   #   needs: [detect-changes, build-access, build-department, build-goal, build-premise, build-gqm-goal, build-assessment]

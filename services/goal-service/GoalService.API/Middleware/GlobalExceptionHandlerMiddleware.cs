@@ -33,11 +33,22 @@ public class GlobalExceptionHandlerMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        if (exception is GoalActivationException activationEx)
+        {
+            _logger.LogWarning(exception, "Goal activation blocked: {Blockers}", string.Join("; ", activationEx.Blockers));
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = 422;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(
+                new { canActivate = false, blockers = activationEx.Blockers },
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+            return;
+        }
+
         var (statusCode, message) = exception switch
         {
             GoalNotFoundException ex => (HttpStatusCode.NotFound, ex.Message),
             StrategyNotFoundException ex => (HttpStatusCode.NotFound, ex.Message),
-            InvalidGoalStateException ex => (HttpStatusCode.BadRequest, ex.Message),
+            InvalidGoalStateException ex => (HttpStatusCode.Conflict, ex.Message),
             GoalHierarchyCycleException ex => (HttpStatusCode.Conflict, ex.Message),
             ArgumentException ex => (HttpStatusCode.BadRequest, ex.Message),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")

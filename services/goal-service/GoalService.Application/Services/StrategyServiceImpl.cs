@@ -1,5 +1,6 @@
 using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
+using GoalService.Application.Interfaces.Clients;
 using GoalService.Application.Mappings;
 using GoalService.Domain.Exceptions;
 using GoalService.Application.Interfaces.Persistence;
@@ -10,10 +11,12 @@ namespace GoalService.Application.Services;
 public class StrategyServiceImpl : IStrategyService
 {
     private readonly IGoalDbContext _context;
+    private readonly IOrchestrationClient _orchestrationClient;
 
-    public StrategyServiceImpl(IGoalDbContext context)
+    public StrategyServiceImpl(IGoalDbContext context, IOrchestrationClient orchestrationClient)
     {
         _context = context;
+        _orchestrationClient = orchestrationClient;
     }
 
     public async Task<IEnumerable<StrategyResponse>> GetByGoalIdAsync(Guid goalId)
@@ -48,6 +51,8 @@ public class StrategyServiceImpl : IStrategyService
 
         _context.Strategies.Add(strategy);
         await _context.SaveChangesAsync();
+
+        await _orchestrationClient.RecordStepAsync(request.GoalId, "StrategyDefined", $"api/Strategy/by-goal/{request.GoalId}", "{}");
 
         return strategy.ToResponse();
     }

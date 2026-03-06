@@ -1,9 +1,11 @@
 using AssessmentService.Application.DTOs;
+using AssessmentService.Application.Interfaces.Clients;
 using AssessmentService.Application.Services;
 using AssessmentService.Domain.Enums;
 using AssessmentService.Domain.Exceptions;
 using AssessmentService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace AssessmentService.Tests;
 
@@ -11,6 +13,7 @@ public class AssessmentServiceTests : IDisposable
 {
     private readonly AssessmentDbContext _dbContext;
     private readonly AssessmentServiceImpl _service;
+    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
 
     public AssessmentServiceTests()
     {
@@ -19,7 +22,8 @@ public class AssessmentServiceTests : IDisposable
             .Options;
 
         _dbContext = new AssessmentDbContext(options);
-        _service = new AssessmentServiceImpl(_dbContext);
+        _orchestrationClientMock = new Mock<IOrchestrationClient>();
+        _service = new AssessmentServiceImpl(_dbContext, _orchestrationClientMock.Object);
     }
 
     public void Dispose()

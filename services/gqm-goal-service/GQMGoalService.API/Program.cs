@@ -1,6 +1,8 @@
 using GQMGoalService.API.Middleware;
 using GQMGoalService.Application;
+using GQMGoalService.Application.Interfaces.Clients;
 using GQMGoalService.Infrastructure;
+using GQMGoalService.Infrastructure.Clients;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,12 @@ builder.Services.AddSwaggerGen(c =>
 var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? "dev-secret-key-for-local";
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>();
 
 var app = builder.Build();
 

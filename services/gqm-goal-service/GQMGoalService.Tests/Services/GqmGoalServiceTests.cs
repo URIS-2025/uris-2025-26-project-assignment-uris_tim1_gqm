@@ -1,6 +1,7 @@
 using Shared.Contracts;
 using AutoMapper;
 using FluentAssertions;
+using GQMGoalService.Application.Interfaces.Clients;
 using Microsoft.EntityFrameworkCore;
 using GQMGoalService.Application.DTOs.GqmGoal;
 using GQMGoalService.Application.Interfaces;
@@ -8,6 +9,7 @@ using GQMGoalService.Application.Mappings;
 using GQMGoalService.Application.Services;
 using GQMGoalService.Domain.Entities;
 using GQMGoalService.Infrastructure.Persistence;
+using Moq;
 
 namespace GQMGoalService.Tests.Services;
 
@@ -16,6 +18,7 @@ public class GqmGoalServiceTests : IDisposable
     private readonly ApplicationDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly GqmGoalService _service;
+    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
 
     public GqmGoalServiceTests()
     {
@@ -28,7 +31,8 @@ public class GqmGoalServiceTests : IDisposable
         var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<GqmGoalMappingProfile>());
         _mapper = mapperConfig.CreateMapper();
 
-        _service = new GqmGoalService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.GqmGoalRequestValidator());
+        _orchestrationClientMock = new Mock<IOrchestrationClient>();
+        _service = new GqmGoalService((IApplicationDbContext)_dbContext, _mapper, new GQMGoalService.Application.Validators.GqmGoalRequestValidator(), _orchestrationClientMock.Object);
     }
 
     [Fact]

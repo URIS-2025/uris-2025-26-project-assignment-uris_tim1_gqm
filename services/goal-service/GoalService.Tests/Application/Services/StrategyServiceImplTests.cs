@@ -1,11 +1,13 @@
 using FluentAssertions;
 using GoalService.Application.DTOs;
+using GoalService.Application.Interfaces.Clients;
 using GoalService.Application.Services;
 using GoalService.Domain.Entities;
 using GoalService.Domain.Enums;
 using GoalService.Domain.Exceptions;
 using GoalService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +19,7 @@ public class StrategyServiceImplTests : IDisposable
 {
     private readonly GoalDbContext _context;
     private readonly StrategyServiceImpl _service;
+    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
 
     public StrategyServiceImplTests()
     {
@@ -25,7 +28,8 @@ public class StrategyServiceImplTests : IDisposable
             .Options;
 
         _context = new GoalDbContext(options);
-        _service = new StrategyServiceImpl(_context);
+        _orchestrationClientMock = new Mock<IOrchestrationClient>();
+        _service = new StrategyServiceImpl(_context, _orchestrationClientMock.Object);
     }
 
     public void Dispose()

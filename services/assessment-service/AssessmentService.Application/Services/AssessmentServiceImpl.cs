@@ -1,5 +1,6 @@
 using AssessmentService.Application.DTOs;
 using AssessmentService.Application.Interfaces;
+using AssessmentService.Application.Interfaces.Clients;
 using AssessmentService.Domain.Entities;
 using AssessmentService.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,12 @@ namespace AssessmentService.Application.Services;
 public class AssessmentServiceImpl : IAssessmentService
 {
     private readonly IAssessmentDbContext _dbContext;
+    private readonly IOrchestrationClient _orchestrationClient;
 
-    public AssessmentServiceImpl(IAssessmentDbContext dbContext)
+    public AssessmentServiceImpl(IAssessmentDbContext dbContext, IOrchestrationClient orchestrationClient)
     {
         _dbContext = dbContext;
+        _orchestrationClient = orchestrationClient;
     }
 
     public async Task<AssessmentResponse> CreateAsync(CreateAssessmentRequest request)
@@ -38,6 +41,8 @@ public class AssessmentServiceImpl : IAssessmentService
         {
             throw new AssessmentAlreadyExistsException(request.GoalId);
         }
+
+        await _orchestrationClient.RecordStepAsync(request.GoalId, "AssessmentCreated", $"api/assessments/by-goal/{request.GoalId}", "{}");
 
         return assessment.ToResponse();
     }
