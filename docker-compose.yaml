@@ -14,6 +14,7 @@ services:
       - gqm-goal-service
       - assessment-service
       - user-service
+      - orchestration-service
 
   user-service:
     build:
@@ -168,6 +169,32 @@ services:
     volumes:
       - assessment-db-data:/var/lib/postgresql/data
 
+  orchestration-service:
+    build:
+      context: .
+      dockerfile: ./services/orchestration-service/OrchestrationService.API/Dockerfile
+    container_name: orchestration-service
+    ports:
+      - "5010:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=orchestration-db;Port=5432;Database=orchestrationdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+    depends_on:
+      - orchestration-db
+
+  orchestration-db:
+    image: postgres:17-alpine
+    container_name: orchestration-db
+    environment:
+      - POSTGRES_DB=orchestrationdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - orchestration-db-data:/var/lib/postgresql/data
+
 volumes:
   department-db-data:
   goal-db-data:
@@ -175,3 +202,4 @@ volumes:
   gqm-goal-db-data:
   assessment-db-data:
   user-db-data:
+  orchestration-db-data:
