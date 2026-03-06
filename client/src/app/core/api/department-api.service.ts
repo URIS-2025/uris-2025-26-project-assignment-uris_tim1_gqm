@@ -10,7 +10,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentApiService {
-    private readonly base = `${environment.apiBaseUrl}/department`;
+    private readonly base = environment.apiBaseUrl;
 
     constructor(private http: HttpClient) { }
 
@@ -19,30 +19,30 @@ export class DepartmentApiService {
         const p = new HttpParams()
             .set('page', params.page ?? 1)
             .set('size', params.size ?? 20);
-        return this.http.get<PaginatedResponse<Department>>(`${this.base}/departments`, { params: p });
+        return this.http.get<PaginatedResponse<Department>>(`${this.base}/department`, { params: p });
     }
 
     getDepartmentById(id: string): Observable<Department> {
-        return this.http.get<Department>(`${this.base}/departments/${id}`);
+        return this.http.get<Department>(`${this.base}/department/${id}`);
     }
 
     getDepartmentsByOrg(orgId: string, params: PagedParams = {}): Observable<PaginatedResponse<Department>> {
         const p = new HttpParams()
             .set('page', params.page ?? 1)
             .set('size', params.size ?? 100);
-        return this.http.get<PaginatedResponse<Department>>(`${this.base}/departments/organization/${orgId}`, { params: p });
+        return this.http.get<PaginatedResponse<Department>>(`${this.base}/department/organization/${orgId}`, { params: p });
     }
 
     createDepartment(req: DepartmentRequest): Observable<Department> {
-        return this.http.post<Department>(`${this.base}/departments`, req);
+        return this.http.post<Department>(`${this.base}/department`, req);
     }
 
     updateDepartment(id: string, req: DepartmentRequest): Observable<Department> {
-        return this.http.put<Department>(`${this.base}/departments/${id}`, req);
+        return this.http.put<Department>(`${this.base}/department/${id}`, req);
     }
 
     deleteDepartment(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.base}/departments/${id}`);
+        return this.http.delete<void>(`${this.base}/department/${id}`);
     }
 
     // Organizations
@@ -50,22 +50,22 @@ export class DepartmentApiService {
         const p = new HttpParams()
             .set('page', params.page ?? 1)
             .set('size', params.size ?? 20);
-        return this.http.get<PaginatedResponse<Organization>>(`${this.base}/organizations`, { params: p });
+        return this.http.get<PaginatedResponse<Organization>>(`${this.base}/organization`, { params: p });
     }
 
     getOrganizationById(id: string): Observable<Organization> {
-        return this.http.get<Organization>(`${this.base}/organizations/${id}`);
+        return this.http.get<Organization>(`${this.base}/organization/${id}`);
     }
 
     createOrganization(req: OrganizationRequest): Observable<Organization> {
-        return this.http.post<Organization>(`${this.base}/organizations`, req);
+        return this.http.post<Organization>(`${this.base}/organization`, req);
     }
 
     updateOrganization(id: string, req: OrganizationRequest): Observable<Organization> {
-        return this.http.put<Organization>(`${this.base}/organizations/${id}`, req);
+        return this.http.put<Organization>(`${this.base}/organization/${id}`, req);
     }
 
     deleteOrganization(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.base}/organizations/${id}`);
+        return this.http.delete<void>(`${this.base}/organization/${id}`);
     }
 }

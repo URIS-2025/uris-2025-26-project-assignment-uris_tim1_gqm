@@ -7,7 +7,7 @@ using Shared.Auth;
 namespace UserService.API.Controllers;
 
 [ApiController]
-[Route("roles")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class RoleController : ControllerBase
 {

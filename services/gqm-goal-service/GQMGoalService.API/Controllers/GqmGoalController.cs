@@ -10,7 +10,7 @@ using Shared.Auth;
 namespace GQMGoalService.API.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class GqmGoalController : ControllerBase
 {
@@ -30,14 +30,14 @@ public class GqmGoalController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<GqmGoalResponse>> GetById(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await _service.GetByIdAsync(id, cancellationToken);
         return Ok(result);
     }
 
-    [HttpGet("by-goal/{goalId}")]
+    [HttpGet("by-goal/{goalId:guid}")]
     public async Task<ActionResult<IEnumerable<GqmGoalResponse>>> GetByGoalId(Guid goalId, CancellationToken cancellationToken = default)
     {
         var result = await _service.GetByGoalIdAsync(goalId, cancellationToken);
@@ -53,7 +53,7 @@ public class GqmGoalController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [RequirePermission("edit_goals")]
     public async Task<ActionResult<GqmGoalResponse>> Update(Guid id, [FromBody] GqmGoalRequest request, CancellationToken cancellationToken = default)
     {
@@ -61,7 +61,7 @@ public class GqmGoalController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [RequirePermission("delete_goals")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {

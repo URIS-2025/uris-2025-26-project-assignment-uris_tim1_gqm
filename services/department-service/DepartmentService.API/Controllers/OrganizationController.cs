@@ -8,7 +8,7 @@ using Shared.Auth;
 namespace DepartmentService.API.Controllers;
 
 [ApiController]
-[Route("organizations")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class OrganizationController : ControllerBase
 {

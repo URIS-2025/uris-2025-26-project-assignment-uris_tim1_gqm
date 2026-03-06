@@ -25,7 +25,7 @@ const INITIAL_STATE: AuthState = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private readonly _state$ = new BehaviorSubject<AuthState>(INITIAL_STATE);
-    private readonly apiUrl = `${environment.apiBaseUrl}/user/auth`;
+    private readonly apiUrl = `${environment.apiBaseUrl}/auth`;
 
     readonly state$ = this._state$.asObservable();
     readonly user$: Observable<User | null> = this._state$.pipe(map(s => s.user));
@@ -108,7 +108,7 @@ export class AuthService {
             // Fire-and-forget: server-side cleanup
             this.http
                 .post(`${this.apiUrl}/logout`, {})
-                .subscribe({ error: () => {} });
+                .subscribe({ error: () => { } });
         }
 
         this._clearAll();

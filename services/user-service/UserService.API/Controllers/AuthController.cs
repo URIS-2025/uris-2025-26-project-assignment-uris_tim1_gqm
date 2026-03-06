@@ -8,7 +8,7 @@ using Shared.Auth;
 namespace UserService.API.Controllers;
 
 [ApiController]
-[Route("auth")]
+[Route("api/v1/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

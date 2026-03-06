@@ -9,7 +9,7 @@ using Shared.Auth;
 namespace GoalService.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class StrategyController : ControllerBase
 {
