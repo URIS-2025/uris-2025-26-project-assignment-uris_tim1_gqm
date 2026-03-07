@@ -37,7 +37,7 @@ public class AssessmentServiceImpl : IAssessmentService
         {
             await _dbContext.SaveChangesAsync();
         }
-        catch (DbUpdateException ex)
+        catch (DbUpdateException)
         {
             throw new AssessmentAlreadyExistsException(request.GoalId);
         }

@@ -2,7 +2,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using FluentValidation;
-using OrchestrationService.API.Middleware;
 using OrchestrationService.Application.Interfaces;
 using OrchestrationService.Application.Interfaces.Clients;
 using OrchestrationService.Application.Interfaces.Persistence;
@@ -12,6 +11,7 @@ using OrchestrationService.Infrastructure.Consumers;
 using OrchestrationService.Infrastructure.Persistence;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +42,9 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
     ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
 
 // --- Cross-Service HTTP Clients ---
 // --- MassTransit ---
@@ -78,7 +81,8 @@ builder.Services.AddMassTransit(x =>
 builder.Services.AddHttpClient<ICompensationHttpClient, CompensationHttpClient>(client =>
 {
     // Base address intentionally empty — compensation endpoints are absolute URLs
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 // --- Controllers ---
 builder.Services.AddControllers();
@@ -110,8 +114,9 @@ builder.Services.AddOpenTelemetry()
     });
 var app = builder.Build();
 
-// --- Global Exception Handler (first in pipeline) ---
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // --- Apply Migrations & Swagger (development only) ---
 if (app.Environment.IsDevelopment())

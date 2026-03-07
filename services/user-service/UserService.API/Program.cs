@@ -14,6 +14,7 @@ using UserService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,12 +35,16 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
 // --- Audit Client ---
 builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 // --- Infrastructure (DbContext, services) ---
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -98,8 +103,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// --- Global exception handler (first in pipeline) ---
-app.UseMiddleware<GlobalExceptionHandler>();
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // --- Swagger ---
 app.UseSwagger();

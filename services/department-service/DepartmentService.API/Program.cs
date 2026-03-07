@@ -9,6 +9,7 @@ using DepartmentService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,9 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
     ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
 
 // --- Infrastructure (DbContext, services) ---
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -86,8 +90,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// --- Global exception handler (first in pipeline) ---
-app.UseMiddleware<GlobalExceptionHandler>();
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // --- Swagger ---
 app.UseSwagger();

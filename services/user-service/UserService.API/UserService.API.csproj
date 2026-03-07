@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../shared/Shared.Auth/Shared.Auth.csproj" />
     <ProjectReference Include="../../../shared/Shared.HMAC/Shared.HMAC.csproj" />
+    <ProjectReference Include="../../../shared/Shared.ErrorHandling/Shared.ErrorHandling.csproj" />
     <ProjectReference Include="../UserService.Domain/UserService.Domain.csproj" />
     <ProjectReference Include="../UserService.Application/UserService.Application.csproj" />
     <ProjectReference Include="../UserService.Infrastructure/UserService.Infrastructure.csproj" />

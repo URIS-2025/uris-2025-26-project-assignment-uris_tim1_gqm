@@ -11,6 +11,7 @@ using AssessmentService.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,9 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
 builder.Services.AddScoped<IAssessmentService, AssessmentServiceImpl>();
 
 var connectionString = builder.Configuration["DATABASE_URL"]
@@ -57,19 +61,22 @@ builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
     var baseUrl = builder.Configuration["Services:GoalService"] ?? "http://goal-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 })
-.AddHttpMessageHandler<HmacDelegatingHandler>();
+.AddHttpMessageHandler<HmacDelegatingHandler>()
+.AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 
 // --- OpenTelemetry ---
@@ -131,7 +138,8 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // --- Authentication & Authorization ---
 app.UseAuthentication();

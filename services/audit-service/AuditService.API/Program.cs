@@ -7,6 +7,7 @@ using AuditService.Infrastructure.Data;
 using AuditService.Infrastructure.Extensions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,9 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
     ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured.");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
+
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
 
 // Infrastructure (DB + services)
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -73,7 +77,8 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 app.UseMiddleware<HmacMiddleware>();
 
 if (app.Environment.IsDevelopment())
