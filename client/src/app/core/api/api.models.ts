@@ -175,19 +175,37 @@ export interface QuestionRequest {
 }
 
 export type MeasurementUnit =
-    | 'dimensionless' | 'time' | 'length' | 'area' | 'volume' | 'mass' | 'temperature'
-    | 'speed' | 'energy' | 'financial' | 'quality' | 'performance' | 'productivity'
-    | 'HR' | 'business' | 'technical' | 'risk' | 'environmental' | 'custom';
+    | 'None' | 'Percentage' | 'Ratio' | 'Index' | 'Score' | 'Rating' | 'Grade' | 'Multiplier' | 'Points' | 'Count'
+    | 'Milliseconds' | 'Seconds' | 'Minutes' | 'Hours' | 'Days' | 'Weeks' | 'Months' | 'Quarters' | 'Years'
+    | 'Millimeters' | 'Centimeters' | 'Meters' | 'Kilometers' | 'Inches' | 'Feet' | 'Yards' | 'Miles'
+    | 'SquareMeters' | 'SquareKilometers' | 'SquareFeet' | 'Hectares' | 'Acres'
+    | 'Milliliters' | 'Liters' | 'CubicMeters' | 'CubicFeet' | 'Gallons'
+    | 'Milligrams' | 'Grams' | 'Kilograms' | 'Tons' | 'Pounds' | 'Ounces'
+    | 'Celsius' | 'Fahrenheit' | 'Kelvin'
+    | 'MetersPerSecond' | 'KilometersPerHour' | 'MilesPerHour'
+    | 'Joules' | 'KilowattHours' | 'Watts' | 'Kilowatts'
+    | 'Currency' | 'CurrencyPerHour' | 'CurrencyPerDay' | 'CurrencyPerMonth' | 'CurrencyPerYear' | 'CostPerUnit' | 'RevenuePerUnit' | 'BudgetVariance'
+    | 'DefectCount' | 'DefectsPerUnit' | 'DefectsPerMillion' | 'ErrorRate' | 'FailureRate' | 'AvailabilityPercentage' | 'DowntimeHours' | 'UptimeHours'
+    | 'ResponseTimeMilliseconds' | 'ThroughputPerSecond' | 'ThroughputPerMinute' | 'RequestsPerSecond' | 'TransactionsPerSecond' | 'LatencyMilliseconds'
+    | 'TasksCompleted' | 'TasksPerHour' | 'OutputPerEmployee' | 'VelocityPoints' | 'StoryPoints' | 'BurndownRate'
+    | 'Employees' | 'EmployeesPerManager' | 'TrainingHours' | 'SatisfactionScore' | 'EngagementScore' | 'AttritionRate'
+    | 'Customers' | 'NewCustomers' | 'CustomerRetentionRate' | 'ChurnRate' | 'NetPromoterScore' | 'ConversionRate' | 'MarketSharePercentage'
+    | 'LinesOfCode' | 'CodeCoveragePercentage' | 'BuildDurationMinutes' | 'DeploymentFrequency' | 'LeadTimeDays' | 'CycleTimeDays'
+    | 'RiskScore' | 'RiskExposureCurrency' | 'CompliancePercentage' | 'AuditFindingsCount'
+    | 'CO2EmissionsTons' | 'CH4EmissionsTons' | 'EnergyConsumptionKWh' | 'WaterUsageLiters'
+    | 'Custom' | 'Other';
 
 export interface Target {
     id: string;
-    value: string;
+    name: string;
+    description: string;
     unit: MeasurementUnit;
     questionId: string;
 }
 
 export interface TargetRequest {
-    value: string;
+    name: string;
+    description: string;
     unit: MeasurementUnit;
     questionId: string;
 }

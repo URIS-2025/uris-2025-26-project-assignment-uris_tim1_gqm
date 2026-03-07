@@ -18,12 +18,6 @@ public class QuestionRequestValidator : AbstractValidator<QuestionRequest>
             .MaximumLength(500).WithMessage("Text must not exceed 500 characters.");
 
         RuleFor(x => x.GqmGoalId)
-            .NotEmpty().WithMessage("GqmGoalId is required.")
-            .MustAsync(GqmGoalExists).WithMessage("The specified GqmGoalId does not exist.");
-    }
-
-    private async Task<bool> GqmGoalExists(Guid gqmGoalId, CancellationToken cancellationToken)
-    {
-        return await _dbContext.GqmGoals.AnyAsync(g => g.Id == gqmGoalId, cancellationToken);
+            .NotEmpty().WithMessage("GqmGoalId is required.");
     }
 }
