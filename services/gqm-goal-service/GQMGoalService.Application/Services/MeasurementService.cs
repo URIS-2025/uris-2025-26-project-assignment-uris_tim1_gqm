@@ -85,6 +85,10 @@ public class MeasurementService : IMeasurementService
     public async Task<MeasurementResponse> CreateAsync(MeasurementRequest request, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+        
+        var targetExists = await _dbContext.Targets.AnyAsync(t => t.Id == request.TargetId, cancellationToken);
+        if (!targetExists)
+             throw new NotFoundException(nameof(Target), request.TargetId);
 
         var measurement = _mapper.Map<Measurement>(request);
 
@@ -103,6 +107,10 @@ public class MeasurementService : IMeasurementService
     public async Task<MeasurementResponse> UpdateAsync(Guid id, MeasurementRequest request, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var targetExists = await _dbContext.Targets.AnyAsync(t => t.Id == request.TargetId, cancellationToken);
+        if (!targetExists)
+             throw new NotFoundException(nameof(Target), request.TargetId);
 
         var measurement = await _dbContext.Measurements.FindAsync(new object[] { id }, cancellationToken);
         if (measurement == null)

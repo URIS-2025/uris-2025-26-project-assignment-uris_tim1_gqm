@@ -41,9 +41,25 @@ export class GoalNewComponent implements OnInit {
     submitError = '';
 
     readonly UNIT_GROUPS = [
-        { group: 'General', units: ['dimensionless', 'custom'] },
-        { group: 'Physical', units: ['time', 'length', 'area', 'volume', 'mass', 'temperature', 'speed', 'energy'] },
-        { group: 'Business & Performance', units: ['financial', 'quality', 'performance', 'productivity', 'HR', 'business', 'technical', 'risk', 'environmental'] }
+        { group: 'Dimensionless', units: ['None', 'Percentage', 'Ratio', 'Index', 'Score', 'Rating', 'Grade', 'Multiplier', 'Points', 'Count'] },
+        { group: 'Time', units: ['Milliseconds', 'Seconds', 'Minutes', 'Hours', 'Days', 'Weeks', 'Months', 'Quarters', 'Years'] },
+        { group: 'Length', units: ['Millimeters', 'Centimeters', 'Meters', 'Kilometers', 'Inches', 'Feet', 'Yards', 'Miles'] },
+        { group: 'Area', units: ['SquareMeters', 'SquareKilometers', 'SquareFeet', 'Hectares', 'Acres'] },
+        { group: 'Volume', units: ['Milliliters', 'Liters', 'CubicMeters', 'CubicFeet', 'Gallons'] },
+        { group: 'Mass / Weight', units: ['Milligrams', 'Grams', 'Kilograms', 'Tons', 'Pounds', 'Ounces'] },
+        { group: 'Temperature', units: ['Celsius', 'Fahrenheit', 'Kelvin'] },
+        { group: 'Speed', units: ['MetersPerSecond', 'KilometersPerHour', 'MilesPerHour'] },
+        { group: 'Energy / Power', units: ['Joules', 'KilowattHours', 'Watts', 'Kilowatts'] },
+        { group: 'Financial', units: ['Currency', 'CurrencyPerHour', 'CurrencyPerDay', 'CurrencyPerMonth', 'CurrencyPerYear', 'CostPerUnit', 'RevenuePerUnit', 'BudgetVariance'] },
+        { group: 'Quality & Defects', units: ['DefectCount', 'DefectsPerUnit', 'DefectsPerMillion', 'ErrorRate', 'FailureRate', 'AvailabilityPercentage', 'DowntimeHours', 'UptimeHours'] },
+        { group: 'Performance', units: ['ResponseTimeMilliseconds', 'ThroughputPerSecond', 'ThroughputPerMinute', 'RequestsPerSecond', 'TransactionsPerSecond', 'LatencyMilliseconds'] },
+        { group: 'Productivity', units: ['TasksCompleted', 'TasksPerHour', 'OutputPerEmployee', 'VelocityPoints', 'StoryPoints', 'BurndownRate'] },
+        { group: 'Human / HR', units: ['Employees', 'EmployeesPerManager', 'TrainingHours', 'SatisfactionScore', 'EngagementScore', 'AttritionRate'] },
+        { group: 'Customer / Business', units: ['Customers', 'NewCustomers', 'CustomerRetentionRate', 'ChurnRate', 'NetPromoterScore', 'ConversionRate', 'MarketSharePercentage'] },
+        { group: 'Technical / Software', units: ['LinesOfCode', 'CodeCoveragePercentage', 'BuildDurationMinutes', 'DeploymentFrequency', 'LeadTimeDays', 'CycleTimeDays'] },
+        { group: 'Risk & Compliance', units: ['RiskScore', 'RiskExposureCurrency', 'CompliancePercentage', 'AuditFindingsCount'] },
+        { group: 'Environmental / Sustainability', units: ['CO2EmissionsTons', 'CH4EmissionsTons', 'EnergyConsumptionKWh', 'WaterUsageLiters'] },
+        { group: 'Custom / Fallback', units: ['Custom', 'Other'] }
     ];
     readonly GOAL_STATUSES = ['Draft', 'Active', 'OnHold', 'Completed', 'Cancelled'];
     readonly REFINEMENT_TYPES = ['AND', 'OR'];
@@ -122,7 +138,7 @@ export class GoalNewComponent implements OnInit {
     }
 
     private _newTarget(): FormGroup {
-        return this.fb.group({ value: ['', Validators.required], unit: ['dimensionless', Validators.required] });
+        return this.fb.group({ name: ['', Validators.required], description: [''], unit: ['None', Validators.required] });
     }
 
     addPremise(): void { this.premises.push(this._newPremise()); }
@@ -208,7 +224,12 @@ export class GoalNewComponent implements OnInit {
                     gqmGoalId: gqmGoal.id,
                 }));
                 for (const t of q.targets) {
-                    await firstValueFrom(this.gqmApi.createTarget({ ...t, questionId: question.id }));
+                    await firstValueFrom(this.gqmApi.createTarget({
+                        name: t.name,
+                        description: t.description || '',
+                        unit: t.unit,
+                        questionId: question.id
+                    }));
                 }
             }
 
