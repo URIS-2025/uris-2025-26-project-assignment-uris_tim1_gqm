@@ -1,5 +1,4 @@
 using FluentValidation;
-using GoalService.API.Middleware;
 using GoalService.Application.Interfaces;
 using GoalService.Application.Interfaces.Clients;
 using GoalService.Infrastructure.Clients;
@@ -9,6 +8,7 @@ using GoalService.Application.Services;
 using GoalService.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,44 +44,53 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
 // --- Cross-Service HTTP Clients ---
 builder.Services.AddHttpClient<IPremiseClient, PremiseClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:PremiseService"] ?? "http://premise-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IAssessmentClient, AssessmentClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AssessmentService"] ?? "http://assessment-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IQgmGoalClient, QgmGoalClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:QgmGoalService"] ?? "http://gqm-goal-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 // --- Controllers ---
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// --- Global Exception Handler (first in pipeline) ---
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // --- Seed Data & Swagger (development only) ---
 if (app.Environment.IsDevelopment())

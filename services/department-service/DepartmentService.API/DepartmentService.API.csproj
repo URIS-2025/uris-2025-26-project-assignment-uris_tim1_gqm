@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../shared/Shared.Auth/Shared.Auth.csproj" />
     <ProjectReference Include="../../../shared/Shared.HMAC/Shared.HMAC.csproj" />
+    <ProjectReference Include="../../../shared/Shared.ErrorHandling/Shared.ErrorHandling.csproj" />
     <ProjectReference Include="../DepartmentService.Domain/DepartmentService.Domain.csproj" />
     <ProjectReference Include="../DepartmentService.Application/DepartmentService.Application.csproj" />
     <ProjectReference Include="../DepartmentService.Infrastructure/DepartmentService.Infrastructure.csproj" />
