@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\Shared.HMAC\Shared.HMAC.csproj" />
+    <ProjectReference Include="..\..\..\shared\Shared.ErrorHandling\Shared.ErrorHandling.csproj" />
     <ProjectReference Include="..\..\..\shared\Shared.Contracts\Shared.Contracts.csproj" />
     <ProjectReference Include="..\AuditService.Domain\AuditService.Domain.csproj" />
     <ProjectReference Include="..\AuditService.Application\AuditService.Application.csproj" />

@@ -583,3 +583,46 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ========================================================
+   TOAST NOTIFICATION STYLES
+======================================================== */
+.toast-error .mdc-snackbar__surface {
+  background: var(--error) !important;
+  color: var(--text-on-dark) !important;
+}
+
+.toast-success .mdc-snackbar__surface {
+  background: var(--success) !important;
+  color: var(--text-on-dark) !important;
+}
+
+.toast-warning .mdc-snackbar__surface {
+  background: var(--warning) !important;
+  color: var(--text-primary) !important;
+}
+
+.toast-info .mdc-snackbar__surface {
+  background: var(--info) !important;
+  color: var(--text-on-dark) !important;
+}
+
+.toast-error .mdc-snackbar__label,
+.toast-success .mdc-snackbar__label,
+.toast-info .mdc-snackbar__label {
+  color: var(--text-on-dark) !important;
+}
+
+.toast-warning .mdc-snackbar__label {
+  color: var(--text-primary) !important;
+}
+
+.toast-error .mat-mdc-snack-bar-action,
+.toast-success .mat-mdc-snack-bar-action,
+.toast-info .mat-mdc-snack-bar-action {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.toast-warning .mat-mdc-snack-bar-action {
+  color: rgba(0, 0, 0, 0.6) !important;
+}

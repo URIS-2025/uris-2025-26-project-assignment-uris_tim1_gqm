@@ -7,6 +7,7 @@ using GQMGoalService.Application.Interfaces.Clients;
 using GQMGoalService.Infrastructure;
 using GQMGoalService.Infrastructure.Clients;
 using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,17 +35,22 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? "dev-secret-key-
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
 builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 
 // --- OpenTelemetry ---
@@ -85,7 +91,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // Apply migrations and seed data
 await app.UseInfrastructureAsync();
