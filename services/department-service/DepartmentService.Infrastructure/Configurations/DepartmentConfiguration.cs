@@ -29,6 +29,10 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasColumnName("organization_id")
             .IsRequired();
 
+        builder.Property(d => d.ManagerId)
+            .HasColumnName("manager_id")
+            .IsRequired(false);
+
         builder.Property(d => d.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

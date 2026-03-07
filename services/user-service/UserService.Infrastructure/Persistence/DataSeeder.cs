@@ -171,20 +171,94 @@ public static class DataSeeder
         // Note: The actual Organization entity seems to live in another service,
         // but UserOrganizationRole just references the Guid.
 
-        // ── Map Admin User to Organization Admin Role ──
+        // ── Map Admin User to System Admin Role ──
         var adminMapping = new UserOrganizationRole
         {
             UserId = adminUser.Id,
-            RoleId = orgAdmin.Id,
+            RoleId = systemAdmin.Id,
             OrganizationId = defaultOrganizationId
         };
 
-        context.Set<UserOrganizationRole>().Add(adminMapping);
+        // ── Test Users for Each Role ──
+        var orgAdminUser = new User
+        {
+            Id = Guid.Parse("30000000-0000-0000-0000-000000000002"),
+            FirstName = "Org",
+            LastName = "Admin",
+            Email = "orgadmin@gqmplus.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var deptManagerUser = new User
+        {
+            Id = Guid.Parse("30000000-0000-0000-0000-000000000003"),
+            FirstName = "Dept",
+            LastName = "Manager",
+            Email = "deptmanager@gqmplus.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var analystUser = new User
+        {
+            Id = Guid.Parse("30000000-0000-0000-0000-000000000004"),
+            FirstName = "Data",
+            LastName = "Analyst",
+            Email = "analyst@gqmplus.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var viewerUser = new User
+        {
+            Id = Guid.Parse("30000000-0000-0000-0000-000000000005"),
+            FirstName = "Read",
+            LastName = "Viewer",
+            Email = "viewer@gqmplus.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        context.Users.AddRange(orgAdminUser, deptManagerUser, analystUser, viewerUser);
+
+        // ── Map Test Users to Roles ──
+        var orgAdminMapping = new UserOrganizationRole
+        {
+            UserId = orgAdminUser.Id,
+            RoleId = orgAdmin.Id,
+            OrganizationId = defaultOrganizationId
+        };
+        var deptManagerMapping = new UserOrganizationRole
+        {
+            UserId = deptManagerUser.Id,
+            RoleId = deptManager.Id,
+            OrganizationId = defaultOrganizationId
+        };
+        var analystMapping = new UserOrganizationRole
+        {
+            UserId = analystUser.Id,
+            RoleId = analyst.Id,
+            OrganizationId = defaultOrganizationId
+        };
+        var viewerMapping = new UserOrganizationRole
+        {
+            UserId = viewerUser.Id,
+            RoleId = viewer.Id,
+            OrganizationId = defaultOrganizationId
+        };
+
+        context.Set<UserOrganizationRole>().AddRange(adminMapping, orgAdminMapping, deptManagerMapping, analystMapping, viewerMapping);
 
         await context.SaveChangesAsync();
 
         logger.LogInformation(
-            "Database seeded successfully with roles, permissions, role-permission mappings, 1 admin user, and 1 user-role mapping."
+            "Database seeded successfully with roles, permissions, role-permission mappings, 5 users, and their user-role mappings."
         );
     }
 
