@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Goals', icon: 'my_location', route: '/goals', permission: 'view_goals' },
     { label: 'Analytics', icon: 'bar_chart', route: '/analytics', permission: 'view_analytics' },
     { label: 'Departments', icon: 'account_tree', route: '/admin/departments', permission: 'manage_departments' },
+    { label: 'Organizations', icon: 'apartment', route: '/admin/organizations', permission: 'manage_organizations' },
     { label: 'Users', icon: 'people_outline', route: '/admin/users', permission: 'manage_users' },
     { label: 'Roles & Permissions', icon: 'shield', route: '/admin/roles', permission: 'manage_users' },
 ];

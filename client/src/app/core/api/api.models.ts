@@ -93,12 +93,14 @@ export interface Department {
     name: string;
     description?: string;
     organizationId: string;
+    managerId?: string;
 }
 
 export interface DepartmentRequest {
     name: string;
     description?: string;
     organizationId: string;
+    managerId?: string;
 }
 
 // Organization models
