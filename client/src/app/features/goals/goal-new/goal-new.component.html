@@ -215,8 +215,12 @@
                             @for (t of getTargets(qi).controls; track t; let ti = $index) {
                             <div class="target-row" [formGroupName]="ti">
                                 <mat-form-field appearance="outline" class="flex-1">
-                                    <mat-label>Target Value</mat-label>
-                                    <input matInput formControlName="value" [id]="'t-val-' + qi + '-' + ti">
+                                    <mat-label>Target Name</mat-label>
+                                    <input matInput formControlName="name" [id]="'t-name-' + qi + '-' + ti" placeholder="e.g. Reduce CPU Usage">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" class="flex-1">
+                                    <mat-label>Target Description</mat-label>
+                                    <input matInput formControlName="description" [id]="'t-desc-' + qi + '-' + ti" placeholder="Optional context">
                                 </mat-form-field>
                                 <mat-form-field appearance="outline" style="width:140px">
                                     <mat-label>Unit</mat-label>

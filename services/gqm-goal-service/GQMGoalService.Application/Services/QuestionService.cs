@@ -91,6 +91,10 @@ public class QuestionService : IQuestionService
     public async Task<QuestionResponse> CreateAsync(QuestionRequest request, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+        
+        var gqmGoalExists = await _dbContext.GqmGoals.AnyAsync(g => g.Id == request.GqmGoalId, cancellationToken);
+        if (!gqmGoalExists)
+            throw new NotFoundException(nameof(GqmGoal), request.GqmGoalId);
 
         var question = _mapper.Map<Question>(request);
         question.CreatedAt = DateTime.UtcNow;
@@ -104,6 +108,10 @@ public class QuestionService : IQuestionService
     public async Task<QuestionResponse> UpdateAsync(Guid id, QuestionRequest request, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var gqmGoalExists = await _dbContext.GqmGoals.AnyAsync(g => g.Id == request.GqmGoalId, cancellationToken);
+        if (!gqmGoalExists)
+            throw new NotFoundException(nameof(GqmGoal), request.GqmGoalId);
 
         var question = await _dbContext.Questions.FindAsync(new object[] { id }, cancellationToken);
         if (question == null)

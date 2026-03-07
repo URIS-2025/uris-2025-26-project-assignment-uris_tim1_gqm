@@ -21,12 +21,6 @@ public class TargetRequestValidator : AbstractValidator<TargetRequest>
             .IsInEnum().WithMessage("Invalid Unit provided.");
 
         RuleFor(x => x.QuestionId)
-            .NotEmpty().WithMessage("QuestionId is required.")
-            .MustAsync(QuestionExists).WithMessage("The specified QuestionId does not exist.");
-    }
-
-    private async Task<bool> QuestionExists(Guid questionId, CancellationToken cancellationToken)
-    {
-        return await _dbContext.Questions.AnyAsync(q => q.Id == questionId, cancellationToken);
+            .NotEmpty().WithMessage("QuestionId is required.");
     }
 }
