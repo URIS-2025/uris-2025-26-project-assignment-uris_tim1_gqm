@@ -81,25 +81,33 @@ export const routes: Routes = [
             {
                 path: 'admin',
                 canActivate: [permissionGuard],
-                data: { permissions: ['manage_organizations'] },
+                data: { anyPermissions: ['manage_organizations', 'manage_users', 'manage_roles', 'manage_departments'] },
                 children: [
                     {
                         path: 'organizations',
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['manage_organizations'] },
                         loadComponent: () =>
                             import('./features/admin/organizations.component').then(m => m.OrganizationsComponent),
                     },
                     {
                         path: 'departments',
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['manage_departments'] },
                         loadComponent: () =>
                             import('./features/admin/departments.component').then(m => m.DepartmentsComponent),
                     },
                     {
                         path: 'users',
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['manage_users'] },
                         loadComponent: () =>
                             import('./features/admin/users/users.component').then(m => m.UsersComponent),
                     },
                     {
                         path: 'roles',
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['manage_roles'] },
                         loadComponent: () =>
                             import('./features/admin/roles/roles.component').then(m => m.RolesComponent),
                     },

@@ -7,8 +7,13 @@ export const permissionGuard: CanActivateFn = (route) => {
     const router = inject(Router);
 
     const required: string[] = route.data?.['permissions'] ?? [];
+    const anyRequired: string[] = route.data?.['anyPermissions'] ?? [];
 
-    if (required.length === 0 || permissions.hasAll(required)) {
+    const hasNoRequirements = required.length === 0 && anyRequired.length === 0;
+    const meetsAllReqs = required.length > 0 && permissions.hasAll(required);
+    const meetsAnyReqs = anyRequired.length > 0 && permissions.hasAny(anyRequired);
+
+    if (hasNoRequirements || meetsAllReqs || meetsAnyReqs) {
         return true;
     }
 

@@ -3,6 +3,7 @@ using System;
 using DepartmentService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DepartmentService.Infrastructure.Migrations
 {
     [DbContext(typeof(DepartmentServiceDbContext))]
-    partial class DepartmentServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260307205446_AddManagerIdToDepartment")]
+    partial class AddManagerIdToDepartment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
