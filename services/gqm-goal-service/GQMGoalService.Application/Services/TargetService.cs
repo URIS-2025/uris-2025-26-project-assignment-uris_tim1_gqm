@@ -91,6 +91,10 @@ public class TargetService : ITargetService
     public async Task<TargetResponse> CreateAsync(TargetRequest request, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+        
+        var questionExists = await _dbContext.Questions.AnyAsync(q => q.Id == request.QuestionId, cancellationToken);
+        if (!questionExists)
+             throw new NotFoundException(nameof(Question), request.QuestionId);
 
         var target = _mapper.Map<Target>(request);
 
@@ -103,6 +107,10 @@ public class TargetService : ITargetService
     public async Task<TargetResponse> UpdateAsync(Guid id, TargetRequest request, CancellationToken cancellationToken = default)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var questionExists = await _dbContext.Questions.AnyAsync(q => q.Id == request.QuestionId, cancellationToken);
+        if (!questionExists)
+             throw new NotFoundException(nameof(Question), request.QuestionId);
 
         var target = await _dbContext.Targets.FindAsync(new object[] { id }, cancellationToken);
         if (target == null)

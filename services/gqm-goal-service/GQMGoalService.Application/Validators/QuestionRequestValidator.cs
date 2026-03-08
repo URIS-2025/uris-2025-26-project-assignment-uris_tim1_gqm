@@ -19,11 +19,7 @@ public class QuestionRequestValidator : AbstractValidator<QuestionRequest>
 
         RuleFor(x => x.GqmGoalId)
             .NotEmpty().WithMessage("GqmGoalId is required.")
-            .MustAsync(GqmGoalExists).WithMessage("The specified GqmGoalId does not exist.");
-    }
-
-    private async Task<bool> GqmGoalExists(Guid gqmGoalId, CancellationToken cancellationToken)
-    {
-        return await _dbContext.GqmGoals.AnyAsync(g => g.Id == gqmGoalId, cancellationToken);
+            .MustAsync(async (id, cancellation) => await _dbContext.GqmGoals.AnyAsync(g => g.Id == id, cancellation))
+            .WithMessage("GqmGoal with the specified ID does not exist.");
     }
 }

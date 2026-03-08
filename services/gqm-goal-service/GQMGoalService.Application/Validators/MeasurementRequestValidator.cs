@@ -17,12 +17,6 @@ public class MeasurementRequestValidator : AbstractValidator<MeasurementRequest>
             .GreaterThanOrEqualTo(0).WithMessage("Value must be greater than or equal to 0."); // Based on typical measurements, adjust if negatives allowed
 
         RuleFor(x => x.TargetId)
-            .NotEmpty().WithMessage("TargetId is required.")
-            .MustAsync(TargetExists).WithMessage("The specified TargetId does not exist.");
-    }
-
-    private async Task<bool> TargetExists(Guid targetId, CancellationToken cancellationToken)
-    {
-        return await _dbContext.Targets.AnyAsync(t => t.Id == targetId, cancellationToken);
+            .NotEmpty().WithMessage("TargetId is required.");
     }
 }

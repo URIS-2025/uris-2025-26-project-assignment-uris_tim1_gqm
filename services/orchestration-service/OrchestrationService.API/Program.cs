@@ -1,5 +1,4 @@
 using FluentValidation;
-using OrchestrationService.API.Middleware;
 using OrchestrationService.Application.Interfaces;
 using OrchestrationService.Application.Interfaces.Clients;
 using OrchestrationService.Application.Interfaces.Persistence;
@@ -7,6 +6,7 @@ using OrchestrationService.Application.Services;
 using OrchestrationService.Infrastructure.Clients;
 using OrchestrationService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,25 +38,31 @@ var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
 // --- Cross-Service HTTP Clients ---
 builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 builder.Services.AddHttpClient<ICompensationHttpClient, CompensationHttpClient>(client =>
 {
     // Base address intentionally empty — compensation endpoints are absolute URLs
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 // --- Controllers ---
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// --- Global Exception Handler (first in pipeline) ---
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
 // --- Apply Migrations & Swagger (development only) ---
 if (app.Environment.IsDevelopment())
