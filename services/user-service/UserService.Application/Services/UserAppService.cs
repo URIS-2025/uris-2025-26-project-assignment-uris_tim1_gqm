@@ -52,7 +52,7 @@ public class UserAppService : IUserService
             }
 
             // Organization Admin only sees users within their organization
-            query = query.Where(u => u.UserOrganizationRoles.Any(uor => uor.OrganizationId == currentOrgId.Value));
+            query = query.Where(u => u.OrganizationId == currentOrgId.Value);
         }
 
         var totalCount = await query.CountAsync();
@@ -69,21 +69,10 @@ public class UserAppService : IUserService
             var response = _mapper.Map<UserResponse>(u);
             
             // Map the roles for the current organization context, or all roles if system admin without org context
-            if (currentOrgId.HasValue)
-            {
-                response.Roles = u.UserOrganizationRoles
-                    .Where(uor => uor.OrganizationId == currentOrgId.Value)
-                    .Select(uor => uor.Role?.Name ?? "Unknown Role")
-                    .Distinct()
-                    .ToList();
-            }
-            else
-            {
-                response.Roles = u.UserOrganizationRoles
-                    .Select(uor => uor.Role?.Name ?? "Unknown Role")
-                    .Distinct()
-                    .ToList();
-            }
+            response.Roles = u.UserOrganizationRoles
+                .Select(uor => uor.Role?.Name ?? "Unknown Role")
+                .Distinct()
+                .ToList();
             return response;
         }).ToList();
 
@@ -136,6 +125,7 @@ public class UserAppService : IUserService
         user.Id = Guid.NewGuid();
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         user.IsActive = true;
+        user.OrganizationId = request.OrganizationId;
         user.CreatedAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
 

@@ -12,8 +12,5 @@ public class AssignRoleRequestValidator : AbstractValidator<AssignRoleRequest>
 
         RuleFor(x => x.RoleId)
             .NotEmpty().WithMessage("Role ID is required.");
-
-        RuleFor(x => x.OrganizationId)
-            .NotEmpty().WithMessage("Organization ID is required.");
     }
 }

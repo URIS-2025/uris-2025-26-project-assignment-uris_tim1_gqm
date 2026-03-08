@@ -240,6 +240,7 @@ export interface UserRequest {
     lastName: string;
     email: string;
     password?: string;
+    organizationId?: string | null;
 }
 
 export interface UpdateProfileRequest {
@@ -257,5 +258,4 @@ export interface Role {
 export interface AssignRoleRequest {
     userId: string;
     roleId: string;
-    organizationId: string;
 }
