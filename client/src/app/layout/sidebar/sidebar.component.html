@@ -13,10 +13,13 @@
     <div class="sidebar-footer">
         <div
             style="width: 32px; height: 32px; border-radius: 50%; background: var(--secondary); color: white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;">
-            AJ</div>
+            {{ initials }}
+        </div>
         <div style="display:flex; flex-direction:column;">
-            <span style="font-size: 13px; font-weight: 600; color: white; line-height: 1.2;">Alice Johnson</span>
-            <span style="font-size: 11px; color: var(--primary-200);">Org Admin</span>
+            <span style="font-size: 13px; font-weight: 600; color: white; line-height: 1.2;">
+                {{ fullName }}
+            </span>
+            <span style="font-size: 11px; color: var(--primary-200);">User</span>
         </div>
     </div>
 </div>
