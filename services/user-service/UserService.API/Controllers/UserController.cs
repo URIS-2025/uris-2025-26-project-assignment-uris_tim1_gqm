@@ -28,7 +28,11 @@ public class UserController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        var response = await _userService.GetAllAsync(page, size);
+        var currentUserId = User.GetUserId();
+        var isSystemAdmin = User.IsInRole(Domain.Constants.Roles.SystemAdmin);
+        var currentOrgId = User.GetOrganizationId();
+        
+        var response = await _userService.GetAllAsync(page, size, currentUserId, isSystemAdmin, currentOrgId);
         return Ok(response);
     }
 
