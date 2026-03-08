@@ -28,22 +28,68 @@ public class UserAppService : IUserService
         _profileValidator = profileValidator;
     }
 
-    public async Task<PaginationResponse<UserResponse>> GetAllAsync(int page, int size)
+    public async Task<PaginationResponse<UserResponse>> GetAllAsync(int page, int size, Guid currentUserId, bool isSystemAdmin, Guid? currentOrgId)
     {
-        var query = _context.Set<User>().AsNoTracking();
+        var query = _context.Set<User>()
+            .AsNoTracking()
+            .Include(u => u.UserOrganizationRoles)
+                .ThenInclude(uor => uor.Role)
+            .AsQueryable();
+
+        // Role-based filtering logic
+        if (!isSystemAdmin)
+        {
+            if (!currentOrgId.HasValue)
+            {
+                // If not system admin and no org context, return empty or throw. Returning empty for safety.
+                return new PaginationResponse<UserResponse>
+                {
+                    Items = new List<UserResponse>(),
+                    Total = 0,
+                    PageNumber = page,
+                    PageSize = size
+                };
+            }
+
+            // Organization Admin only sees users within their organization
+            query = query.Where(u => u.UserOrganizationRoles.Any(uor => uor.OrganizationId == currentOrgId.Value));
+        }
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var users = await query
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
 
+        var items = users.Select(u => 
+        {
+            var response = _mapper.Map<UserResponse>(u);
+            
+            // Map the roles for the current organization context, or all roles if system admin without org context
+            if (currentOrgId.HasValue)
+            {
+                response.Roles = u.UserOrganizationRoles
+                    .Where(uor => uor.OrganizationId == currentOrgId.Value)
+                    .Select(uor => uor.Role?.Name ?? "Unknown Role")
+                    .Distinct()
+                    .ToList();
+            }
+            else
+            {
+                response.Roles = u.UserOrganizationRoles
+                    .Select(uor => uor.Role?.Name ?? "Unknown Role")
+                    .Distinct()
+                    .ToList();
+            }
+            return response;
+        }).ToList();
+
         return new PaginationResponse<UserResponse>
         {
-            Items = _mapper.Map<List<UserResponse>>(items),
+            Items = items,
             Total = totalCount,
             PageNumber = page,
             PageSize = size
