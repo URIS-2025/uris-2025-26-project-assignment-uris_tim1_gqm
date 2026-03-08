@@ -14,30 +14,30 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, finalize, of } from 'rxjs';
 
 function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
-    if (!control.value) return null;
-    return control.value.endsWith('@gqmplus.com') ? null : { invalidDomain: true };
+  if (!control.value) return null;
+  return control.value.endsWith('@gqmplus.com') ? null : { invalidDomain: true };
 }
 
 @Component({
-    selector: 'app-user-dialog',
-    standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatProgressSpinnerModule
-    ],
-    styles: [`
+  selector: 'app-user-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatProgressSpinnerModule
+  ],
+  styles: [`
     .dialog-container { padding: 8px; }
     mat-form-field { width: 100%; margin-bottom: 8px; }
     .form-row { display: flex; gap: 16px; }
     .form-row > * { flex: 1; }
   `],
-    template: `
+  template: `
     <h2 mat-dialog-title>Add New User</h2>
     
     <mat-dialog-content class="dialog-container">
@@ -73,14 +73,16 @@ function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
             <input matInput formControlName="password" required>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Organization</mat-label>
-            <mat-select formControlName="organizationId" required>
-              @for (org of organizations(); track org.id) {
-                <mat-option [value]="org.id">{{ org.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+          @if (!isSystemAdminSelected()) {
+            <mat-form-field appearance="outline">
+              <mat-label>Organization</mat-label>
+              <mat-select formControlName="organizationId" required>
+                @for (org of organizations(); track org.id) {
+                  <mat-option [value]="org.id">{{ org.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
 
           <mat-form-field appearance="outline">
             <mat-label>Role</mat-label>
@@ -124,177 +126,194 @@ function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
   `
 })
 export class UserDialogComponent implements OnInit {
-    private fb = inject(FormBuilder);
-    private dialogRef = inject(MatDialogRef<UserDialogComponent>);
-    private userService = inject(UserApiService);
-    private departmentService = inject(DepartmentApiService);
-    private authService = inject(AuthService);
+  private fb = inject(FormBuilder);
+  private dialogRef = inject(MatDialogRef<UserDialogComponent>);
+  private userService = inject(UserApiService);
+  private departmentService = inject(DepartmentApiService);
+  private authService = inject(AuthService);
 
-    userForm: FormGroup;
+  userForm: FormGroup;
 
-    initialLoading = signal<boolean>(true);
-    submitting = signal<boolean>(false);
-    departmentsLoading = signal<boolean>(false);
+  initialLoading = signal<boolean>(true);
+  submitting = signal<boolean>(false);
+  departmentsLoading = signal<boolean>(false);
 
-    roles = signal<Role[]>([]);
-    organizations = signal<Organization[]>([]);
-    departments = signal<Department[]>([]);
+  roles = signal<Role[]>([]);
+  organizations = signal<Organization[]>([]);
+  departments = signal<Department[]>([]);
 
-    selectedRoleId = signal<string>('');
+  selectedRoleId = signal<string>('');
 
-    isDepartmentManagerSelected = computed(() => {
-        const roleId = this.selectedRoleId();
-        const role = this.roles().find(r => r.id === roleId);
-        if (!role) return false;
+  isDepartmentManagerSelected = computed(() => {
+    const roleId = this.selectedRoleId();
+    const role = this.roles().find(r => r.id === roleId);
+    if (!role) return false;
 
-        // Return true if the role name implies department manager
-        return role.name.toLowerCase().includes('department manager');
+    // Return true if the role name implies department manager
+    return role.name.toLowerCase().includes('department manager');
+  });
+
+  isSystemAdminSelected = computed(() => {
+    const roleId = this.selectedRoleId();
+    const role = this.roles().find(r => r.id === roleId);
+    if (!role) return false;
+
+    return role.name.toLowerCase().includes('system admin');
+  });
+
+  constructor() {
+    this.userForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email, gqmEmailValidator]],
+      password: ['Test@123', Validators.required],
+      organizationId: ['', Validators.required],
+      roleId: ['', Validators.required],
+      departmentId: ['']
     });
 
-    constructor() {
-        this.userForm = this.fb.group({
-            firstName: ['', Validators.required],
-            lastName: ['', Validators.required],
-            email: ['', [Validators.required, Validators.email, gqmEmailValidator]],
-            password: ['Test@123', Validators.required],
-            organizationId: ['', Validators.required],
-            roleId: ['', Validators.required],
-            departmentId: ['']
-        });
+    // Watch organization changes to fetch associated departments
+    this.userForm.get('organizationId')?.valueChanges.subscribe(orgId => {
+      this.userForm.get('departmentId')?.setValue('');
+      if (orgId) {
+        this.loadDepartments(orgId);
+      } else {
+        this.departments.set([]);
+      }
+    });
 
-        // Watch organization changes to fetch associated departments
-        this.userForm.get('organizationId')?.valueChanges.subscribe(orgId => {
-            this.userForm.get('departmentId')?.setValue('');
-            if (orgId) {
-                this.loadDepartments(orgId);
-            } else {
-                this.departments.set([]);
-            }
-        });
+    // Track roleId changes using a signal for the computed property
+    this.userForm.get('roleId')?.valueChanges.subscribe(roleId => {
+      this.selectedRoleId.set(roleId);
 
-        // Track roleId changes using a signal for the computed property
-        this.userForm.get('roleId')?.valueChanges.subscribe(roleId => {
-            this.selectedRoleId.set(roleId);
+      // Allow computed value to update, then apply validation
+      setTimeout(() => {
+        const deptControl = this.userForm.get('departmentId');
+        if (this.isDepartmentManagerSelected()) {
+          deptControl?.setValidators(Validators.required);
+        } else {
+          deptControl?.clearValidators();
+          deptControl?.setValue('');
+        }
+        deptControl?.updateValueAndValidity();
 
-            // Allow computed value to update, then apply validation
-            setTimeout(() => {
-                const deptControl = this.userForm.get('departmentId');
-                if (this.isDepartmentManagerSelected()) {
-                    deptControl?.setValidators(Validators.required);
-                } else {
-                    deptControl?.clearValidators();
-                    deptControl?.setValue('');
-                }
-                deptControl?.updateValueAndValidity();
-            });
-        });
-    }
+        const orgControl = this.userForm.get('organizationId');
+        if (this.isSystemAdminSelected()) {
+          orgControl?.clearValidators();
+          orgControl?.setValue(null);
+        } else {
+          orgControl?.setValidators(Validators.required);
+        }
+        orgControl?.updateValueAndValidity();
+      });
+    });
+  }
 
-    ngOnInit(): void {
-        this.loadInitialData();
-    }
+  ngOnInit(): void {
+    this.loadInitialData();
+  }
 
-    private loadInitialData() {
-        // Fetch roles and organizations concurrently
-        let rolesFetched = false;
-        let orgsFetched = false;
+  private loadInitialData() {
+    // Fetch roles and organizations concurrently
+    let rolesFetched = false;
+    let orgsFetched = false;
 
-        const checkLoading = () => { if (rolesFetched && orgsFetched) this.initialLoading.set(false); };
+    const checkLoading = () => { if (rolesFetched && orgsFetched) this.initialLoading.set(false); };
 
-        this.userService.getRoles().pipe(
-            catchError(() => of([]))
-        ).subscribe(res => {
-            this.roles.set(res);
-            rolesFetched = true;
-            checkLoading();
-        });
+    this.userService.getRoles().pipe(
+      catchError(() => of([]))
+    ).subscribe(res => {
+      this.roles.set(res);
+      rolesFetched = true;
+      checkLoading();
+    });
 
-        this.departmentService.getOrganizations({ size: 100 }).pipe(
-            catchError(() => of({ items: [] }))
-        ).subscribe(res => {
-            let loadedOrgs = res.items || [];
+    this.departmentService.getOrganizations({ size: 100 }).pipe(
+      catchError(() => of({ items: [] }))
+    ).subscribe(res => {
+      let loadedOrgs = res.items || [];
 
-            // Filter organizations based on current user's role
-            const currentUser = this.authService.currentUser;
-            if (currentUser) {
-                const isSystemAdmin = currentUser.permissions?.includes('manage_organizations');
-                if (!isSystemAdmin && currentUser.organizationId) {
-                    loadedOrgs = loadedOrgs.filter(org => org.id === currentUser.organizationId);
-                }
-            }
+      // Filter organizations based on current user's role
+      const currentUser = this.authService.currentUser;
+      if (currentUser) {
+        const isSystemAdmin = currentUser.permissions?.includes('manage_organizations');
+        if (!isSystemAdmin && currentUser.organizationId) {
+          loadedOrgs = loadedOrgs.filter(org => org.id === currentUser.organizationId);
+        }
+      }
 
-            this.organizations.set(loadedOrgs);
+      this.organizations.set(loadedOrgs);
 
-            // If there's only one organization available (e.g., Org Admin), select it automatically
-            if (loadedOrgs.length === 1) {
-                this.userForm.patchValue({ organizationId: loadedOrgs[0].id });
-            }
+      // If there's only one organization available (e.g., Org Admin), select it automatically
+      if (loadedOrgs.length === 1) {
+        this.userForm.patchValue({ organizationId: loadedOrgs[0].id });
+      }
 
-            orgsFetched = true;
-            checkLoading();
-        });
-    }
+      orgsFetched = true;
+      checkLoading();
+    });
+  }
 
-    private loadDepartments(orgId: string) {
-        this.departmentsLoading.set(true);
-        this.departmentService.getDepartmentsByOrg(orgId, { size: 100 }).pipe(
-            catchError(() => of({ items: [] })),
-            finalize(() => this.departmentsLoading.set(false))
-        ).subscribe(res => {
-            this.departments.set(res.items || []);
-        });
-    }
+  private loadDepartments(orgId: string) {
+    this.departmentsLoading.set(true);
+    this.departmentService.getDepartmentsByOrg(orgId, { size: 100 }).pipe(
+      catchError(() => of({ items: [] })),
+      finalize(() => this.departmentsLoading.set(false))
+    ).subscribe(res => {
+      this.departments.set(res.items || []);
+    });
+  }
 
-    onSubmit() {
-        if (this.userForm.invalid || this.submitting()) return;
+  onSubmit() {
+    if (this.userForm.invalid || this.submitting()) return;
 
-        this.submitting.set(true);
-        const val = this.userForm.value;
+    this.submitting.set(true);
+    const val = this.userForm.value;
 
-        // Step 1: Create User
-        this.userService.createUser({
-            firstName: val.firstName,
-            lastName: val.lastName,
-            email: val.email,
-            password: val.password
+    // Step 1: Create User
+    this.userService.createUser({
+      firstName: val.firstName,
+      lastName: val.lastName,
+      email: val.email,
+      password: val.password,
+      organizationId: val.organizationId
+    }).subscribe({
+      next: (createdUser) => {
+        // Step 2: Assign Role
+        this.userService.assignRole({
+          userId: createdUser.id,
+          roleId: val.roleId
         }).subscribe({
-            next: (createdUser) => {
-                // Step 2: Assign Role
-                this.userService.assignRole({
-                    userId: createdUser.id,
-                    roleId: val.roleId,
-                    organizationId: val.organizationId
-                }).subscribe({
-                    next: () => {
-                        // Step 3: Set Department Manager if applicable
-                        if (this.isDepartmentManagerSelected() && val.departmentId) {
+          next: () => {
+            // Step 3: Set Department Manager if applicable
+            if (this.isDepartmentManagerSelected() && val.departmentId) {
 
-                            // To update department, we need to fetch it first to get its current fields.
-                            this.departmentService.getDepartmentById(val.departmentId).subscribe(dept => {
-                                this.departmentService.updateDepartment(val.departmentId, {
-                                    name: dept.name,
-                                    description: dept.description,
-                                    organizationId: dept.organizationId,
-                                    managerId: createdUser.id // <--- SET THE MANAGER
-                                }).subscribe({
-                                    next: () => this.dialogRef.close(true),
-                                    error: () => this.dialogRef.close(true) // Still close if it partially succeeded
-                                });
-                            });
-                        } else {
-                            this.dialogRef.close(true); // Success without department assignment
-                        }
-                    },
-                    error: (err) => {
-                        console.error('Failed to assign role', err);
-                        this.submitting.set(false);
-                    }
+              // To update department, we need to fetch it first to get its current fields.
+              this.departmentService.getDepartmentById(val.departmentId).subscribe(dept => {
+                this.departmentService.updateDepartment(val.departmentId, {
+                  name: dept.name,
+                  description: dept.description,
+                  organizationId: dept.organizationId,
+                  managerId: createdUser.id // <--- SET THE MANAGER
+                }).subscribe({
+                  next: () => this.dialogRef.close(true),
+                  error: () => this.dialogRef.close(true) // Still close if it partially succeeded
                 });
-            },
-            error: (err) => {
-                console.error('Failed to create user', err);
-                this.submitting.set(false);
+              });
+            } else {
+              this.dialogRef.close(true); // Success without department assignment
             }
+          },
+          error: (err) => {
+            console.error('Failed to assign role', err);
+            this.submitting.set(false);
+          }
         });
-    }
+      },
+      error: (err) => {
+        console.error('Failed to create user', err);
+        this.submitting.set(false);
+      }
+    });
+  }
 }

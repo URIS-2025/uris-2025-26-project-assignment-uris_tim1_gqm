@@ -150,6 +150,9 @@ public static class DataSeeder
 
         context.RolePermissions.AddRange(rolePermissions);
 
+        // ── Default Organization ──
+        var defaultOrganizationId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+
         // ── Default System Admin User ──
         var adminUser = new User
         {
@@ -159,24 +162,18 @@ public static class DataSeeder
             Email = "admin@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
             IsActive = true,
+            OrganizationId = null, // System Admin is Global
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         context.Users.Add(adminUser);
 
-        // ── Default Organization ──
-        var defaultOrganizationId = Guid.Parse("40000000-0000-0000-0000-000000000001");
-        
-        // Note: The actual Organization entity seems to live in another service,
-        // but UserOrganizationRole just references the Guid.
-
         // ── Map Admin User to System Admin Role ──
         var adminMapping = new UserOrganizationRole
         {
             UserId = adminUser.Id,
-            RoleId = systemAdmin.Id,
-            OrganizationId = defaultOrganizationId
+            RoleId = systemAdmin.Id
         };
 
         // ── Test Users for Each Role ──
@@ -188,6 +185,7 @@ public static class DataSeeder
             Email = "orgadmin@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
+            OrganizationId = defaultOrganizationId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -199,6 +197,7 @@ public static class DataSeeder
             Email = "deptmanager@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
+            OrganizationId = defaultOrganizationId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -210,6 +209,7 @@ public static class DataSeeder
             Email = "analyst@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
+            OrganizationId = defaultOrganizationId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -221,6 +221,7 @@ public static class DataSeeder
             Email = "viewer@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
+            OrganizationId = defaultOrganizationId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -231,26 +232,22 @@ public static class DataSeeder
         var orgAdminMapping = new UserOrganizationRole
         {
             UserId = orgAdminUser.Id,
-            RoleId = orgAdmin.Id,
-            OrganizationId = defaultOrganizationId
+            RoleId = orgAdmin.Id
         };
         var deptManagerMapping = new UserOrganizationRole
         {
             UserId = deptManagerUser.Id,
-            RoleId = deptManager.Id,
-            OrganizationId = defaultOrganizationId
+            RoleId = deptManager.Id
         };
         var analystMapping = new UserOrganizationRole
         {
             UserId = analystUser.Id,
-            RoleId = analyst.Id,
-            OrganizationId = defaultOrganizationId
+            RoleId = analyst.Id
         };
         var viewerMapping = new UserOrganizationRole
         {
             UserId = viewerUser.Id,
-            RoleId = viewer.Id,
-            OrganizationId = defaultOrganizationId
+            RoleId = viewer.Id
         };
 
         context.Set<UserOrganizationRole>().AddRange(adminMapping, orgAdminMapping, deptManagerMapping, analystMapping, viewerMapping);

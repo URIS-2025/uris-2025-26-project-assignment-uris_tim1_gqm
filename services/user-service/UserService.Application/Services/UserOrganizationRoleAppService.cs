@@ -45,17 +45,16 @@ public class UserOrganizationRoleAppService : IUserOrganizationRoleService
         var alreadyAssigned = await _context.Set<UserOrganizationRole>()
             .AnyAsync(uor =>
                 uor.UserId == request.UserId &&
-                uor.RoleId == request.RoleId &&
-                uor.OrganizationId == request.OrganizationId);
+                uor.RoleId == request.RoleId);
 
         if (alreadyAssigned)
-            throw new BadRequestException("This role is already assigned to the user for this organization.");
+            throw new BadRequestException("This role is already assigned to the user.");
 
         var userOrganizationRole = new UserOrganizationRole
         {
+            Id = Guid.NewGuid(),
             UserId = request.UserId,
-            RoleId = request.RoleId,
-            OrganizationId = request.OrganizationId
+            RoleId = request.RoleId
         };
 
         _context.Set<UserOrganizationRole>().Add(userOrganizationRole);
@@ -65,18 +64,16 @@ public class UserOrganizationRoleAppService : IUserOrganizationRoleService
         {
             UserId = userOrganizationRole.UserId,
             RoleId = userOrganizationRole.RoleId,
-            OrganizationId = userOrganizationRole.OrganizationId,
             RoleName = role.Name
         };
     }
 
-    public async Task RemoveRoleAsync(Guid userId, Guid roleId, Guid organizationId)
+    public async Task RemoveRoleAsync(Guid userId, Guid roleId)
     {
         var assignment = await _context.Set<UserOrganizationRole>()
             .FirstOrDefaultAsync(uor =>
                 uor.UserId == userId &&
-                uor.RoleId == roleId &&
-                uor.OrganizationId == organizationId);
+                uor.RoleId == roleId);
 
         if (assignment is null)
             throw new NotFoundException("Role assignment not found.");
@@ -105,7 +102,7 @@ public class UserOrganizationRoleAppService : IUserOrganizationRoleService
     public async Task<List<UserOrganizationRoleResponse>> GetByUserAndOrganizationAsync(Guid userId, Guid organizationId)
     {
         var userExists = await _context.Set<User>()
-            .AnyAsync(u => u.Id == userId);
+            .AnyAsync(u => u.Id == userId && u.OrganizationId == organizationId);
 
         if (!userExists)
             throw new NotFoundException(nameof(User), userId);
@@ -113,7 +110,7 @@ public class UserOrganizationRoleAppService : IUserOrganizationRoleService
         var assignments = await _context.Set<UserOrganizationRole>()
             .AsNoTracking()
             .Include(uor => uor.Role)
-            .Where(uor => uor.UserId == userId && uor.OrganizationId == organizationId)
+            .Where(uor => uor.UserId == userId)
             .ToListAsync();
 
         return _mapper.Map<List<UserOrganizationRoleResponse>>(assignments);

@@ -27,7 +27,7 @@ public class UserOrganizationRoleController : ControllerBase
     {
         var response = await _userOrganizationRoleService.AssignRoleAsync(request);
         _ = _auditClient.LogAsync(Guid.Empty, "System", "RoleAssigned", "User", request.UserId,
-            new { request.RoleId, request.OrganizationId });
+            new { request.RoleId });
         return Created(string.Empty, response);
     }
 
@@ -35,12 +35,11 @@ public class UserOrganizationRoleController : ControllerBase
     [RequirePermission("manage_user_roles")]
     public async Task<ActionResult> RemoveRole(
         [FromQuery] Guid userId,
-        [FromQuery] Guid roleId,
-        [FromQuery] Guid organizationId)
+        [FromQuery] Guid roleId)
     {
-        await _userOrganizationRoleService.RemoveRoleAsync(userId, roleId, organizationId);
+        await _userOrganizationRoleService.RemoveRoleAsync(userId, roleId);
         _ = _auditClient.LogAsync(Guid.Empty, "System", "RoleRemoved", "User", userId,
-            new { roleId, organizationId });
+            new { roleId });
         return NoContent();
     }
 

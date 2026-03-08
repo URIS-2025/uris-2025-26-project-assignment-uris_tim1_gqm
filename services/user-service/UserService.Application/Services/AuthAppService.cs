@@ -131,15 +131,17 @@ public class AuthAppService : IAuthService
             .Where(uor => uor.UserId == userId)
             .ToListAsync();
 
-        var permissions = assignments
-            .SelectMany(uor => uor.Role.RolePermissions)
-            .Select(rp => rp.Permission.Name)
-            .Distinct()
-            .ToList();
+        var permissions = Enumerable.Empty<string>().ToList();
+        if (assignments.Any())
+        {
+            permissions = assignments
+                .SelectMany(uor => uor.Role.RolePermissions)
+                .Select(rp => rp.Permission.Name)
+                .Distinct()
+                .ToList();
+        }
 
-        var organizationId = assignments
-            .Select(a => a.OrganizationId)
-            .FirstOrDefault();
+        var organizationId = user.OrganizationId;
 
         return new UserContextResponse
         {
