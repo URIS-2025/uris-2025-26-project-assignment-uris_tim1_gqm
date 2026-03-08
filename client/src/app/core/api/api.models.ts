@@ -222,3 +222,40 @@ export interface MeasurementRequest {
     measuredAt: string;
     targetId: string;
 }
+
+// User models
+export interface User {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    isActive: boolean;
+    roles: string[];
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface UserRequest {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password?: string;
+}
+
+export interface UpdateProfileRequest {
+    firstName: string;
+    lastName: string;
+}
+
+// Role models
+export interface Role {
+    id: string;
+    name: string;
+    description: string;
+}
+
+export interface AssignRoleRequest {
+    userId: string;
+    roleId: string;
+    organizationId: string;
+}
