@@ -59,7 +59,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("updated_at")
             .IsRequired();
 
+        builder.Property(u => u.OrganizationId)
+            .HasColumnName("organization_id");
+
         builder.HasIndex(u => u.Email)
             .IsUnique();
+
+        builder.HasIndex(u => u.OrganizationId);
     }
 }

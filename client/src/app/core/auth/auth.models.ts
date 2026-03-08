@@ -3,7 +3,7 @@ export interface User {
     email: string;
     firstName: string;
     lastName: string;
-    organizationId: string;
+    organizationId: string | null;
     permissions: string[];
     managedDepartmentIds: string[];
 }

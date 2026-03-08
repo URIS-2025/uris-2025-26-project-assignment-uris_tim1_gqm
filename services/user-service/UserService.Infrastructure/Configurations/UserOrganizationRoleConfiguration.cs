@@ -10,16 +10,16 @@ public class UserOrganizationRoleConfiguration : IEntityTypeConfiguration<UserOr
     {
         builder.ToTable("user_organization_roles");
 
-        builder.HasKey(uor => new { uor.UserId, uor.RoleId, uor.OrganizationId });
+        builder.HasKey(uor => uor.Id);
+
+        builder.Property(uor => uor.Id)
+            .HasColumnName("id");
 
         builder.Property(uor => uor.UserId)
             .HasColumnName("user_id");
 
         builder.Property(uor => uor.RoleId)
             .HasColumnName("role_id");
-
-        builder.Property(uor => uor.OrganizationId)
-            .HasColumnName("organization_id");
 
         builder.HasOne(uor => uor.User)
             .WithMany(u => u.UserOrganizationRoles)
@@ -31,6 +31,7 @@ public class UserOrganizationRoleConfiguration : IEntityTypeConfiguration<UserOr
             .HasForeignKey(uor => uor.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(uor => uor.OrganizationId);
+        builder.HasIndex(uor => new { uor.UserId, uor.RoleId })
+            .IsUnique();
     }
 }
