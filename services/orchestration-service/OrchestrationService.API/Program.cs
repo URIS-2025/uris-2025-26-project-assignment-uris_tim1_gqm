@@ -115,3 +115,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "orch
     .WithName("HealthCheck");
 
 app.Run();
+
+namespace OrchestrationService.API
+{
+    public partial class Program { }
+}

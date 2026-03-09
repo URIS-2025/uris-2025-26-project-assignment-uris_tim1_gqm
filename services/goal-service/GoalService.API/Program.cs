@@ -118,3 +118,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal
     .WithName("HealthCheck");
 
 app.Run();
+
+namespace GoalService.API
+{
+    public partial class Program { }
+}
