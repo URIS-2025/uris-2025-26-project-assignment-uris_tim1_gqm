@@ -1,55 +1,165 @@
 <div class="dashboard page-enter">
-    <app-page-header [title]="'Welcome back, ' + userName"
-        subtitle="Here's an overview of your GQM+ workspace."></app-page-header>
 
-    <div class="stat-grid">
-        <mat-card class="stat-card">
-            <mat-card-content>
-                <div class="stat-icon-wrap primary">
-                    <span class="material-icons-round">flag</span>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-value">{{ loading ? '—' : stats.goals }}</div>
-                    <div class="stat-label">Total Goals</div>
-                </div>
-            </mat-card-content>
-        </mat-card>
+    <!-- Header -->
+    <app-page-header title="Dashboard" subtitle="Strategic goal management overview">
+        <ng-template #actions>
+            <a [hasPermission]="'create_goals'" permissionMode="disable" mat-flat-button routerLink="/goals/new"
+                class="btn-create">
+                <mat-icon>add</mat-icon> Create Goal
+            </a>
+        </ng-template>
+    </app-page-header>
 
-        <mat-card class="stat-card" [hasPermission]="'manage_departments'" permissionMode="hide">
-            <mat-card-content>
-                <div class="stat-icon-wrap success">
-                    <span class="material-icons-round">business</span>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-value">{{ loading ? '—' : stats.departments }}</div>
-                    <div class="stat-label">Departments</div>
-                </div>
-            </mat-card-content>
-        </mat-card>
+    @if (loading) {
+    <div class="loading-wrap">
+        <mat-spinner diameter="40"></mat-spinner>
     </div>
+    } @else {
 
-    <div class="quick-actions-section">
-        <h2 class="section-title">Quick Actions</h2>
-        <div class="quick-actions-grid">
-            <a [hasPermission]="'create_goals'" permissionMode="hide" mat-stroked-button routerLink="/goals/new"
-                class="quick-action-btn" id="btn-new-goal">
-                <span class="material-icons-round">add_circle_outline</span>
-                New Goal
-            </a>
-            <a mat-stroked-button routerLink="/goals" class="quick-action-btn" id="btn-view-goals">
-                <span class="material-icons-round">flag</span>
-                View Goals
-            </a>
-            <a [hasPermission]="'manage_organizations'" permissionMode="hide" mat-stroked-button
-                routerLink="/admin/organizations" class="quick-action-btn" id="btn-organizations">
-                <span class="material-icons-round">corporate_fare</span>
-                Organizations
-            </a>
-            <a [hasPermission]="'manage_departments'" permissionMode="hide" mat-stroked-button
-                routerLink="/admin/departments" class="quick-action-btn" id="btn-departments">
-                <span class="material-icons-round">business</span>
-                Departments
-            </a>
+    <!-- Permission Banner -->
+    <div class="permission-banner">
+        <div class="banner-icon">
+            <mat-icon>shield</mat-icon>
+        </div>
+        <div class="banner-content">
+            <h3 class="banner-title">Permission-Based Access Control</h3>
+            <p class="banner-text">Your access is determined by your role:
+                <span class="role-badge">{{ getRoleDisplay() }}</span>
+            </p>
         </div>
     </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <p class="kpi-label">Active Goals</p>
+            <p class="kpi-value">{{ activeGoals }}</p>
+            <div class="kpi-meta">
+                <mat-icon class="kpi-meta-icon">flag</mat-icon>
+                <span>Currently in progress</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Average Probability</p>
+            <p class="kpi-value">{{ (avgProbability * 100).toFixed(0) }}%</p>
+            <div class="kpi-meta kpi-meta-green">
+                <mat-icon class="kpi-meta-icon">trending_up</mat-icon>
+                <span>Across all goals</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">High Risk Goals</p>
+            <p class="kpi-value">{{ highRiskGoals }}</p>
+            <div class="kpi-meta kpi-meta-orange">
+                <mat-icon class="kpi-meta-icon">warning</mat-icon>
+                <span>Probability &lt; 60%</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Completed Goals</p>
+            <p class="kpi-value">{{ completedGoals }}</p>
+            <div class="kpi-meta">
+                <mat-icon class="kpi-meta-icon">check_circle</mat-icon>
+                <span>Total completed</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+        <!-- Goal Status Distribution (vertical bars) -->
+        <div class="chart-card">
+            <h3 class="chart-title">Goal Status Distribution</h3>
+            <p class="chart-subtitle">Goals categorized by current status</p>
+            <div class="bar-chart-v">
+                @for (s of statusDistribution; track s.status) {
+                <div class="bar-col">
+                    <span class="bar-count">{{ s.count }}</span>
+                    <div class="bar-v" [style.height.%]="getStatusBarHeight(s.count)" [style.background]="s.color">
+                    </div>
+                    <span class="bar-label">{{ s.status }}</span>
+                </div>
+                }
+                @if (statusDistribution.length === 0) {
+                <p class="chart-empty">No goals yet</p>
+                }
+            </div>
+        </div>
+
+        <!-- Goals by Department (horizontal bars) -->
+        <div class="chart-card">
+            <h3 class="chart-title">Goals by Department</h3>
+            <p class="chart-subtitle">Distribution across organizational units</p>
+            <div class="bar-chart-h">
+                @for (d of goalsByDept; track d.name) {
+                <div class="bar-row">
+                    <span class="bar-row-label">{{ d.name }}</span>
+                    <div class="bar-row-track">
+                        <div class="bar-h" [style.width.%]="getBarWidth(d.count)"></div>
+                    </div>
+                    <span class="bar-row-count">{{ d.count }}</span>
+                </div>
+                }
+                @if (goalsByDept.length === 0) {
+                <p class="chart-empty">No data</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row: Recent Assessments -->
+    <div class="section-card">
+        <h3 class="chart-title">Recent Probability Assessments</h3>
+        <p class="chart-subtitle">Latest goal probability updates</p>
+        <div class="assessment-list">
+            @for (a of recentAssessments; track a.id) {
+            <div class="assessment-row">
+                <div class="assessment-info">
+                    <p class="assessment-goal">{{ a.goalFocus }}</p>
+                    <p class="assessment-date">{{ formatDateTime(a.assessedAt) }}</p>
+                </div>
+                <span class="assessment-prob" [style.color]="getProbabilityColor(a.probability)"
+                    [style.background]="getProbabilityBg(a.probability)">
+                    {{ (a.probability * 100).toFixed(0) }}%
+                </span>
+            </div>
+            }
+            @if (recentAssessments.length === 0) {
+            <p class="chart-empty">No assessments recorded yet</p>
+            }
+        </div>
+    </div>
+
+    <!-- Active Goals Table -->
+    <div class="section-card">
+        <h3 class="chart-title">Active Goals</h3>
+        <p class="chart-subtitle">Goals currently in progress across departments</p>
+        <div class="active-goals-list">
+            @for (g of activeGoalsList; track g.id) {
+            <a [routerLink]="['/goals', g.id]" class="active-goal-row">
+                <div class="active-goal-accent" [style.background]="getProbabilityColor(g.probability || 0)"></div>
+                <div class="active-goal-info">
+                    <h4 class="active-goal-focus">{{ g.focus }}</h4>
+                    <p class="active-goal-magnitude">{{ g.magnitude }}</p>
+                    <div class="active-goal-meta">
+                        <span class="active-goal-dept">{{ g.deptName }}</span>
+                        <span class="active-goal-date">
+                            <mat-icon class="meta-icon-sm">schedule</mat-icon>
+                            {{ formatShortDate(g.activeTo) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="active-goal-prob">
+                    <span class="prob-big">{{ ((g.probability || 0) * 100).toFixed(0) }}%</span>
+                    <span class="prob-label">Probability</span>
+                </div>
+            </a>
+            }
+            @if (activeGoalsList.length === 0) {
+            <p class="chart-empty">No active goals</p>
+            }
+        </div>
+    </div>
+
+    }
 </div>

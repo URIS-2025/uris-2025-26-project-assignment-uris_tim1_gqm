@@ -14,6 +14,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { HasPermissionDirective } from '../../core/permissions/has-permission.directive';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { GoalApiService } from '../../core/api/goal-api.service';
+import { DepartmentApiService } from '../../core/api/department-api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Goal } from '../../core/api/api.models';
 import { CommonModule } from '@angular/common';
@@ -50,6 +51,7 @@ export class GoalsListComponent implements OnInit {
     };
 
     private auth = inject(AuthService);
+    private deptApi = inject(DepartmentApiService);
     private destroyRef = inject(DestroyRef);
 
     constructor(private goalApi: GoalApiService, private dialog: MatDialog) { }
@@ -65,14 +67,27 @@ export class GoalsListComponent implements OnInit {
 
     loadGoals(): void {
         this.loading = true;
-        this.goalApi.getAll({ pageNumber: this.pageNumber, pageSize: this.pageSize }).subscribe({
-            next: res => {
-                this.allGoals = res.items ?? [];
-                this.totalCount = res.totalCount ?? 0;
-                this.loading = false;
-                this.applyFilters();
-            },
-            error: () => { this.loading = false; }
+        const orgId = this.auth.organizationId;
+
+        const depts$ = orgId
+            ? this.deptApi.getDepartmentsByOrg(orgId, { page: 1, size: 100 })
+            : this.deptApi.getDepartments({ page: 1, size: 100 });
+
+        import('rxjs').then(({ forkJoin }) => {
+            forkJoin({
+                goalsRes: this.goalApi.getAll({ pageNumber: 1, pageSize: 1000 }), // fetch large to filter client side
+                departmentsRes: depts$
+            }).subscribe({
+                next: ({ goalsRes, departmentsRes }) => {
+                    const deptIds = new Set(departmentsRes.items.map((d: any) => d.id));
+                    const filteredGoals = (goalsRes.items ?? []).filter(g => deptIds.has(g.departmentId));
+
+                    this.allGoals = filteredGoals;
+                    this.loading = false;
+                    this.applyFilters();
+                },
+                error: () => { this.loading = false; }
+            });
         });
     }
 
@@ -94,7 +109,11 @@ export class GoalsListComponent implements OnInit {
             );
         }
 
-        this.goals = filtered;
+        this.totalCount = filtered.length;
+
+        // Client-side Pagination
+        const start = (this.pageNumber - 1) * this.pageSize;
+        this.goals = filtered.slice(start, start + this.pageSize);
     }
 
     onSearch(): void {
