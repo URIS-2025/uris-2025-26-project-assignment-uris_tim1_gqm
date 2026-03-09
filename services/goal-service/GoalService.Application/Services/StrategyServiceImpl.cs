@@ -5,18 +5,20 @@ using GoalService.Application.Mappings;
 using GoalService.Domain.Exceptions;
 using GoalService.Application.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
+using Shared.Contracts.Messages;
 
 namespace GoalService.Application.Services;
 
 public class StrategyServiceImpl : IStrategyService
 {
     private readonly IGoalDbContext _context;
-    private readonly IOrchestrationClient _orchestrationClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public StrategyServiceImpl(IGoalDbContext context, IOrchestrationClient orchestrationClient)
+    public StrategyServiceImpl(IGoalDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
-        _orchestrationClient = orchestrationClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<IEnumerable<StrategyResponse>> GetByGoalIdAsync(Guid goalId)
@@ -50,9 +52,17 @@ public class StrategyServiceImpl : IStrategyService
         var strategy = request.ToEntity();
 
         _context.Strategies.Add(strategy);
-        await _context.SaveChangesAsync();
+        await _publishEndpoint.Publish<IWorkflowTransitionRequested>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            GoalId = request.GoalId,
+            StepName = "StrategyDefined",
+            CompensationEndpoint = $"api/Strategy/by-goal/{request.GoalId}",
+            CompensationPayload = "{}",
+            RequestedAt = DateTime.UtcNow
+        });
 
-        await _orchestrationClient.RecordStepAsync(request.GoalId, "StrategyDefined", $"api/Strategy/by-goal/{request.GoalId}", "{}");
+        await _context.SaveChangesAsync();
 
         return strategy.ToResponse();
     }

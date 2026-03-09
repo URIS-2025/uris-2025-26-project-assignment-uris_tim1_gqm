@@ -2,8 +2,9 @@ using FluentValidation;
 using GoalService.Application.DTOs;
 using Shared.Contracts;
 using GoalService.Application.Interfaces;
-using GoalService.Application.Interfaces.Clients;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts.Messages;
 
 namespace GoalService.API.Controllers;
 
@@ -13,13 +14,13 @@ public class GoalController : ControllerBase
 {
     private readonly IGoalService _goalService;
     private readonly IValidator<GoalRequest> _validator;
-    private readonly IAuditClient _auditClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public GoalController(IGoalService goalService, IValidator<GoalRequest> validator, IAuditClient auditClient)
+    public GoalController(IGoalService goalService, IValidator<GoalRequest> validator, IPublishEndpoint publishEndpoint)
     {
         _goalService = goalService;
         _validator = validator;
-        _auditClient = auditClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     /// <summary>
@@ -79,7 +80,7 @@ public class GoalController : ControllerBase
             return BadRequest(new { errors = validation.Errors.Select(e => e.ErrorMessage) });
 
         var goal = await _goalService.CreateAsync(request);
-        _ = _auditClient.LogAsync(Guid.Empty, "System", "GoalCreated", "Goal", goal.Id, new { goal.Focus });
+        
         return CreatedAtAction(nameof(GetById), new { id = goal.Id }, goal);
     }
 

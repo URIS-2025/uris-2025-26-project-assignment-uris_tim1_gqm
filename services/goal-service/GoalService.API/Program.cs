@@ -7,6 +7,7 @@ using GoalService.Infrastructure.Persistence;
 using GoalService.Application.Interfaces.Persistence;
 using GoalService.Application.Services;
 using GoalService.Infrastructure.Seed;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.HMAC;
 
@@ -59,17 +60,30 @@ builder.Services.AddHttpClient<IQgmGoalClient, QgmGoalClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
-builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
+// --- MassTransit ---
+builder.Services.AddMassTransit(x =>
 {
-    var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
-    client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+    x.AddEntityFrameworkOutbox<GoalDbContext>(o =>
+    {
+        o.UsePostgres();
+        o.UseBusOutbox();
+    });
 
-builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
-{
-    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
-    client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+    x.UsingRabbitMq((ctx, cfg) =>
+    {
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq://localhost";
+        var rabbitMqUsername = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitMqPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+        cfg.Host(rabbitMqHost, h =>
+        {
+            h.Username(rabbitMqUsername);
+            h.Password(rabbitMqPassword);
+        });
+
+        cfg.ConfigureEndpoints(ctx);
+    });
+});
 
 // --- Controllers ---
 builder.Services.AddControllers();

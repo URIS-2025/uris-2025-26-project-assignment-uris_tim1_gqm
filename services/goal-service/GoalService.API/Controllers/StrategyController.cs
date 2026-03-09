@@ -1,8 +1,9 @@
 using FluentValidation;
 using GoalService.Application.DTOs;
 using GoalService.Application.Interfaces;
-using GoalService.Application.Interfaces.Clients;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Contracts.Messages;
 
 namespace GoalService.API.Controllers;
 
@@ -12,13 +13,13 @@ public class StrategyController : ControllerBase
 {
     private readonly IStrategyService _strategyService;
     private readonly IValidator<StrategyRequest> _validator;
-    private readonly IAuditClient _auditClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public StrategyController(IStrategyService strategyService, IValidator<StrategyRequest> validator, IAuditClient auditClient)
+    public StrategyController(IStrategyService strategyService, IValidator<StrategyRequest> validator, IPublishEndpoint publishEndpoint)
     {
         _strategyService = strategyService;
         _validator = validator;
-        _auditClient = auditClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     /// <summary>
@@ -55,7 +56,20 @@ public class StrategyController : ControllerBase
             return BadRequest(new { errors = validation.Errors.Select(e => e.ErrorMessage) });
 
         var strategy = await _strategyService.CreateAsync(request);
-        _ = _auditClient.LogAsync(Guid.Empty, "System", "StrategyCreated", "Strategy", strategy.Id, new { strategy.GoalId });
+        
+        await _publishEndpoint.Publish<IAuditLogCreated>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            ActorId = Guid.Empty,
+            ActorRole = "System",
+            Service = "goal-service",
+            Action = "StrategyCreated",
+            EntityType = "Strategy",
+            EntityId = strategy.Id,
+            Metadata = System.Text.Json.JsonSerializer.Serialize(new { strategy.GoalId }),
+            OccurredAt = DateTime.UtcNow
+        });
+
         return CreatedAtAction(nameof(GetById), new { id = strategy.Id }, strategy);
     }
 
