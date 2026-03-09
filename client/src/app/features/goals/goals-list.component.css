@@ -119,7 +119,7 @@
     flex-shrink: 0;
 }
 
-/* Mat-form-field inside filter bar — compact, no subscript space */
+/* Mat-form-field inside filter bar — compact, clean dropdown */
 .filter-field {
     flex-shrink: 0;
     width: 170px;
@@ -132,12 +132,29 @@
 
 .filter-field .mat-mdc-text-field-wrapper {
     padding: 0 12px !important;
+    background: var(--surface-1) !important;
+    border-radius: var(--radius-md) !important;
 }
 
 .filter-field .mat-mdc-form-field-infix {
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    min-height: 36px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    min-height: 34px !important;
+}
+
+.filter-field .mdc-floating-label {
+    font-size: 13px !important;
+    color: var(--text-secondary) !important;
+}
+
+.filter-field .mat-mdc-select-value-text {
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.filter-field .mat-mdc-select-placeholder {
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
 /* Results count */
@@ -192,6 +209,10 @@
 
 .goal-card.status-active::before {
     background: #10B981;
+}
+
+.goal-card.status-draft::before {
+    background: #64748B;
 }
 
 .goal-card.status-onhold::before {

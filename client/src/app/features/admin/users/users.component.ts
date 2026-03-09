@@ -75,6 +75,21 @@ interface UserRow {
       margin-top: 2px;
     }
     .user-inactive { opacity: 0.5; }
+    
+    /* Table styling improvements */
+    th.mat-mdc-header-cell {
+      padding: 16px 24px !important;
+      font-size: 13px !important;
+      color: var(--text-secondary) !important;
+      font-weight: 600 !important;
+      border-bottom: 1px solid var(--border-color) !important;
+    }
+    td.mat-mdc-cell {
+      padding: 16px 24px !important;
+      font-size: 14px !important;
+      color: var(--text-primary) !important;
+      border-bottom: 1px solid var(--border-color) !important;
+    }
   `],
   template: `
     <div class="page-enter" style="padding: 24px;">

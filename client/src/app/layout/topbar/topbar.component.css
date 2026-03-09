@@ -152,10 +152,10 @@
 
 button.active {
     background: var(--surface-1);
-    color: var(--primary-700) !important;
+    color: #2CB1A1 !important;
     font-weight: 500;
 }
 
 button.active mat-icon {
-    color: var(--primary-700) !important;
+    color: #2CB1A1 !important;
 }

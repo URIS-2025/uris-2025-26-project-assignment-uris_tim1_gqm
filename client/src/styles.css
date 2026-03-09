@@ -443,15 +443,64 @@ body {
   color: white !important;
 }
 
-/* Tabs */
+/* ========================================================
+   FORM FIELD FONT — Force Inter everywhere in Material
+======================================================== */
+.mdc-floating-label,
+.mat-mdc-floating-label,
+.mdc-text-field__input,
+.mat-mdc-input-element,
+.mat-mdc-select-value-text,
+.mat-mdc-select-placeholder,
+.mat-mdc-form-field-label,
+.mat-mdc-form-field-hint,
+.mat-mdc-form-field-error,
+.mdc-floating-label--float-above,
+.mat-mdc-form-field .mdc-floating-label,
+.mat-mdc-form-field .mat-mdc-input-element,
+.mat-mdc-form-field .mat-mdc-select {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Floating label size + color when resting and floating */
+.mdc-floating-label {
+  font-size: 14px !important;
+  color: var(--text-muted) !important;
+  font-weight: 400 !important;
+}
+
+.mdc-floating-label--float-above {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+}
+
+/* Mat-input inside form fields */
+.mdc-text-field__input {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+}
+
+.mdc-text-field__input::placeholder {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+  opacity: 0.6 !important;
+}
+
+/* ========================================================
+   TABS — Inter font, clean styling
+======================================================== */
 .mat-mdc-tab-header {
   background: var(--surface-0) !important;
   border-bottom: 1px solid var(--border-color) !important;
 }
 
 .mat-mdc-tab .mdc-tab__text-label {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
   color: var(--text-secondary) !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
@@ -469,6 +518,48 @@ body {
 /* Slider */
 .mat-mdc-slider .mdc-slider__track--active_fill {
   border-color: var(--primary-700) !important;
+}
+
+/* ========================================================
+   FILTER FIELD — compact inline dropdown (goals-list etc.)
+======================================================== */
+.filter-field .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}
+
+.filter-field .mat-mdc-text-field-wrapper {
+  padding: 0 12px !important;
+  background: var(--surface-1) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.filter-field .mat-mdc-form-field-infix {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  min-height: 34px !important;
+}
+
+.filter-field .mdc-notched-outline__leading,
+.filter-field .mdc-notched-outline__notch,
+.filter-field .mdc-notched-outline__trailing {
+  border-color: var(--border-color) !important;
+}
+
+.filter-field .mdc-floating-label {
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+  color: var(--text-secondary) !important;
+}
+
+.filter-field .mat-mdc-select-value-text {
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.filter-field .mat-mdc-select-placeholder {
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+  color: var(--text-muted) !important;
 }
 
 /* ========================================================

@@ -71,7 +71,7 @@ export class DepartmentsComponent implements OnInit {
     load(): void {
         this.loading = true;
         this.deptApi.getDepartments({ page: this.pageNumber, size: this.pageSize }).subscribe({
-            next: res => { this.departments = res.items ?? []; this.totalCount = res.totalCount ?? 0; this.loading = false; },
+            next: res => { this.departments = res.items ?? []; this.totalCount = res.total ?? 0; this.loading = false; },
             error: () => { this.loading = false; }
         });
     }

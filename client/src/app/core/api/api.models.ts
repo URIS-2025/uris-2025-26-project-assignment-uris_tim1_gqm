@@ -12,7 +12,7 @@ export interface PagedParams {
 
 export interface PaginatedResponse<T> {
     items: T[];
-    totalCount: number;
+    total: number;
     pageNumber: number;
     pageSize: number;
     totalPages: number;
@@ -34,7 +34,7 @@ export interface Goal {
     updatedAt?: string;
 }
 
-export type GoalStatus = 'Active' | 'OnHold' | 'Completed' | 'Cancelled';
+export type GoalStatus = 'Active' | 'OnHold' | 'Completed' | 'Cancelled' | 'Draft';
 
 export interface GoalDetails extends Goal {
     strategy?: Strategy;
