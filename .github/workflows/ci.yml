@@ -311,12 +311,17 @@ jobs:
           reporter: dotnet-trx
 
   build-e2e:
-    needs: [detect-changes, build-goal, build-audit, build-orchestration]
+    needs: [detect-changes, build-department, build-goal, build-premise, build-gqm-goal, build-assessment, build-user, build-audit, build-orchestration]
     if: |
       always() && 
       !cancelled() &&
       !contains(needs.*.result, 'failure') &&
-      (needs.detect-changes.outputs.goal == 'true' || 
+      (needs.detect-changes.outputs.department == 'true' ||
+       needs.detect-changes.outputs.goal == 'true' || 
+       needs.detect-changes.outputs.premise == 'true' ||
+       needs.detect-changes.outputs.gqm-goal == 'true' ||
+       needs.detect-changes.outputs.assessment == 'true' ||
+       needs.detect-changes.outputs.user == 'true' ||
        needs.detect-changes.outputs.audit == 'true' || 
        needs.detect-changes.outputs.orchestration == 'true' ||
        needs.detect-changes.outputs.shared == 'true' ||
