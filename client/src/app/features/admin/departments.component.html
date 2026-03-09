@@ -21,15 +21,7 @@
                 <mat-label>Description</mat-label>
                 <input matInput formControlName="description">
             </mat-form-field>
-            <mat-form-field appearance="outline">
-                <mat-label>Organization</mat-label>
-                <mat-select formControlName="organizationId" id="dept-org">
-                    @for (o of organizations; track o.id) {
-                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
-                    }
-                </mat-select>
-                @if (form.get('organizationId')?.invalid && form.touched) { <mat-error>Required</mat-error> }
-            </mat-form-field>
+
             <div class="form-actions">
                 <button mat-stroked-button type="button" (click)="cancelForm()">Cancel</button>
                 <button mat-flat-button type="submit" [disabled]="form.invalid">{{ editing ? 'Update' : 'Create'

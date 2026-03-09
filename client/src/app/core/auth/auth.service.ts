@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
     AuthState,
@@ -31,6 +31,11 @@ export class AuthService {
     readonly user$: Observable<User | null> = this._state$.pipe(map(s => s.user));
     readonly isAuthenticated$: Observable<boolean> = this._state$.pipe(map(s => s.isAuthenticated));
     readonly token$: Observable<string | null> = this._state$.pipe(map(s => s.accessToken));
+
+    readonly organizationId$: Observable<string | null> = this._state$.pipe(
+        map(s => s.user?.organizationId ?? null),
+        distinctUntilChanged()
+    );
 
     constructor(
         private http: HttpClient,

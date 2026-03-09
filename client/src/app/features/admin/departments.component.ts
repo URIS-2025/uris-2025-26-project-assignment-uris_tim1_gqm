@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +14,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { HasPermissionDirective } from '../../core/permissions/has-permission.directive';
 import { DepartmentApiService } from '../../core/api/department-api.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Department, Organization } from '../../core/api/api.models';
 
 @Component({
@@ -38,6 +40,8 @@ export class DepartmentsComponent implements OnInit {
 
     displayedColumns = ['name', 'description', 'organization', 'actions'];
     form: FormGroup;
+    private auth = inject(AuthService);
+    private destroyRef = inject(DestroyRef);
 
     constructor(
         private deptApi: DepartmentApiService,
@@ -47,15 +51,20 @@ export class DepartmentsComponent implements OnInit {
         this.form = this.fb.group({
             name: ['', Validators.required],
             description: [''],
-            organizationId: ['', Validators.required],
         });
     }
 
     ngOnInit(): void {
-        this.load();
         this.deptApi.getOrganizations({ page: 1, size: 100 }).subscribe({
             next: res => this.organizations = res.items ?? [],
             error: () => { }
+        });
+
+        this.auth.organizationId$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => {
+            this.pageNumber = 1;
+            this.load();
         });
     }
 
@@ -76,6 +85,8 @@ export class DepartmentsComponent implements OnInit {
     save(): void {
         if (this.form.invalid) return;
         const req = this.form.value;
+        req.organizationId = this.auth.organizationId; // auto-inject active org
+
         const op = this.editing
             ? this.deptApi.updateDepartment(this.editing.id, req)
             : this.deptApi.createDepartment(req);
