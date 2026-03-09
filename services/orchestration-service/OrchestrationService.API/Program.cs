@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using FluentValidation;
@@ -85,6 +86,7 @@ builder.Services.AddControllers();
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("orchestration-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -143,6 +145,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "orch
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
 
 
 

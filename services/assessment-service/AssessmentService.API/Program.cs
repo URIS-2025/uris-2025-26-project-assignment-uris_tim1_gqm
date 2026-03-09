@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using AssessmentService.API.Middleware;
@@ -69,6 +70,7 @@ builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("assessment-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -133,6 +135,7 @@ app.MapControllers();
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
 
 
 

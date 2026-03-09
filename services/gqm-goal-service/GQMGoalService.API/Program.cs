@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using GQMGoalService.API.Middleware;
@@ -44,6 +45,7 @@ builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("gqm-goal-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -98,6 +100,7 @@ app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
 
 
 

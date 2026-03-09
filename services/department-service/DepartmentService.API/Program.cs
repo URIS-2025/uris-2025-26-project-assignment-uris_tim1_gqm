@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using DepartmentService.API.Middleware;
@@ -36,6 +37,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<OrganizationRequestValidato
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("department-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -107,6 +109,7 @@ app.Run();
 
 // Required for integration testing
 public partial class Program { }
+
 
 
 

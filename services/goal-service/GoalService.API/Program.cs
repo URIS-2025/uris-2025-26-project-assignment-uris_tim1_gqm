@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using FluentValidation;
@@ -93,6 +94,7 @@ builder.Services.AddControllers();
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("goal-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -146,6 +148,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
 
 
 

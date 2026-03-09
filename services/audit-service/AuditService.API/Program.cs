@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using AuditService.API.Middleware;
@@ -41,6 +42,7 @@ if (builder.Environment.IsDevelopment())
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("audit-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -88,6 +90,7 @@ app.MapPrometheusScrapingEndpoint();
 app.Run();
 
 public partial class Program { }
+
 
 
 

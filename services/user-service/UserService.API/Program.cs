@@ -1,3 +1,4 @@
+using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using System.Text;
@@ -71,6 +72,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<UserRequestValidator>();
 
 // --- OpenTelemetry ---
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("user-service"))
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
@@ -146,6 +148,7 @@ app.Run();
 
 // Required for integration testing
 public partial class Program { }
+
 
 
 
