@@ -1,12 +1,43 @@
 <div class="goals-list-page page-enter">
-    <app-page-header title="Goals" subtitle="Manage your organisational goals.">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a routerLink="/">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">Goals</span>
+    </nav>
+
+    <app-page-header title="Goals" subtitle="Manage strategic goals across your organization">
         <ng-template #actions>
             <a [hasPermission]="'create_goals'" permissionMode="disable" mat-flat-button routerLink="/goals/new"
-                id="btn-new-goal">
-                <mat-icon>add</mat-icon> New Goal
+                id="btn-new-goal" class="btn-create">
+                <mat-icon>add</mat-icon> Create Goal
             </a>
         </ng-template>
     </app-page-header>
+
+    <!-- Filters bar -->
+    <div class="filters-bar">
+        <div class="search-wrap">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input type="text" placeholder="Search goals by focus, object, or magnitude..." class="search-input"
+                [(ngModel)]="searchQuery" (input)="onSearch()">
+        </div>
+        <div class="filter-divider"></div>
+        <mat-form-field appearance="outline" class="filter-field">
+            <mat-select [(ngModel)]="statusFilter" (selectionChange)="onStatusChange()" placeholder="All Statuses">
+                <mat-option value="">All Statuses</mat-option>
+                <mat-option value="Active">Active</mat-option>
+                <mat-option value="OnHold">On Hold</mat-option>
+                <mat-option value="Completed">Completed</mat-option>
+                <mat-option value="Cancelled">Cancelled</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <!-- Results count -->
+    @if (!loading && goals.length > 0) {
+    <p class="results-count">Showing {{ goals.length }} of {{ totalCount }} goals</p>
+    }
 
     @if (loading) {
     <div class="loading-wrap">
@@ -15,62 +46,59 @@
     } @else if (goals.length === 0) {
     <div class="empty-state">
         <span class="material-icons-round">flag</span>
-        <p>No goals yet. <a routerLink="/goals/new">Create your first goal.</a></p>
+        <p>No goals found. <a routerLink="/goals/new">Create your first goal.</a></p>
     </div>
     } @else {
-    <div class="table-card">
-        <table mat-table [dataSource]="goals" class="goal-table">
 
-            <ng-container matColumnDef="focus">
-                <th mat-header-cell *matHeaderCellDef>Focus</th>
-                <td mat-cell *matCellDef="let g">
-                    <a [routerLink]="['/goals', g.id]" class="goal-link">{{ g.focus }}</a>
-                </td>
-            </ng-container>
+    <!-- Goal Cards -->
+    <div class="goal-cards">
+        @for (g of goals; track g.id) {
+        <a [routerLink]="['/goals', g.id]" class="goal-card" [class.status-active]="g.status === 'Active'"
+            [class.status-onhold]="g.status === 'OnHold'" [class.status-completed]="g.status === 'Completed'"
+            [class.status-cancelled]="g.status === 'Cancelled'">
 
-            <ng-container matColumnDef="object">
-                <th mat-header-cell *matHeaderCellDef>Object</th>
-                <td mat-cell *matCellDef="let g">{{ g.object }}</td>
-            </ng-container>
+            <div class="goal-card-body">
+                <div class="goal-card-main">
+                    <h3 class="goal-focus">{{ g.focus }}</h3>
+                    <p class="goal-magnitude">{{ g.magnitude }}</p>
+                    @if (g.constraints) {
+                    <p class="goal-constraints">{{ g.constraints }}</p>
+                    }
+                    <div class="goal-meta">
+                        <span class="meta-item">
+                            <mat-icon class="meta-icon">calendar_today</mat-icon>
+                            {{ formatDate(g.activeFrom) }} - {{ formatDate(g.activeTo) }}
+                        </span>
+                        <span class="meta-item">
+                            <mat-icon class="meta-icon">schedule</mat-icon>
+                            {{ getDaysRemaining(g.activeTo) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="goal-card-right">
+                    <span [class]="'status-chip ' + statusColors[g.status]">{{ g.status }}</span>
+                    <div class="probability-block">
+                        <span class="probability-label"><mat-icon
+                                style="font-size:14px;height:14px;width:14px;">adjust</mat-icon>
+                            Probability</span>
+                        <span class="probability-value" [class.prob-high]="g.baselineProbability >= 0.7"
+                            [class.prob-mid]="g.baselineProbability >= 0.4 && g.baselineProbability < 0.7"
+                            [class.prob-low]="g.baselineProbability < 0.4">{{ (g.baselineProbability *
+                            100).toFixed(0) }}%</span>
+                    </div>
+                </div>
+            </div>
 
-            <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let g">
-                    <span [class]="'chip ' + (statusColors[g.status])">
-                        {{ g.status }}
-                    </span>
-                </td>
-            </ng-container>
-
-            <ng-container matColumnDef="activeFrom">
-                <th mat-header-cell *matHeaderCellDef>From</th>
-                <td mat-cell *matCellDef="let g">{{ formatDate(g.activeFrom) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="activeTo">
-                <th mat-header-cell *matHeaderCellDef>To</th>
-                <td mat-cell *matCellDef="let g">{{ formatDate(g.activeTo) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let g" class="actions-cell">
-                    <a mat-icon-button [routerLink]="['/goals', g.id]" title="View">
-                        <mat-icon>visibility</mat-icon>
-                    </a>
-                    <button [hasPermission]="'delete_goals'" permissionMode="disable" mat-icon-button class="btn-danger"
-                        (click)="deleteGoal(g)" title="Delete">
-                        <mat-icon>delete_outline</mat-icon>
-                    </button>
-                </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25, 50]"
-            (page)="onPage($event)"></mat-paginator>
+            <!-- Delete overlay -->
+            <button [hasPermission]="'delete_goals'" permissionMode="disable" mat-icon-button class="goal-delete-btn"
+                (click)="deleteGoal(g); $event.preventDefault(); $event.stopPropagation()" title="Delete">
+                <mat-icon>delete_outline</mat-icon>
+            </button>
+        </a>
+        }
     </div>
+
+    <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25, 50]"
+        (page)="onPage($event)"></mat-paginator>
     }
 </div>
