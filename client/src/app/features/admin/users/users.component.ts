@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -161,6 +162,8 @@ export class UsersComponent implements OnInit {
   users = signal<UserRow[]>([]);
   loading = signal<boolean>(true);
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private userService: UserApiService,
     private departmentService: DepartmentApiService,
@@ -169,7 +172,11 @@ export class UsersComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadData();
+    this.authService.organizationId$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.loadData();
+    });
   }
 
   openAddUserDialog(): void {

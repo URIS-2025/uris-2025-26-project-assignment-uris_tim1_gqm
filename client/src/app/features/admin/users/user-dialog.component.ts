@@ -73,16 +73,7 @@ function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
             <input matInput formControlName="password" required>
           </mat-form-field>
 
-          @if (!isSystemAdminSelected()) {
-            <mat-form-field appearance="outline">
-              <mat-label>Organization</mat-label>
-              <mat-select formControlName="organizationId" required>
-                @for (org of organizations(); track org.id) {
-                  <mat-option [value]="org.id">{{ org.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          }
+
 
           <mat-form-field appearance="outline">
             <mat-label>Role</mat-label>
@@ -139,7 +130,6 @@ export class UserDialogComponent implements OnInit {
   departmentsLoading = signal<boolean>(false);
 
   roles = signal<Role[]>([]);
-  organizations = signal<Organization[]>([]);
   departments = signal<Department[]>([]);
 
   selectedRoleId = signal<string>('');
@@ -167,20 +157,11 @@ export class UserDialogComponent implements OnInit {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email, gqmEmailValidator]],
       password: ['Test@123', Validators.required],
-      organizationId: ['', Validators.required],
       roleId: ['', Validators.required],
       departmentId: ['']
     });
 
-    // Watch organization changes to fetch associated departments
-    this.userForm.get('organizationId')?.valueChanges.subscribe(orgId => {
-      this.userForm.get('departmentId')?.setValue('');
-      if (orgId) {
-        this.loadDepartments(orgId);
-      } else {
-        this.departments.set([]);
-      }
-    });
+
 
     // Track roleId changes using a signal for the computed property
     this.userForm.get('roleId')?.valueChanges.subscribe(roleId => {
@@ -197,14 +178,7 @@ export class UserDialogComponent implements OnInit {
         }
         deptControl?.updateValueAndValidity();
 
-        const orgControl = this.userForm.get('organizationId');
-        if (this.isSystemAdminSelected()) {
-          orgControl?.clearValidators();
-          orgControl?.setValue(null);
-        } else {
-          orgControl?.setValidators(Validators.required);
-        }
-        orgControl?.updateValueAndValidity();
+
       });
     });
   }
@@ -214,44 +188,17 @@ export class UserDialogComponent implements OnInit {
   }
 
   private loadInitialData() {
-    // Fetch roles and organizations concurrently
-    let rolesFetched = false;
-    let orgsFetched = false;
-
-    const checkLoading = () => { if (rolesFetched && orgsFetched) this.initialLoading.set(false); };
-
     this.userService.getRoles().pipe(
       catchError(() => of([]))
     ).subscribe(res => {
       this.roles.set(res);
-      rolesFetched = true;
-      checkLoading();
+      this.initialLoading.set(false);
     });
 
-    this.departmentService.getOrganizations({ size: 100 }).pipe(
-      catchError(() => of({ items: [] }))
-    ).subscribe(res => {
-      let loadedOrgs = res.items || [];
-
-      // Filter organizations based on current user's role
-      const currentUser = this.authService.currentUser;
-      if (currentUser) {
-        const isSystemAdmin = currentUser.permissions?.includes('manage_organizations');
-        if (!isSystemAdmin && currentUser.organizationId) {
-          loadedOrgs = loadedOrgs.filter(org => org.id === currentUser.organizationId);
-        }
-      }
-
-      this.organizations.set(loadedOrgs);
-
-      // If there's only one organization available (e.g., Org Admin), select it automatically
-      if (loadedOrgs.length === 1) {
-        this.userForm.patchValue({ organizationId: loadedOrgs[0].id });
-      }
-
-      orgsFetched = true;
-      checkLoading();
-    });
+    const orgId = this.authService.organizationId;
+    if (orgId) {
+      this.loadDepartments(orgId);
+    }
   }
 
   private loadDepartments(orgId: string) {
@@ -276,7 +223,7 @@ export class UserDialogComponent implements OnInit {
       lastName: val.lastName,
       email: val.email,
       password: val.password,
-      organizationId: val.organizationId
+      organizationId: this.authService.organizationId!
     }).subscribe({
       next: (createdUser) => {
         // Step 2: Assign Role
