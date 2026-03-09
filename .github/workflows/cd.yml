@@ -1,0 +1,130 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI - Build & Test"]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  load-outputs:
+    name: Load CI Change Detection Outputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    outputs:
+      department: ${{ steps.parse.outputs.department }}
+      goal: ${{ steps.parse.outputs.goal }}
+      premise: ${{ steps.parse.outputs.premise }}
+      gqm-goal: ${{ steps.parse.outputs.gqm-goal }}
+      assessment: ${{ steps.parse.outputs.assessment }}
+      user: ${{ steps.parse.outputs.user }}
+      orchestration: ${{ steps.parse.outputs.orchestration }}
+      audit: ${{ steps.parse.outputs.audit }}
+      shared: ${{ steps.parse.outputs.shared }}
+      infrastructure: ${{ steps.parse.outputs.infrastructure }}
+      has-changes: ${{ steps.parse.outputs.has-changes }}
+    steps:
+      - name: Download change detection outputs from CI
+        uses: actions/download-artifact@v4
+        with:
+          name: detect-changes-outputs
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+
+      - name: Parse outputs
+        id: parse
+        run: |
+          while IFS='=' read -r key value; do
+            echo "${key}=${value}" >> $GITHUB_OUTPUT
+          done < detect-changes.env
+
+  deploy:
+    name: Deploy all services
+    needs: [load-outputs]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: needs.load-outputs.outputs.has-changes == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .env file
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_PASSWORD }}
+          HMAC_SECRET_KEY: ${{ secrets.HMAC_SECRET_KEY }}
+        run: |
+          printf 'POSTGRES_PASSWORD=%s\nRABBITMQ_DEFAULT_PASS=%s\nHMAC_SECRET_KEY=%s\n' \
+            "$POSTGRES_PASSWORD" "$RABBITMQ_DEFAULT_PASS" "$HMAC_SECRET_KEY" > .env
+          chmod 600 .env
+
+      - name: Copy files to VM and deploy
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          CHG_DEPT: ${{ needs.load-outputs.outputs.department }}
+          CHG_GOAL: ${{ needs.load-outputs.outputs.goal }}
+          CHG_PREM: ${{ needs.load-outputs.outputs.premise }}
+          CHG_GQM: ${{ needs.load-outputs.outputs.gqm-goal }}
+          CHG_ASMT: ${{ needs.load-outputs.outputs.assessment }}
+          CHG_USER: ${{ needs.load-outputs.outputs.user }}
+          CHG_ORCH: ${{ needs.load-outputs.outputs.orchestration }}
+          CHG_AUDIT: ${{ needs.load-outputs.outputs.audit }}
+          CHG_SHARED: ${{ needs.load-outputs.outputs.shared }}
+          CHG_INFRA: ${{ needs.load-outputs.outputs.infrastructure }}
+        run: |
+          KEY_FILE=$(mktemp)
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          HOST="${VM_HOST//$'\n'/}"
+
+          tar -czf - docker-compose.yaml nginx.conf .env | \
+            ssh -i "$KEY_FILE" \
+              -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              "${VM_USER}@${HOST}" 'mkdir -p ~/app && tar -xzf - -C ~/app --overwrite --no-same-owner'
+
+          # Build selective pull list — only pull images that actually changed
+          SERVICES=""
+          if [ "$CHG_SHARED" != "true" ] && [ "$CHG_INFRA" != "true" ]; then
+            [ "$CHG_DEPT" == "true" ] && SERVICES="$SERVICES department-service"
+            [ "$CHG_GOAL" == "true" ] && SERVICES="$SERVICES goal-service"
+            [ "$CHG_PREM" == "true" ] && SERVICES="$SERVICES premise-service"
+            [ "$CHG_GQM" == "true" ]  && SERVICES="$SERVICES gqm-goal-service"
+            [ "$CHG_ASMT" == "true" ] && SERVICES="$SERVICES assessment-service"
+            [ "$CHG_USER" == "true" ] && SERVICES="$SERVICES user-service"
+            [ "$CHG_ORCH" == "true" ] && SERVICES="$SERVICES orchestration-service"
+            [ "$CHG_AUDIT" == "true" ] && SERVICES="$SERVICES audit-service"
+            SERVICES="${SERVICES# }"  # trim leading space
+          fi
+
+          ssh -i "$KEY_FILE" \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            -o ServerAliveInterval=20 \
+            -o ServerAliveCountMax=10 \
+            "${VM_USER}@${HOST}" bash -s << REMOTE
+            set -e
+            if [ -n "$ACR_LOGIN_SERVER" ]; then
+              echo "$ACR_PASSWORD" | docker login "$ACR_LOGIN_SERVER" -u "$ACR_USERNAME" --password-stdin
+            fi
+            cd ~/app
+            docker compose pull $SERVICES
+            docker compose up -d --remove-orphans
+            docker image prune -f
+            echo "✅ Deployment complete"
+          REMOTE
