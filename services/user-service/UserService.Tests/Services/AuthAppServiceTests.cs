@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 using UserService.Application.Services;
 using UserService.Application.Validators;
 using UserService.Domain.Entities;
@@ -17,6 +18,7 @@ public class AuthAppServiceTests : IDisposable
     private readonly Infrastructure.Persistence.UserServiceDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly Mock<IEmailService> _emailServiceMock;
+    private readonly Mock<IDepartmentClient> _departmentClientMock;
     private readonly AuthAppService _sut;
 
     public AuthAppServiceTests()
@@ -36,11 +38,13 @@ public class AuthAppServiceTests : IDisposable
             .Build();
 
         _emailServiceMock = new Mock<IEmailService>();
+        _departmentClientMock = new Mock<IDepartmentClient>();
 
         _sut = new AuthAppService(
             _context,
             _configuration,
             _emailServiceMock.Object,
+            _departmentClientMock.Object,
             new ChangePasswordRequestValidator(),
             new ResetPasswordRequestValidator());
     }

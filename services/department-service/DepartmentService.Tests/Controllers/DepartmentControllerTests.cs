@@ -17,13 +17,31 @@ public class DepartmentControllerTests
     {
         _serviceMock = new Mock<IDepartmentService>();
         _sut = new DepartmentController(_serviceMock.Object);
+        SetupUser(null);
+    }
+
+    private void SetupUser(Guid? orgId)
+    {
+        var claims = new List<System.Security.Claims.Claim>();
+        if (orgId.HasValue)
+        {
+            claims.Add(new System.Security.Claims.Claim(Shared.Auth.ClaimsPrincipalExtensions.OrganizationIdClaimType, orgId.Value.ToString()));
+        }
+        var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");
+        var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+        
+        _sut.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = principal }
+        };
     }
 
     // ── GetAll ──
 
     [Fact]
-    public async Task GetAll_ReturnsOk_WithPagedResponse()
+    public async Task GetAll_ReturnsOk_WithPagedResponse_WhenNoOrgClaim()
     {
+        SetupUser(null);
         var pagedResponse = new PaginationResponse<DepartmentResponse>
         {
             Items = [new DepartmentResponse { Id = Guid.NewGuid(), Name = "Dept 1" }],
@@ -39,8 +57,30 @@ public class DepartmentControllerTests
     }
 
     [Fact]
+    public async Task GetAll_ReturnsOk_WithPagedResponse_WhenOrgClaimPresent()
+    {
+        var orgId = Guid.NewGuid();
+        SetupUser(orgId);
+        
+        var pagedResponse = new PaginationResponse<DepartmentResponse>
+        {
+            Items = [new DepartmentResponse { Id = Guid.NewGuid(), Name = "Dept Org", OrganizationId = orgId }],
+            Total = 1, PageNumber = 1, PageSize = 20
+        };
+        _serviceMock.Setup(s => s.GetByOrganizationIdAsync(orgId, 1, 20)).ReturnsAsync(pagedResponse);
+
+        var result = await _sut.GetAll();
+
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var value = okResult.Value.Should().BeOfType<PaginationResponse<DepartmentResponse>>().Subject;
+        value.Items.Should().HaveCount(1);
+        _serviceMock.Verify(s => s.GetByOrganizationIdAsync(orgId, 1, 20), Times.Once);
+    }
+
+    [Fact]
     public async Task GetAll_CallsServiceWithCorrectPagination()
     {
+        SetupUser(null);
         _serviceMock.Setup(s => s.GetAllAsync(2, 5))
             .ReturnsAsync(new PaginationResponse<DepartmentResponse>());
 
