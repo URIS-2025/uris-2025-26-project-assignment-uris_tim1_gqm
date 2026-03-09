@@ -5,7 +5,9 @@ using OrchestrationService.Application.Interfaces.Clients;
 using OrchestrationService.Application.Interfaces.Persistence;
 using OrchestrationService.Application.Services;
 using OrchestrationService.Infrastructure.Clients;
+using OrchestrationService.Infrastructure.Consumers;
 using OrchestrationService.Infrastructure.Persistence;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.HMAC;
 
@@ -39,11 +41,36 @@ builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
 // --- Cross-Service HTTP Clients ---
-builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
+// --- MassTransit ---
+builder.Services.AddMassTransit(x =>
 {
-    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
-    client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<HmacDelegatingHandler>();
+    x.AddConsumer<WorkflowTransitionRequestedConsumer>();
+
+    x.AddEntityFrameworkOutbox<OrchestrationDbContext>(o =>
+    {
+        o.UsePostgres();
+        o.UseBusOutbox();
+        o.DisableInboxCleanupService(); // Optional: handle cleanup ourselves or keep default
+    });
+
+    x.UsingRabbitMq((ctx, cfg) =>
+    {
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq://localhost";
+        var rabbitMqUsername = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitMqPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+        cfg.Host(rabbitMqHost, h =>
+        {
+            h.Username(rabbitMqUsername);
+            h.Password(rabbitMqPassword);
+        });
+
+        // Add Retry Policy to handle race conditions during workflow startup
+        cfg.UseMessageRetry(r => r.Interval(5, TimeSpan.FromSeconds(1)));
+
+        cfg.ConfigureEndpoints(ctx);
+    });
+});
 
 builder.Services.AddHttpClient<ICompensationHttpClient, CompensationHttpClient>(client =>
 {

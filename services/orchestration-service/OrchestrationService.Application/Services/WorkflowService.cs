@@ -7,24 +7,26 @@ using OrchestrationService.Application.Interfaces.Persistence;
 using OrchestrationService.Domain.Entities;
 using OrchestrationService.Domain.Enums;
 using OrchestrationService.Domain.Exceptions;
+using MassTransit;
+using Shared.Contracts.Messages;
 
 namespace OrchestrationService.Application.Services;
 
 public class WorkflowService : IWorkflowService
 {
     private readonly IOrchestrationDbContext _context;
-    private readonly IAuditClient _auditClient;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly ICompensationHttpClient _compensationClient;
     private readonly ILogger<WorkflowService> _logger;
 
     public WorkflowService(
         IOrchestrationDbContext context,
-        IAuditClient auditClient,
+        IPublishEndpoint publishEndpoint,
         ICompensationHttpClient compensationClient,
         ILogger<WorkflowService> logger)
     {
         _context = context;
-        _auditClient = auditClient;
+        _publishEndpoint = publishEndpoint;
         _compensationClient = compensationClient;
         _logger = logger;
     }
@@ -50,10 +52,20 @@ public class WorkflowService : IWorkflowService
         };
 
         _context.SagaWorkflows.Add(workflow);
-        await _context.SaveChangesAsync();
+        await _publishEndpoint.Publish<IAuditLogCreated>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            ActorId = Guid.Empty,
+            ActorRole = "System",
+            Service = "orchestration-service",
+            Action = "WorkflowStarted",
+            EntityType = "SagaWorkflow",
+            EntityId = workflow.Id,
+            Metadata = $"GoalId={request.GoalId}",
+            OccurredAt = DateTime.UtcNow
+        });
 
-        _ = _auditClient.LogAsync("WorkflowStarted", "SagaWorkflow", workflow.Id.ToString(),
-            $"GoalId={request.GoalId}");
+        await _context.SaveChangesAsync();
 
         return MapWorkflow(workflow);
     }
@@ -97,6 +109,20 @@ public class WorkflowService : IWorkflowService
         }
 
         workflow.UpdatedAt = DateTime.UtcNow;
+
+        await _publishEndpoint.Publish<IAuditLogCreated>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            ActorId = Guid.Empty,
+            ActorRole = "System",
+            Service = "orchestration-service",
+            Action = $"StepRecorded_{request.StepName}",
+            EntityType = "SagaWorkflow",
+            EntityId = workflow.Id,
+            Metadata = $"GoalId={goalId}",
+            OccurredAt = DateTime.UtcNow
+        });
+
         await _context.SaveChangesAsync();
 
         return MapWorkflow(workflow);
@@ -138,10 +164,20 @@ public class WorkflowService : IWorkflowService
 
         workflow.Status = SagaStatus.Compensated;
         workflow.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await _publishEndpoint.Publish<IAuditLogCreated>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            ActorId = Guid.Empty,
+            ActorRole = "System",
+            Service = "orchestration-service",
+            Action = "WorkflowCompensated",
+            EntityType = "SagaWorkflow",
+            EntityId = workflow.Id,
+            Metadata = $"GoalId={goalId}",
+            OccurredAt = DateTime.UtcNow
+        });
 
-        _ = _auditClient.LogAsync("WorkflowCompensated", "SagaWorkflow", workflow.Id.ToString(),
-            $"GoalId={goalId}");
+        await _context.SaveChangesAsync();
 
         return MapWorkflow(workflow);
     }
