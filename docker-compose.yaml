@@ -88,6 +88,8 @@ services:
       - Services__OrchestrationService=http://orchestration-service:8080
       - Services__AuditService=http://audit-service:8080
       - RabbitMQ__Host=rabbitmq://rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       - goal-db
       - rabbitmq
@@ -198,6 +200,8 @@ services:
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
       - Services__AuditService=http://audit-service:8080
       - RabbitMQ__Host=rabbitmq://rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       - orchestration-db
       - rabbitmq
@@ -226,6 +230,8 @@ services:
       - DATABASE_URL=Host=audit-db;Port=5432;Database=auditdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
       - RabbitMQ__Host=rabbitmq://rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       - audit-db
       - rabbitmq
@@ -248,6 +254,9 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
 
