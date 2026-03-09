@@ -1,9 +1,16 @@
 <div class="admin-page page-enter">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a routerLink="/">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">Organizations</span>
+    </nav>
+
     <app-page-header title="Organizations" subtitle="Manage organisations in the platform.">
         <ng-template #actions>
             <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-flat-button
-                (click)="openCreate()" id="btn-create-org">
-                <mat-icon>add</mat-icon> New Organization
+                (click)="openCreate()" id="btn-create-org" class="btn-create">
+                <mat-icon>add</mat-icon> Add Organization
             </button>
         </ng-template>
     </app-page-header>
@@ -31,32 +38,34 @@
 
     @if (loading) {
     <div class="loading-wrap"><mat-spinner diameter="36"></mat-spinner></div>
-    } @else {
-    <div class="table-card">
-        <table mat-table [dataSource]="orgs">
-            <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Name</th>
-                <td mat-cell *matCellDef="let o"><strong>{{ o.name }}</strong></td>
-            </ng-container>
-            <ng-container matColumnDef="description">
-                <th mat-header-cell *matHeaderCellDef>Description</th>
-                <td mat-cell *matCellDef="let o">{{ o.description || '—' }}</td>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let o" class="actions-cell">
-                    <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-icon-button
-                        (click)="openEdit(o)" title="Edit"><mat-icon>edit</mat-icon></button>
-                    <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-icon-button
-                        class="btn-danger" (click)="delete(o)"
-                        title="Delete"><mat-icon>delete_outline</mat-icon></button>
-                </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-        <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25]"
-            (page)="onPage($event)"></mat-paginator>
+    } @else if (orgs.length === 0) {
+    <div class="empty-state-card">
+        <span class="material-icons-round">corporate_fare</span>
+        <p>No organizations yet. Create your first organization.</p>
     </div>
+    } @else {
+    <div class="org-grid">
+        @for (o of orgs; track o.id) {
+        <div class="org-card">
+            <div class="org-card-header">
+                <div class="org-icon-wrap">
+                    <span class="material-icons-round">corporate_fare</span>
+                </div>
+                <div class="org-info">
+                    <h4 class="org-name">{{ o.name }}</h4>
+                    <p class="org-meta">{{ o.description || '—' }}</p>
+                </div>
+            </div>
+            <div class="org-card-actions">
+                <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-stroked-button
+                    (click)="openEdit(o)" class="org-action-btn">Edit</button>
+                <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-stroked-button
+                    class="org-action-btn danger" (click)="delete(o)">Delete</button>
+            </div>
+        </div>
+        }
+    </div>
+    <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25]" (page)="onPage($event)"
+        class="org-paginator"></mat-paginator>
     }
 </div>

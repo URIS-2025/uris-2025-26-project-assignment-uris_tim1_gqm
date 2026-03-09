@@ -1,196 +1,251 @@
 <div class="goal-detail-page page-enter">
-    <div class="detail-header">
-        <a mat-button routerLink="/goals">
-            <mat-icon>arrow_back</mat-icon> Back to Goals
-        </a>
-        <span class="spacer" style="flex:1"></span>
-        <button [hasPermission]="'edit_goals'" permissionMode="disable" mat-stroked-button color="primary">
-            <mat-icon>edit</mat-icon> Edit Goal
-        </button>
-    </div>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a routerLink="/">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <a routerLink="/goals">Goals</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">{{ goal?.focus || 'Goal Details' }}</span>
+    </nav>
 
     @if (loading) {
     <div class="loading-wrap"><mat-spinner diameter="40"></mat-spinner></div>
     } @else if (error) {
     <div class="error-state">{{ error }}</div>
     } @else if (goal) {
-    <app-page-header [title]="goal.focus" [subtitle]="goal.object">
-        <ng-template #actions>
-            <div class="flex flex-align gap-2">
-                <span [class]="'chip chip-' + goal.status.toLowerCase()">{{ goal.status }}</span>
-                <span class="chip chip-info" title="Baseline Probability">Baseline: {{ (goal.baselineProbability *
-                    100).toFixed(0) }}%</span>
-            </div>
-        </ng-template>
-    </app-page-header>
 
-    <mat-tab-group animationDuration="150ms" class="enterprise-tabs mt-2" dynamicHeight>
+    <!-- Hero header -->
+    <div class="detail-hero">
+        <h1 class="hero-title">{{ goal.focus }}</h1>
+        <p class="hero-subtitle">{{ goal.magnitude }}</p>
+        <div class="hero-meta">
+            <span class="meta-tag">
+                <mat-icon class="meta-icon-sm">business</mat-icon>
+                {{ getDepartmentName() }}
+            </span>
+            <span class="meta-tag">
+                <mat-icon class="meta-icon-sm">calendar_today</mat-icon>
+                {{ formatDate(goal.activeFrom) }} - {{ formatDate(goal.activeTo) }}
+            </span>
+            <span class="meta-tag probability-tag">
+                <mat-icon class="meta-icon-sm">adjust</mat-icon>
+                {{ (goal.baselineProbability * 100).toFixed(0) }}% probability
+            </span>
+        </div>
+    </div>
+
+    <!-- Tab bar -->
+    <mat-tab-group animationDuration="150ms" class="detail-tabs" dynamicHeight>
 
         <!-- OVERVIEW TAB -->
         <mat-tab label="Overview">
-            <div class="p-3">
-                <mat-card class="mb-3">
-                    <mat-card-content>
-                        <div class="info-grid">
-                            <div class="info-row"><span class="info-label">Focus</span><span>{{ goal.focus }}</span>
-                            </div>
-                            <div class="info-row"><span class="info-label">Object</span><span>{{ goal.object }}</span>
-                            </div>
-                            <div class="info-row"><span class="info-label">Magnitude</span><span>{{ goal.magnitude
-                                    }}</span></div>
-                            <div class="info-row"><span class="info-label">Constraints</span><span>{{ goal.constraints
-                                    || 'None' }}</span></div>
-                            <div class="info-row"><span class="info-label">Active Period</span><span>{{
-                                    formatDate(goal.activeFrom) }} - {{ formatDate(goal.activeTo) }}</span></div>
+            <div class="tab-body">
+                <!-- Stat cards row -->
+                <div class="stat-cards-row">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <mat-icon class="stat-icon">adjust</mat-icon>
+                            <span>Baseline Probability</span>
                         </div>
-                    </mat-card-content>
-                </mat-card>
+                        <div class="stat-value">{{ (goal.baselineProbability * 100).toFixed(0) }}%</div>
+                        <div class="stat-sub">Initial assessment</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <mat-icon class="stat-icon">schedule</mat-icon>
+                            <span>Time Progress</span>
+                        </div>
+                        <div class="stat-value">{{ getTimeProgress() }}%</div>
+                        <div class="stat-sub">{{ getDaysRemaining() }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <mat-icon class="stat-icon">trending_up</mat-icon>
+                            <span>Status</span>
+                        </div>
+                        <div class="stat-value-chip">
+                            <span [class]="'status-badge status-' + goal.status.toLowerCase()">{{ goal.status }}</span>
+                        </div>
+                        <div class="stat-sub">{{ goal.status === 'Active' ? 'In progress' : goal.status }}</div>
+                    </div>
+                </div>
+
+                <!-- Goal Details card -->
+                <div class="detail-section-card">
+                    <h3 class="section-title">Goal Details</h3>
+                    <div class="detail-fields-grid">
+                        <div class="detail-field">
+                            <span class="field-label">Focus</span>
+                            <span class="field-value">{{ goal.focus }}</span>
+                        </div>
+                        <div class="detail-field">
+                            <span class="field-label">Object</span>
+                            <span class="field-value">{{ goal.object }}</span>
+                        </div>
+                        <div class="detail-field full-width">
+                            <span class="field-label">Magnitude</span>
+                            <span class="field-value">{{ goal.magnitude }}</span>
+                        </div>
+                        <div class="detail-field full-width">
+                            <span class="field-label">Constraints</span>
+                            <span class="field-value">{{ goal.constraints || 'None' }}</span>
+                        </div>
+                    </div>
+                    <mat-divider class="section-divider"></mat-divider>
+                    <div class="detail-fields-grid">
+                        <div class="detail-field">
+                            <span class="field-label">Active From</span>
+                            <span class="field-value">{{ formatDate(goal.activeFrom) }}</span>
+                        </div>
+                        <div class="detail-field">
+                            <span class="field-label">Active To</span>
+                            <span class="field-value">{{ formatDate(goal.activeTo) }}</span>
+                        </div>
+                        <div class="detail-field">
+                            <span class="field-label">Created At</span>
+                            <span class="field-value">{{ formatDate(goal.createdAt || '') }}</span>
+                        </div>
+                        <div class="detail-field">
+                            <span class="field-label">Last Updated</span>
+                            <span class="field-value">{{ formatDate(goal.updatedAt || '') }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </mat-tab>
 
         <!-- STRATEGIES TAB -->
         <mat-tab label="Strategies">
-            <div class="p-3">
-                <div class="flex-between mb-2">
-                    <h3>Derivation Strategies</h3>
-                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-button color="primary">
+            <div class="tab-body">
+                <div class="tab-header-row">
+                    <h3 class="section-title">Derivation Strategies</h3>
+                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-stroked-button class="btn-sm">
                         <mat-icon>add</mat-icon> Link Strategy
                     </button>
                 </div>
                 @if (goal.strategy) {
-                <mat-card>
-                    <mat-card-content>
-                        <div class="info-grid">
-                            <div class="info-row"><span class="info-label">Name</span><span>{{ goal.strategy.name
-                                    }}</span></div>
-                            <div class="info-row"><span class="info-label">Description</span><span>{{
-                                    goal.strategy.description }}</span></div>
-                            <div class="info-row"><span class="info-label">Refinement</span>
-                                <span class="chip chip-default">{{ goal.strategy.refinementType }}</span>
-                            </div>
+                <div class="detail-section-card">
+                    <div class="detail-fields-grid">
+                        <div class="detail-field">
+                            <span class="field-label">Name</span>
+                            <span class="field-value">{{ goal.strategy.name }}</span>
                         </div>
-                    </mat-card-content>
-                </mat-card>
+                        <div class="detail-field">
+                            <span class="field-label">Refinement</span>
+                            <span class="chip chip-default">{{ goal.strategy.refinementType }}</span>
+                        </div>
+                        <div class="detail-field full-width">
+                            <span class="field-label">Description</span>
+                            <span class="field-value">{{ goal.strategy.description }}</span>
+                        </div>
+                    </div>
+                </div>
                 } @else {
-                <div class="empty-state">No strategies linked yet.</div>
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">lightbulb_outline</span>
+                    <p>No strategies linked yet.</p>
+                </div>
                 }
             </div>
         </mat-tab>
 
         <!-- PREMISES TAB -->
         <mat-tab label="Premises">
-            <div class="p-3">
-                <div class="flex-between mb-2">
-                    <h3>Premises Timeline</h3>
-                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-button color="primary">
+            <div class="tab-body">
+                <div class="tab-header-row">
+                    <h3 class="section-title">Premises</h3>
+                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-stroked-button class="btn-sm">
                         <mat-icon>add</mat-icon> Add Premise
                     </button>
                 </div>
                 @if (goal.premises?.length) {
-                <mat-card>
-                    <mat-card-content>
-                        @for (p of goal.premises; track p.id; let last = $last) {
-                        <div class="premise-item flex flex-col gap-1 mb-2">
-                            <div class="flex flex-align gap-2">
-                                <span [class]="'chip ' + (p.type === 'Assumption' ? 'chip-info' : 'chip-warning')">{{
-                                    p.type }}</span>
-                                <span class="text-muted" style="font-size: 11px;">v{{ p.version || 1 }}</span>
-                                @if (!p.isActive) { <span class="chip chip-error">Inactive</span> }
-                            </div>
-                            <span class="premise-desc">{{ p.description }}</span>
+                <div class="detail-section-card">
+                    @for (p of goal.premises; track p.id; let last = $last) {
+                    <div class="premise-row">
+                        <div class="premise-row-meta">
+                            <span [class]="'chip ' + (p.type === 'Assumption' ? 'chip-info' : 'chip-warning')">{{
+                                p.type }}</span>
+                            <span class="text-muted" style="font-size: 11px;">v{{ p.version || 1 }}</span>
+                            @if (!p.isActive) { <span class="chip chip-error">Inactive</span> }
                         </div>
-                        @if (!last) { <mat-divider class="my-2"></mat-divider> }
-                        }
-                    </mat-card-content>
-                </mat-card>
+                        <p class="premise-desc">{{ p.description }}</p>
+                    </div>
+                    @if (!last) { <mat-divider class="my-divider"></mat-divider> }
+                    }
+                </div>
                 } @else {
-                <div class="empty-state">No premises established.</div>
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">description</span>
+                    <p>No premises established.</p>
+                </div>
                 }
             </div>
         </mat-tab>
 
-        <!-- GQM BUILDER TAB -->
-        <mat-tab label="GQM Builder">
-            <div class="p-3">
-                <div class="flex-between mb-2">
-                    <h3>Questions & Targets</h3>
-                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-button color="primary">
-                        <mat-icon>edit</mat-icon> Edit GQM
-                    </button>
+        <!-- GQM STRUCTURE TAB -->
+        <mat-tab label="GQM Structure">
+            <div class="tab-body">
+                <div class="tab-header-row">
+                    <h3 class="section-title">Questions & Targets</h3>
                 </div>
-                <mat-card>
-                    <mat-card-content>
-                        @if (goal.gqmGoals?.length) {
-                        @for (gqm of goal.gqmGoals; track gqm.id) {
-                        <div class="mb-2"><strong>Goal:</strong> {{ gqm.description }}</div>
-                        <div class="text-muted">Questions attached to this GQM goal will appear here.</div>
-                        }
-                        } @else {
-                        <div class="empty-state">GQM Structure not yet defined.</div>
-                        }
-                    </mat-card-content>
-                </mat-card>
+                @if (goal.gqmGoals?.length) {
+                <div class="detail-section-card">
+                    @for (gqm of goal.gqmGoals; track gqm.id) {
+                    <div class="detail-field full-width">
+                        <span class="field-label">GQM Goal</span>
+                        <span class="field-value">{{ gqm.description }}</span>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">help_outline</span>
+                    <p>GQM Structure not yet defined.</p>
+                </div>
+                }
             </div>
         </mat-tab>
 
-        <!-- INFLUENCES TAB -->
-        <mat-tab label="Influences">
-            <div class="p-3">
-                <div class="flex-between mb-2">
-                    <h3>Influence Network</h3>
-                    <button [hasPermission]="'manage_goal_influences'" permissionMode="disable" mat-button
-                        color="primary">
-                        <mat-icon>cable</mat-icon> Manage Network
-                    </button>
+        <!-- INFLUENCE TAB -->
+        <mat-tab label="Influence">
+            <div class="tab-body">
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">cable</span>
+                    <p>Influence DAG Visualization will render here.</p>
                 </div>
-                <mat-card>
-                    <mat-card-content>
-                        <div class="empty-state">Influence DAG Visualization will render here.</div>
-                    </mat-card-content>
-                </mat-card>
             </div>
         </mat-tab>
 
         <!-- ASSESSMENTS TAB -->
         <mat-tab label="Assessments">
-            <div class="p-3">
-                <div class="flex-between mb-2">
-                    <h3>Probability Assessments</h3>
-                    <button [hasPermission]="'manage_probability_assessments'" permissionMode="disable" mat-button
-                        color="primary">
+            <div class="tab-body">
+                <div class="tab-header-row">
+                    <h3 class="section-title">Probability Assessments</h3>
+                    <button [hasPermission]="'manage_probability_assessments'" permissionMode="disable"
+                        mat-stroked-button class="btn-sm">
                         <mat-icon>add</mat-icon> New Assessment
                     </button>
                 </div>
                 @if (goal.assessments?.length) {
-                <mat-card>
-                    <mat-card-content>
-                        @for (a of goal.assessments; track a.id; let last = $last) {
-                        <div class="assessment-item flex flex-col gap-1 mb-2">
-                            <div class="flex flex-align gap-2">
-                                <strong style="font-size: 16px;">{{ (a.probability * 100).toFixed(0) }}%</strong>
-                                <span class="text-muted" style="font-size: 12px;">{{ formatDate(a.assessedAt || '')
-                                    }}</span>
-                            </div>
-                            <span class="assessment-notes">{{ a.notes }}</span>
+                <div class="detail-section-card">
+                    @for (a of goal.assessments; track a.id; let last = $last) {
+                    <div class="assessment-row">
+                        <div class="assessment-prob">{{ (a.probability * 100).toFixed(0) }}%</div>
+                        <div class="assessment-info">
+                            <p class="assessment-notes">{{ a.notes || 'No notes' }}</p>
+                            <span class="text-muted" style="font-size: 11px;">{{ formatDate(a.assessedAt || '')
+                                }}</span>
                         </div>
-                        @if (!last) { <mat-divider class="my-2"></mat-divider> }
-                        }
-                    </mat-card-content>
-                </mat-card>
+                    </div>
+                    @if (!last) { <mat-divider class="my-divider"></mat-divider> }
+                    }
+                </div>
                 } @else {
-                <div class="empty-state">No assessments recorded yet.</div>
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">analytics</span>
+                    <p>No assessments recorded yet.</p>
+                </div>
                 }
-            </div>
-        </mat-tab>
-
-        <!-- HIERARCHY TAB (EXTRA) -->
-        <mat-tab label="Hierarchy">
-            <div class="p-3">
-                <mat-card>
-                    <mat-card-content>
-                        <div class="empty-state">Organizational hierarchy tree renders here.</div>
-                    </mat-card-content>
-                </mat-card>
             </div>
         </mat-tab>
 
