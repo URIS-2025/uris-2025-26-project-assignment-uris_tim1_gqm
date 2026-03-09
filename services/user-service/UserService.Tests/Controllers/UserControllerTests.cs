@@ -23,19 +23,48 @@ public class UserControllerTests
         _auditClientMock = new Mock<IAuditClient>();
         _auditClientMock.Setup(a => a.LogAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<object?>())).Returns(Task.CompletedTask);
         _sut = new UserController(_serviceMock.Object, _auditClientMock.Object);
+        SetupUser(Guid.NewGuid());
+    }
+
+    private void SetupUser(Guid userId, bool isSystemAdmin = false, Guid? orgId = null)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        
+        if (isSystemAdmin)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, UserService.Domain.Constants.Roles.SystemAdmin));
+        }
+
+        if (orgId.HasValue)
+        {
+            claims.Add(new Claim(Shared.Auth.ClaimsPrincipalExtensions.OrganizationIdClaimType, orgId.Value.ToString()));
+        }
+
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        _sut.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+        };
     }
 
     [Fact]
     public async Task GetAll_ReturnsOk_WithPagedResponse()
     {
+        var userId = Guid.NewGuid();
+        var orgId = Guid.NewGuid();
+        SetupUser(userId, true, orgId);
+
         var pagedResponse = new PaginationResponse<UserResponse>
         {
             Items = [new UserResponse { Id = Guid.NewGuid(), FirstName = "Test" }],
             Total = 1, PageNumber = 1, PageSize = 10
         };
-        _serviceMock.Setup(s => s.GetAllAsync(1, 10)).ReturnsAsync(pagedResponse);
+        _serviceMock.Setup(s => s.GetAllAsync(1, 10, userId, true, orgId)).ReturnsAsync(pagedResponse);
 
-        var result = await _sut.GetAll();
+        var result = await _sut.GetAll(1, 10);
 
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var value = okResult.Value.Should().BeOfType<PaginationResponse<UserResponse>>().Subject;

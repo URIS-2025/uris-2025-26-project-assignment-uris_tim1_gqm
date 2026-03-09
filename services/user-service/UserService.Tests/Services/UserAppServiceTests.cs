@@ -41,7 +41,7 @@ public class UserAppServiceTests : IDisposable
         _context.Dispose();
     }
 
-    private async Task<User> SeedUser(string email = "test@example.com", string firstName = "Test", string lastName = "User")
+    private async Task<User> SeedUser(string email = "test@example.com", string firstName = "Test", string lastName = "User", Guid? orgId = null)
     {
         var user = new User
         {
@@ -51,6 +51,7 @@ public class UserAppServiceTests : IDisposable
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password@1"),
             IsActive = true,
+            OrganizationId = orgId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -64,7 +65,7 @@ public class UserAppServiceTests : IDisposable
     [Fact]
     public async Task GetAllAsync_ReturnsEmptyPage_WhenNoUsers()
     {
-        var result = await _sut.GetAllAsync(1, 10);
+        var result = await _sut.GetAllAsync(1, 10, Guid.NewGuid(), true, null);
 
         result.Items.Should().BeEmpty();
         result.Total.Should().Be(0);
@@ -73,11 +74,12 @@ public class UserAppServiceTests : IDisposable
     [Fact]
     public async Task GetAllAsync_ReturnsPagedResults()
     {
-        await SeedUser("a@test.com", "Alice", "Smith");
-        await SeedUser("b@test.com", "Bob", "Jones");
-        await SeedUser("c@test.com", "Charlie", "Brown");
+        var orgId = Guid.NewGuid();
+        await SeedUser("a@test.com", "Alice", "Smith", orgId);
+        await SeedUser("b@test.com", "Bob", "Jones", orgId);
+        await SeedUser("c@test.com", "Charlie", "Brown", orgId);
 
-        var result = await _sut.GetAllAsync(1, 2);
+        var result = await _sut.GetAllAsync(1, 2, Guid.NewGuid(), false, orgId);
 
         result.Items.Should().HaveCount(2);
         result.Total.Should().Be(3);
@@ -86,12 +88,37 @@ public class UserAppServiceTests : IDisposable
     [Fact]
     public async Task GetAllAsync_ReturnsItemsOrderedByLastName()
     {
-        await SeedUser("z@test.com", "Zoe", "Zeta");
-        await SeedUser("a@test.com", "Alice", "Alpha");
+        var orgId = Guid.NewGuid();
+        await SeedUser("z@test.com", "Zoe", "Zeta", orgId);
+        await SeedUser("a@test.com", "Alice", "Alpha", orgId);
 
-        var result = await _sut.GetAllAsync(1, 10);
+        var result = await _sut.GetAllAsync(1, 10, Guid.NewGuid(), false, orgId);
 
         result.Items.Select(x => x.LastName).Should().BeInAscendingOrder();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_FiltersByOrganizationId()
+    {
+        var org1 = Guid.NewGuid();
+        var org2 = Guid.NewGuid();
+        await SeedUser("a@org1.com", "Alice", "One", org1);
+        await SeedUser("b@org2.com", "Bob", "Two", org2);
+
+        var result = await _sut.GetAllAsync(1, 10, Guid.NewGuid(), false, org1);
+
+        result.Items.Should().HaveCount(1);
+        result.Items.First().Email.Should().Be("a@org1.com");
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsEmpty_WhenNotAdminAndNoOrgId()
+    {
+        await SeedUser("a@test.com", "Alice", "Smith", Guid.NewGuid());
+
+        var result = await _sut.GetAllAsync(1, 10, Guid.NewGuid(), false, null);
+
+        result.Items.Should().BeEmpty();
     }
 
     // ── GetByIdAsync ──
