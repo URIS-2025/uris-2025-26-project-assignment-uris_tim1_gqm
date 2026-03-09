@@ -4,6 +4,9 @@ export interface User {
     firstName: string;
     lastName: string;
     organizationId: string | null;
+    organization: { id: string; name: string } | null;
+    organizations: { id: string; name: string }[];
+    isSystemAdmin: boolean;
     permissions: string[];
     managedDepartmentIds: string[];
 }

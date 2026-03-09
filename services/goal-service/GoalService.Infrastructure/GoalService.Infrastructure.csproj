@@ -21,4 +21,8 @@
     <ProjectReference Include="..\GoalService.Application\GoalService.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
 </Project>

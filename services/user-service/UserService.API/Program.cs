@@ -22,6 +22,9 @@ var builder = WebApplication.CreateBuilder(args);
 // --- Controllers ---
 builder.Services.AddControllers();
 
+// --- HTTP Context Accessor ---
+builder.Services.AddHttpContextAccessor();
+
 // --- Swagger / OpenAPI ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -42,6 +45,14 @@ builder.Services.AddCorrelationId();
 builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
 {
     var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+// --- Department Client ---
+builder.Services.AddHttpClient<IDepartmentClient, DepartmentClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:DepartmentService"] ?? "http://department-service:8080";
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>()
   .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();

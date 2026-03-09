@@ -23,6 +23,26 @@ export class TopbarComponent {
         return this.auth.user$;
     }
 
+    get isSystemAdmin(): boolean {
+        return this.auth.currentUser?.isSystemAdmin ?? false;
+    }
+
+    get currentOrgName(): string {
+        return this.auth.currentUser?.organization?.name ?? '';
+    }
+
+    get organizations() {
+        return this.auth.currentUser?.organizations ?? [];
+    }
+
+    get currentOrgId(): string | null {
+        return this.auth.currentUser?.organizationId ?? null;
+    }
+
+    switchOrganization(orgId: string): void {
+        this.auth.switchOrganization(orgId);
+    }
+
     constructor(private auth: AuthService, private router: Router) { }
 
     logout(): void {

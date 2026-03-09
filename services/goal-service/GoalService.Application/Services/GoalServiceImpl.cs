@@ -19,27 +19,33 @@ public class GoalServiceImpl : IGoalService
     private readonly IAssessmentClient _assessmentClient;
     private readonly IQgmGoalClient _qgmGoalClient;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IDepartmentClient _departmentClient;
 
     public GoalServiceImpl(
         IGoalDbContext context, 
         IPremiseClient premiseClient, 
         IAssessmentClient assessmentClient, 
         IQgmGoalClient qgmGoalClient,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IDepartmentClient departmentClient)
     {
         _context = context;
         _premiseClient = premiseClient;
         _assessmentClient = assessmentClient;
         _qgmGoalClient = qgmGoalClient;
         _publishEndpoint = publishEndpoint;
+        _departmentClient = departmentClient;
     }
 
     public async Task<PaginationResponse<GoalResponse>> GetAllPaginatedAsync(PaginationRequest request)
     {
+        var departmentIds = await _departmentClient.GetMyDepartmentIdsAsync();
+
         var query = _context.Goals
             .Include(g => g.Strategies)
                 .ThenInclude(s => s.GoalInfluences)
             .Include(g => g.GoalInfluence)
+            .Where(g => departmentIds.Contains(g.DepartmentId))
             .AsNoTracking();
 
         // Optional: Simple OrderBy implementation

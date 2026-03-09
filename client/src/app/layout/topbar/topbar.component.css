@@ -109,30 +109,36 @@
 .org-switcher {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 8px !important;
-    border-radius: var(--radius-md) !important;
+    gap: 8px;
+    padding: 0 12px !important;
+    border-radius: var(--radius-md, 8px) !important;
     height: 36px !important;
-    color: var(--text-primary) !important;
+    color: var(--primary-900, #0f172a) !important;
+    background: var(--surface-2, #f1f5f9) !important;
+    border: 1px solid var(--surface-3, #e2e8f0);
+}
+
+.org-switcher:hover:not([disabled]) {
+    background: var(--surface-3, #e2e8f0) !important;
 }
 
 .org-switcher .org-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: var(--secondary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--primary-800, #1e293b);
 }
 
 .org-switcher .org-name {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 14px;
 }
 
 .org-switcher .dropdown-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: var(--text-muted);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--primary-700, #334155);
 }
 
 .menu-header {

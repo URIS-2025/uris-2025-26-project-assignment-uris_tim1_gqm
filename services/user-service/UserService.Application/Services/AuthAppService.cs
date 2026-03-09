@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using UserService.Application.Interfaces.Clients;
 using UserService.Domain.Entities;
 using UserService.Domain.Exceptions;
 using FluentValidation;
@@ -18,6 +19,7 @@ public class AuthAppService : IAuthService
     private readonly IApplicationDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
+    private readonly IDepartmentClient _departmentClient;
     private readonly IValidator<ChangePasswordRequest> _changePasswordValidator;
     private readonly IValidator<ResetPasswordRequest> _resetPasswordValidator;
 
@@ -25,12 +27,14 @@ public class AuthAppService : IAuthService
         IApplicationDbContext context,
         IConfiguration configuration,
         IEmailService emailService,
+        IDepartmentClient departmentClient,
         IValidator<ChangePasswordRequest> changePasswordValidator,
         IValidator<ResetPasswordRequest> resetPasswordValidator)
     {
         _context = context;
         _configuration = configuration;
         _emailService = emailService;
+        _departmentClient = departmentClient;
         _changePasswordValidator = changePasswordValidator;
         _resetPasswordValidator = resetPasswordValidator;
     }
@@ -142,6 +146,33 @@ public class AuthAppService : IAuthService
         }
 
         var organizationId = user.OrganizationId;
+        OrganizationDto? userOrganization = null;
+        var organizations = new List<OrganizationDto>();
+
+        var isSystemAdmin = assignments.Any(uor => uor.Role.Name == Domain.Constants.Roles.SystemAdmin);
+
+        var orgResponse = await _departmentClient.GetOrganizationsAsync(1, 100);
+        if (orgResponse != null && orgResponse.Items != null)
+        {
+            if (isSystemAdmin)
+            {
+                organizations = orgResponse.Items.ToList();
+                // Optionally set the user's current organization
+                if (organizationId.HasValue)
+                {
+                    userOrganization = organizations.FirstOrDefault(o => o.Id == organizationId.Value);
+                }
+                else if (organizations.Any())
+                {
+                    userOrganization = organizations.First();
+                    organizationId = userOrganization.Id;
+                }
+            }
+            else if (organizationId.HasValue)
+            {
+                userOrganization = orgResponse.Items.FirstOrDefault(o => o.Id == organizationId.Value);
+            }
+        }
 
         return new UserContextResponse
         {
@@ -150,6 +181,9 @@ public class AuthAppService : IAuthService
             FirstName = user.FirstName,
             LastName = user.LastName,
             OrganizationId = organizationId,
+            Organization = userOrganization,
+            Organizations = organizations,
+            IsSystemAdmin = isSystemAdmin,
             Permissions = permissions,
             ManagedDepartmentIds = new List<Guid>(),
         };

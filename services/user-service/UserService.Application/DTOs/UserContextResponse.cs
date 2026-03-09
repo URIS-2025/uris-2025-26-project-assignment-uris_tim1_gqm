@@ -7,6 +7,9 @@ public record UserContextResponse
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public Guid? OrganizationId { get; set; }
+    public OrganizationDto? Organization { get; set; }
+    public List<OrganizationDto> Organizations { get; set; } = new();
+    public bool IsSystemAdmin { get; set; }
     public List<string> Permissions { get; set; } = new();
     public List<Guid> ManagedDepartmentIds { get; set; } = new();
 }

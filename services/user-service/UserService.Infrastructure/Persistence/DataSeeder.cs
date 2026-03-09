@@ -151,7 +151,9 @@ public static class DataSeeder
         context.RolePermissions.AddRange(rolePermissions);
 
         // ── Default Organization ──
-        var defaultOrganizationId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+        var techCorpOrgId = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+        var greenEnergyOrgId = Guid.Parse("b2c3d4e5-f6a7-8901-bcde-f12345678901");
+        var healthPlusOrgId = Guid.Parse("c3d4e5f6-a7b8-9012-cdef-123456789012");
 
         // ── Default System Admin User ──
         var adminUser = new User
@@ -185,7 +187,7 @@ public static class DataSeeder
             Email = "orgadmin@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
-            OrganizationId = defaultOrganizationId,
+            OrganizationId = techCorpOrgId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -197,7 +199,7 @@ public static class DataSeeder
             Email = "deptmanager@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
-            OrganizationId = defaultOrganizationId,
+            OrganizationId = greenEnergyOrgId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -209,7 +211,7 @@ public static class DataSeeder
             Email = "analyst@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
-            OrganizationId = defaultOrganizationId,
+            OrganizationId = healthPlusOrgId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -221,7 +223,7 @@ public static class DataSeeder
             Email = "viewer@gqmplus.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@123"),
             IsActive = true,
-            OrganizationId = defaultOrganizationId,
+            OrganizationId = techCorpOrgId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

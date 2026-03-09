@@ -36,23 +36,22 @@ public class UserAppService : IUserService
                 .ThenInclude(uor => uor.Role)
             .AsQueryable();
 
-        // Role-based filtering logic
-        if (!isSystemAdmin)
+        // Organization filtering logic
+        if (currentOrgId.HasValue)
         {
-            if (!currentOrgId.HasValue)
-            {
-                // If not system admin and no org context, return empty or throw. Returning empty for safety.
-                return new PaginationResponse<UserResponse>
-                {
-                    Items = new List<UserResponse>(),
-                    Total = 0,
-                    PageNumber = page,
-                    PageSize = size
-                };
-            }
-
-            // Organization Admin only sees users within their organization
+            // Both SystemAdmins and normal users will be filtered by the selected organization context
             query = query.Where(u => u.OrganizationId == currentOrgId.Value);
+        }
+        else if (!isSystemAdmin)
+        {
+            // If not system admin and no org context, return empty for safety
+            return new PaginationResponse<UserResponse>
+            {
+                Items = new List<UserResponse>(),
+                Total = 0,
+                PageNumber = page,
+                PageSize = size
+            };
         }
 
         var totalCount = await query.CountAsync();
