@@ -34,6 +34,7 @@ jobs:
       audit: ${{ steps.filter.outputs.audit }}
       shared: ${{ steps.filter.outputs.shared }}
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
+      e2e: ${{ steps.filter.outputs.e2e }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -62,6 +63,8 @@ jobs:
             infrastructure:
               - 'docker-compose.yaml'
               - 'nginx.conf'
+            e2e:
+              - 'tests/E2E.Tests/**'
   
   build-department:
     needs: detect-changes
@@ -304,6 +307,43 @@ jobs:
         if: always()
         with:
           name: Orchestration Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
+
+  build-e2e:
+    needs: [detect-changes, build-goal, build-audit, build-orchestration]
+    if: |
+      always() && 
+      !cancelled() &&
+      !contains(needs.*.result, 'failure') &&
+      (needs.detect-changes.outputs.goal == 'true' || 
+       needs.detect-changes.outputs.audit == 'true' || 
+       needs.detect-changes.outputs.orchestration == 'true' ||
+       needs.detect-changes.outputs.shared == 'true' ||
+       needs.detect-changes.outputs.infrastructure == 'true' ||
+       needs.detect-changes.outputs.e2e == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-e2e-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-e2e-${{ runner.os }}-
+      - name: Build E2E Tests
+        run: dotnet build tests/E2E.Tests/E2E.Tests.csproj --configuration Release
+      - name: Run E2E Tests
+        run: dotnet test tests/E2E.Tests/E2E.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish E2E Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Integration Tests
           path: test-results/*.trx
           reporter: dotnet-trx
 
