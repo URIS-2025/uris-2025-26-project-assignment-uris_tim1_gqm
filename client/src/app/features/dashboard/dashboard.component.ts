@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +25,8 @@ export class DashboardComponent implements OnInit {
     loading = true;
     userName = '';
 
+    private destroyRef = inject(DestroyRef);
+
     constructor(
         private goalApi: GoalApiService,
         private deptApi: DepartmentApiService,
@@ -34,17 +37,22 @@ export class DashboardComponent implements OnInit {
         const user = this.auth.currentUser;
         this.userName = user ? user.firstName : '';
 
-        this.goalApi.getAll({ pageNumber: 1, pageSize: 1 }).subscribe({
-            next: res => { this.stats.goals = res.totalCount; },
-            error: () => { },
-        });
+        this.auth.organizationId$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => {
+            this.loading = true;
+            this.goalApi.getAll({ pageNumber: 1, pageSize: 1 }).subscribe({
+                next: res => { this.stats.goals = res.totalCount; },
+                error: () => { },
+            });
 
-        this.deptApi.getDepartments({ page: 1, size: 1 }).subscribe({
-            next: res => {
-                this.stats.departments = res.totalCount;
-                this.loading = false;
-            },
-            error: () => { this.loading = false; },
+            this.deptApi.getDepartments({ page: 1, size: 1 }).subscribe({
+                next: res => {
+                    this.stats.departments = res.totalCount;
+                    this.loading = false;
+                },
+                error: () => { this.loading = false; },
+            });
         });
     }
 }

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +12,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { HasPermissionDirective } from '../../core/permissions/has-permission.directive';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { GoalApiService } from '../../core/api/goal-api.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Goal } from '../../core/api/api.models';
 import { CommonModule } from '@angular/common';
 
@@ -42,9 +44,19 @@ export class GoalsListComponent implements OnInit {
         'Cancelled': 'chip-default',
     };
 
+    private auth = inject(AuthService);
+    private destroyRef = inject(DestroyRef);
+
     constructor(private goalApi: GoalApiService, private dialog: MatDialog) { }
 
-    ngOnInit(): void { this.loadGoals(); }
+    ngOnInit(): void {
+        this.auth.organizationId$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => {
+            this.pageNumber = 1;
+            this.loadGoals();
+        });
+    }
 
     loadGoals(): void {
         this.loading = true;
