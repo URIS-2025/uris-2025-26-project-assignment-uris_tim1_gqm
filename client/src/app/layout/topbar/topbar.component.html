@@ -10,22 +10,33 @@
 
     <span class="spacer"></span>
 
+    @if (isSystemAdmin) {
     <button mat-button [matMenuTriggerFor]="orgMenu" class="org-switcher">
-        <mat-icon class="org-icon">corporate_fare</mat-icon>
-        <span class="org-name">Global Corp Inc.</span>
+        <mat-icon class="org-icon">domain</mat-icon>
+        <span class="org-name">{{ currentOrgName }}</span>
         <mat-icon class="dropdown-icon">expand_more</mat-icon>
     </button>
 
     <mat-menu #orgMenu="matMenu" xPosition="before">
         <div class="menu-header">Select Organization</div>
         <mat-divider></mat-divider>
-        <button mat-menu-item class="active">
-            <mat-icon>check</mat-icon> Global Corp Inc.
+        @for (org of organizations; track org.id) {
+        <button mat-menu-item [class.active]="org.id === currentOrgId" (click)="switchOrganization(org.id)">
+            @if (org.id === currentOrgId) {
+            <mat-icon>check</mat-icon>
+            } @else {
+            <span style="display:inline-block; width:24px"></span>
+            }
+            {{ org.name }}
         </button>
-        <button mat-menu-item>
-            <span style="display:inline-block; width:24px"></span> Acme EMEA
-        </button>
+        }
     </mat-menu>
+    } @else {
+    <button mat-button class="org-switcher" disabled style="opacity: 1; cursor: default">
+        <mat-icon class="org-icon">domain</mat-icon>
+        <span class="org-name">{{ currentOrgName }}</span>
+    </button>
+    }
 
 
     @if (user$ | async; as user) {

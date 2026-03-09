@@ -24,8 +24,15 @@ public class DepartmentController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 20)
     {
-        var result = await _departmentService.GetAllAsync(page, size);
-        return Ok(result);
+        var orgId = User.GetOrganizationId();
+        if (orgId.HasValue)
+        {
+            var result = await _departmentService.GetByOrganizationIdAsync(orgId.Value, page, size);
+            return Ok(result);
+        }
+
+        var allResult = await _departmentService.GetAllAsync(page, size);
+        return Ok(allResult);
     }
 
     [HttpGet("{id:guid}")]
