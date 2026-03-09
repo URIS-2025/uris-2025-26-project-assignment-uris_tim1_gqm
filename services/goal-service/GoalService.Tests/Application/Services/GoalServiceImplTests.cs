@@ -25,6 +25,7 @@ public class GoalServiceImplTests : IDisposable
     private readonly Mock<IAssessmentClient> _assessmentClientMock;
     private readonly Mock<IQgmGoalClient> _qgmGoalClientMock;
     private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
+    private readonly Mock<IDepartmentClient> _departmentClientMock;
 
     public GoalServiceImplTests()
     {
@@ -37,13 +38,15 @@ public class GoalServiceImplTests : IDisposable
         _assessmentClientMock = new Mock<IAssessmentClient>();
         _qgmGoalClientMock = new Mock<IQgmGoalClient>();
         _orchestrationClientMock = new Mock<IOrchestrationClient>();
+        _departmentClientMock = new Mock<IDepartmentClient>();
 
         _service = new GoalServiceImpl(
             _context, 
             _premiseClientMock.Object, 
             _assessmentClientMock.Object, 
             _qgmGoalClientMock.Object,
-            _orchestrationClientMock.Object);
+            _orchestrationClientMock.Object,
+            _departmentClientMock.Object);
     }
 
     public void Dispose()
@@ -86,6 +89,9 @@ public class GoalServiceImplTests : IDisposable
         _context.Goals.Add(goal);
         _context.Strategies.Add(strategy);
         await _context.SaveChangesAsync();
+
+        _departmentClientMock.Setup(x => x.GetMyDepartmentIdsAsync())
+            .ReturnsAsync(new[] { departmentId });
 
         // Act
         var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };

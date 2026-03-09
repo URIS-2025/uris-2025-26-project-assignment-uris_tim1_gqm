@@ -82,8 +82,7 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
         var request = new AssignRoleRequest
         {
             UserId = user.Id,
-            RoleId = role.Id,
-            OrganizationId = orgId
+            RoleId = role.Id
         };
 
         var result = await _sut.AssignRoleAsync(request);
@@ -104,11 +103,11 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
 
         await _sut.AssignRoleAsync(new AssignRoleRequest 
         { 
-            UserId = user.Id, RoleId = role1.Id, OrganizationId = orgId 
+            UserId = user.Id, RoleId = role1.Id 
         });
         await _sut.AssignRoleAsync(new AssignRoleRequest 
         { 
-            UserId = user.Id, RoleId = role2.Id, OrganizationId = orgId 
+            UserId = user.Id, RoleId = role2.Id 
         });
 
         _context.UserOrganizationRoles.Should().HaveCount(2);
@@ -121,8 +120,7 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
         var request = new AssignRoleRequest
         {
             UserId = Guid.NewGuid(),
-            RoleId = role.Id,
-            OrganizationId = Guid.NewGuid()
+            RoleId = role.Id
         };
 
         var act = () => _sut.AssignRoleAsync(request);
@@ -137,8 +135,7 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
         var request = new AssignRoleRequest
         {
             UserId = user.Id,
-            RoleId = Guid.NewGuid(),
-            OrganizationId = Guid.NewGuid()
+            RoleId = Guid.NewGuid()
         };
 
         var act = () => _sut.AssignRoleAsync(request);
@@ -156,8 +153,7 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
         var request = new AssignRoleRequest
         {
             UserId = user.Id,
-            RoleId = role.Id,
-            OrganizationId = orgId
+            RoleId = role.Id
         };
 
         await _sut.AssignRoleAsync(request);
@@ -176,12 +172,11 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
         _context.UserOrganizationRoles.Add(new UserOrganizationRole
         {
             UserId = user.Id,
-            RoleId = role.Id,
-            OrganizationId = orgId
+            RoleId = role.Id
         });
         await _context.SaveChangesAsync();
 
-        await _sut.RemoveRoleAsync(user.Id, role.Id, orgId);
+        await _sut.RemoveRoleAsync(user.Id, role.Id);
 
         _context.UserOrganizationRoles.Should().BeEmpty();
     }
@@ -189,7 +184,7 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
     [Fact]
     public async Task RemoveRoleAsync_ThrowsNotFoundException_WhenNotFound()
     {
-        var act = () => _sut.RemoveRoleAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var act = () => _sut.RemoveRoleAsync(Guid.NewGuid(), Guid.NewGuid());
 
         await act.Should().ThrowAsync<NotFoundException>();
     }
@@ -203,8 +198,7 @@ public class UserOrganizationRoleAppServiceTests : IDisposable
         _context.UserOrganizationRoles.Add(new UserOrganizationRole
         {
             UserId = user.Id,
-            RoleId = role.Id,
-            OrganizationId = Guid.NewGuid()
+            RoleId = role.Id
         });
         await _context.SaveChangesAsync();
 
