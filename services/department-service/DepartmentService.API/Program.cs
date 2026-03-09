@@ -40,7 +40,9 @@ builder.Services.AddOpenTelemetry()
     {
         metrics.AddAspNetCoreInstrumentation()
                .AddHttpClientInstrumentation()
-               .AddPrometheusExporter();
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddProcessInstrumentation();
     })
     .WithTracing(tracing =>
     {
@@ -101,4 +103,5 @@ app.Run();
 
 // Required for integration testing
 public partial class Program { }
+
 

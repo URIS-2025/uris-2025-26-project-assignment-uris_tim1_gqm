@@ -97,7 +97,9 @@ builder.Services.AddOpenTelemetry()
     {
         metrics.AddAspNetCoreInstrumentation()
                .AddHttpClientInstrumentation()
-               .AddPrometheusExporter();
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddProcessInstrumentation();
     })
     .WithTracing(tracing =>
     {
@@ -140,4 +142,5 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
 

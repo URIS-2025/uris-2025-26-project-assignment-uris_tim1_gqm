@@ -45,7 +45,9 @@ builder.Services.AddOpenTelemetry()
     {
         metrics.AddAspNetCoreInstrumentation()
                .AddHttpClientInstrumentation()
-               .AddPrometheusExporter();
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddProcessInstrumentation();
     })
     .WithTracing(tracing =>
     {
@@ -82,4 +84,5 @@ app.MapPrometheusScrapingEndpoint();
 app.Run();
 
 public partial class Program { }
+
 
