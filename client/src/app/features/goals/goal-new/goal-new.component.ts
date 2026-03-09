@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,7 +10,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { PageHeaderComponent } from '../../../shared/components/page-header.component';
+import { CommonModule } from '@angular/common';
 import { GoalApiService } from '../../../core/api/goal-api.service';
 import { PremiseApiService } from '../../../core/api/premise-api.service';
 import { AssessmentApiService } from '../../../core/api/assessment-api.service';
@@ -26,11 +25,12 @@ import { firstValueFrom } from 'rxjs';
     selector: 'app-goal-new',
     standalone: true,
     imports: [
+        CommonModule,
         ReactiveFormsModule,
-        MatStepperModule, MatFormFieldModule, MatInputModule, MatSelectModule,
+        RouterLink,
+        MatFormFieldModule, MatInputModule, MatSelectModule,
         MatButtonModule, MatIconModule, MatSliderModule, MatProgressSpinnerModule,
         MatDatepickerModule, MatNativeDateModule,
-        PageHeaderComponent,
     ],
     templateUrl: './goal-new.component.html',
     styleUrl: './goal-new.component.css',
@@ -39,6 +39,17 @@ export class GoalNewComponent implements OnInit {
     departments: Department[] = [];
     submitting = false;
     submitError = '';
+    currentStep = 0;
+
+    readonly steps = [
+        { label: 'Department' },
+        { label: 'Goal Definition' },
+        { label: 'Premises' },
+        { label: 'Strategy' },
+        { label: 'Probability' },
+        { label: 'GQM Structure' },
+        { label: 'Review' },
+    ];
 
     readonly UNIT_GROUPS = [
         { group: 'Dimensionless', units: ['None', 'Percentage', 'Ratio', 'Index', 'Score', 'Rating', 'Grade', 'Multiplier', 'Points', 'Count'] },
@@ -112,7 +123,6 @@ export class GoalNewComponent implements OnInit {
         this.deptApi.getDepartments({ page: 1, size: 100 }).subscribe({
             next: res => {
                 const all = res.items ?? [];
-                // Admin gets all, otherwise managers get a filtered restricted view (simulated via first 2)
                 if (this.permissions.has('view_all_departments')) {
                     this.departments = all;
                 } else {
@@ -164,6 +174,57 @@ export class GoalNewComponent implements OnInit {
         if (p < 0.33) return 'Low';
         if (p < 0.66) return 'Medium';
         return 'High';
+    }
+
+    // Custom stepper navigation
+    private getStepForm(step: number): FormGroup | null {
+        switch (step) {
+            case 0: return this.step1;
+            case 1: return this.step2;
+            case 2: return this.step3;
+            case 3: return this.step4;
+            case 4: return this.step5;
+            case 5: return this.step6;
+            default: return null;
+        }
+    }
+
+    isStepValid(step: number): boolean {
+        const form = this.getStepForm(step);
+        return form ? form.valid : true;
+    }
+
+    isStepCompleted(step: number): boolean {
+        if (step >= this.currentStep) return false;
+        return this.isStepValid(step);
+    }
+
+    nextStep(): void {
+        const form = this.getStepForm(this.currentStep);
+        if (form) {
+            form.markAllAsTouched();
+            if (form.invalid) return;
+        }
+        if (this.currentStep < this.steps.length - 1) {
+            this.currentStep++;
+        }
+    }
+
+    prevStep(): void {
+        if (this.currentStep > 0) {
+            this.currentStep--;
+        }
+    }
+
+    goToStep(step: number): void {
+        // Can only go back to completed steps or the current step
+        if (step <= this.currentStep) {
+            this.currentStep = step;
+        }
+    }
+
+    cancel(): void {
+        this.router.navigate(['/goals']);
     }
 
     saveDraft(): void {

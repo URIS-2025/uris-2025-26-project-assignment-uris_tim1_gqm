@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +21,7 @@ import { Organization } from '../../core/api/api.models';
     selector: 'app-organizations',
     standalone: true,
     imports: [
+        RouterLink, CommonModule,
         ReactiveFormsModule,
         MatTableModule, MatButtonModule, MatIconModule,
         MatProgressSpinnerModule, MatPaginatorModule,

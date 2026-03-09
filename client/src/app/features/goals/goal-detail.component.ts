@@ -38,6 +38,32 @@ export class GoalDetailComponent implements OnInit {
     }
 
     formatDate(d: string): string {
-        return d ? new Date(d).toLocaleDateString() : '—';
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'numeric', day: 'numeric',
+            hour: 'numeric', minute: '2-digit'
+        });
+    }
+
+    getDepartmentName(): string {
+        return this.goal?.departmentId ? 'Department' : '—';
+    }
+
+    getTimeProgress(): number {
+        if (!this.goal) return 0;
+        const start = new Date(this.goal.activeFrom).getTime();
+        const end = new Date(this.goal.activeTo).getTime();
+        const now = Date.now();
+        if (now <= start) return 0;
+        if (now >= end) return 100;
+        return Math.round(((now - start) / (end - start)) * 100);
+    }
+
+    getDaysRemaining(): string {
+        if (!this.goal) return '';
+        const end = new Date(this.goal.activeTo).getTime();
+        const diff = Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24));
+        if (diff < 0) return 'Expired';
+        return `${diff} days remaining`;
     }
 }

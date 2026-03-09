@@ -167,6 +167,7 @@ body {
 /* Form Fields */
 .mat-mdc-form-field {
   width: 100%;
+  --mat-form-field-container-text-size: 14px;
 }
 
 .mat-mdc-text-field-wrapper {
@@ -191,31 +192,34 @@ body {
 .mat-mdc-input-element {
   color: var(--text-primary) !important;
   caret-color: var(--primary-700) !important;
+  font-size: 14px !important;
 }
 
+/* Placeholder — lighter & smaller */
+.mat-mdc-input-element::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7 !important;
+  font-size: 13px !important;
+}
+
+/* Mat-label inside fields — smaller */
 .mat-mdc-form-field-label,
 .mat-mdc-floating-label {
   color: var(--text-secondary) !important;
+  font-size: 13px !important;
 }
 
-/* Select */
-.mat-mdc-select-value {
-  color: var(--text-primary) !important;
+/* Subscript (hints/errors) */
+.mat-mdc-form-field-subscript-wrapper {
+  font-size: 11px !important;
 }
 
-.mat-mdc-select-panel {
-  background: var(--surface-0) !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-md) !important;
+.mat-mdc-form-field-hint {
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
 }
 
-.mat-mdc-option {
-  color: var(--text-primary) !important;
-}
 
-.mat-mdc-option:hover {
-  background: var(--surface-2) !important;
-}
 
 /* Tables */
 .mat-mdc-table {
@@ -251,13 +255,157 @@ body {
   border-bottom: 1px solid var(--border-color) !important;
 }
 
-/* Paginator */
+/* ========================================================
+   PAGINATOR — Modern Clean
+======================================================== */
 .mat-mdc-paginator {
   background: var(--surface-0) !important;
   color: var(--text-secondary) !important;
-  border-top: 1px solid var(--border-color) !important;
-  border-bottom-left-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  margin-top: 12px;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.mat-mdc-paginator-container {
+  padding: 6px 16px !important;
+  min-height: 48px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.mat-mdc-paginator-range-label {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  font-family: 'Inter', sans-serif !important;
+  margin: 0 16px !important;
+  white-space: nowrap !important;
+}
+
+.mat-mdc-paginator-page-size-label {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  font-family: 'Inter', sans-serif !important;
+  white-space: nowrap !important;
+}
+
+.mat-mdc-paginator-page-size-select {
+  width: 84px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.mat-mdc-paginator-page-size-select .mat-mdc-select-value {
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.mat-mdc-paginator-page-size-select .mat-mdc-select-value-text {
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.mat-mdc-paginator-page-size-select .mat-mdc-form-field-infix {
+  min-height: 32px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  width: auto !important;
+  min-width: 40px !important;
+}
+
+.mat-mdc-paginator-navigation-previous,
+.mat-mdc-paginator-navigation-next,
+.mat-mdc-paginator-navigation-first,
+.mat-mdc-paginator-navigation-last {
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.mat-mdc-paginator-navigation-previous:hover,
+.mat-mdc-paginator-navigation-next:hover,
+.mat-mdc-paginator-navigation-first:hover,
+.mat-mdc-paginator-navigation-last:hover {
+  background: var(--surface-2) !important;
+}
+
+/* ========================================================
+   SELECT / DROPDOWN — Global Figma Style
+======================================================== */
+.mat-mdc-select {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+}
+
+.mat-mdc-select-trigger {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.mat-mdc-select-value-text {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-select-placeholder {
+  color: var(--text-muted) !important;
+  font-size: 13px !important;
+  opacity: 0.7 !important;
+}
+
+.mat-mdc-select-arrow-wrapper {
+  color: var(--text-muted) !important;
+}
+
+/* Dropdown panel */
+.mat-mdc-select-panel {
+  background: var(--surface-0) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 4px 0 !important;
+  max-height: 256px !important;
+}
+
+/* Dropdown options */
+.mat-mdc-option {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+  padding: 0 16px !important;
+  min-height: 40px !important;
+  border-radius: 0 !important;
+}
+
+.mat-mdc-option:hover {
+  background: var(--surface-2) !important;
+}
+
+/* Selected option — Figma teal/green highlight */
+.mat-mdc-option.mdc-list-item--selected,
+.mat-mdc-option.mat-mdc-option-active,
+.mat-mdc-option[aria-selected="true"] {
+  background: #2CB1A1 !important;
+  color: white !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text,
+.mat-mdc-option[aria-selected="true"] .mdc-list-item__primary-text {
+  color: white !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected .mat-pseudo-checkbox,
+.mat-mdc-option[aria-selected="true"] .mat-pseudo-checkbox {
+  display: none !important;
+}
+
+/* Option text */
+.mdc-list-item__primary-text {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
 }
 
 /* Dialog */
@@ -293,6 +441,29 @@ body {
 .mat-badge-content {
   background: var(--secondary) !important;
   color: white !important;
+}
+
+/* Tabs */
+.mat-mdc-tab-header {
+  background: var(--surface-0) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.mat-mdc-tab .mdc-tab__text-label {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.mat-mdc-tab-body-wrapper {
+  background: transparent !important;
 }
 
 /* Slider */
