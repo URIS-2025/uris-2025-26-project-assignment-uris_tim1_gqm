@@ -1,3 +1,5 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using GQMGoalService.API.Middleware;
 using GQMGoalService.Application;
 using GQMGoalService.Application.Interfaces.Clients;
@@ -39,6 +41,24 @@ builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -69,4 +89,7 @@ app.MapControllers();
 
 app.MapHealthChecks("/health");
 
+app.MapPrometheusScrapingEndpoint();
+
 app.Run();
+

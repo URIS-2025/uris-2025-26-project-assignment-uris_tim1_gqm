@@ -1,3 +1,5 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -66,6 +68,24 @@ builder.Services.AddAutoMapper(typeof(UserProfile).Assembly);
 // --- FluentValidation ---
 builder.Services.AddValidatorsFromAssemblyContaining<UserRequestValidator>();
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // --- Apply migrations and seed data ---
@@ -114,7 +134,10 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "user-service" }))
     .WithName("HealthCheck");
 
+app.MapPrometheusScrapingEndpoint();
+
 app.Run();
 
 // Required for integration testing
 public partial class Program { }
+

@@ -1,3 +1,5 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using FluentValidation;
 using GoalService.API.Middleware;
 using GoalService.Application.Interfaces;
@@ -88,6 +90,24 @@ builder.Services.AddMassTransit(x =>
 // --- Controllers ---
 builder.Services.AddControllers();
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // --- Global Exception Handler (first in pipeline) ---
@@ -117,4 +137,7 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal-service" }))
     .WithName("HealthCheck");
 
+app.MapPrometheusScrapingEndpoint();
+
 app.Run();
+

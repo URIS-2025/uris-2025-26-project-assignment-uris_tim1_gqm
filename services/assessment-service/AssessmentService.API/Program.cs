@@ -1,3 +1,5 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using AssessmentService.API.Middleware;
 using AssessmentService.Application.Interfaces;
 using AssessmentService.Application.Interfaces.Clients;
@@ -64,6 +66,24 @@ builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // Apply database schema and seed data in development
@@ -104,4 +124,7 @@ app.UseMiddleware<HmacMiddleware>();
 
 app.MapControllers();
 
+app.MapPrometheusScrapingEndpoint();
+
 app.Run();
+
