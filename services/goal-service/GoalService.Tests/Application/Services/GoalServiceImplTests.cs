@@ -7,6 +7,8 @@ using GoalService.Domain.Entities;
 using GoalService.Domain.Enums;
 using GoalService.Domain.Exceptions;
 using GoalService.Infrastructure.Persistence;
+using MassTransit;
+using Shared.Contracts.Messages;
 using GoalService.Application.Interfaces.Clients;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -24,7 +26,7 @@ public class GoalServiceImplTests : IDisposable
     private readonly Mock<IPremiseClient> _premiseClientMock;
     private readonly Mock<IAssessmentClient> _assessmentClientMock;
     private readonly Mock<IQgmGoalClient> _qgmGoalClientMock;
-    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
+    private readonly Mock<IPublishEndpoint> _publishEndpointMock;
 
     public GoalServiceImplTests()
     {
@@ -36,14 +38,14 @@ public class GoalServiceImplTests : IDisposable
         _premiseClientMock = new Mock<IPremiseClient>();
         _assessmentClientMock = new Mock<IAssessmentClient>();
         _qgmGoalClientMock = new Mock<IQgmGoalClient>();
-        _orchestrationClientMock = new Mock<IOrchestrationClient>();
+        _publishEndpointMock = new Mock<IPublishEndpoint>();
 
         _service = new GoalServiceImpl(
             _context, 
             _premiseClientMock.Object, 
             _assessmentClientMock.Object, 
             _qgmGoalClientMock.Object,
-            _orchestrationClientMock.Object);
+            _publishEndpointMock.Object);
     }
 
     public void Dispose()
@@ -418,9 +420,6 @@ public class GoalServiceImplTests : IDisposable
             .ReturnsAsync(new[] { new AssessmentDto { GoalId = goal.Id, State = "Completed" } });
         _qgmGoalClientMock.Setup(x => x.GetQgmGoalsForGoalAsync(goal.Id))
             .ReturnsAsync(new[] { new QgmGoalDto { GoalId = goal.Id } });
-        _orchestrationClientMock.Setup(x => x.RecordStepAsync(goal.Id, "Activated",
-            It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(Task.CompletedTask);
 
         var result = await _service.ActivateAsync(goal.Id);
 

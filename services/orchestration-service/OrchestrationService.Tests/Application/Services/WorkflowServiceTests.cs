@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using OrchestrationService.Application.DTOs;
+using MassTransit;
+using Shared.Contracts.Messages;
 using OrchestrationService.Application.Interfaces.Clients;
 using OrchestrationService.Application.Services;
 using OrchestrationService.Domain.Entities;
@@ -16,7 +18,7 @@ public class WorkflowServiceTests : IDisposable
 {
     private readonly OrchestrationDbContext _context;
     private readonly WorkflowService _service;
-    private readonly Mock<IAuditClient> _auditMock;
+    private readonly Mock<IPublishEndpoint> _publishMock;
     private readonly Mock<ICompensationHttpClient> _compensationMock;
 
     public WorkflowServiceTests()
@@ -26,12 +28,12 @@ public class WorkflowServiceTests : IDisposable
             .Options;
 
         _context = new OrchestrationDbContext(options);
-        _auditMock = new Mock<IAuditClient>();
+        _publishMock = new Mock<IPublishEndpoint>();
         _compensationMock = new Mock<ICompensationHttpClient>();
 
         var logger = new Mock<ILogger<WorkflowService>>().Object;
 
-        _service = new WorkflowService(_context, _auditMock.Object, _compensationMock.Object, logger);
+        _service = new WorkflowService(_context, _publishMock.Object, _compensationMock.Object, logger);
     }
 
     public void Dispose()
@@ -99,8 +101,7 @@ public class WorkflowServiceTests : IDisposable
 
         // Assert — give fire-and-forget a moment
         await Task.Delay(50);
-        _auditMock.Verify(a => a.LogAsync("WorkflowStarted", "SagaWorkflow",
-            It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _publishMock.Verify(p => p.Publish<IAuditLogCreated>(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ─── GetWorkflowAsync ──────────────────────────────────────────────────────
@@ -384,8 +385,7 @@ public class WorkflowServiceTests : IDisposable
         await Task.Delay(50);
 
         // Assert
-        _auditMock.Verify(a => a.LogAsync("WorkflowCompensated", "SagaWorkflow",
-            It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _publishMock.Verify(p => p.Publish<IAuditLogCreated>(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ─── GetStepsAsync ────────────────────────────────────────────────────────

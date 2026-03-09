@@ -1,7 +1,8 @@
 using FluentAssertions;
 using GoalService.Application.DTOs;
-using GoalService.Application.Interfaces.Clients;
 using GoalService.Application.Services;
+using MassTransit;
+using Shared.Contracts.Messages;
 using GoalService.Domain.Entities;
 using GoalService.Domain.Enums;
 using GoalService.Domain.Exceptions;
@@ -19,7 +20,7 @@ public class StrategyServiceImplTests : IDisposable
 {
     private readonly GoalDbContext _context;
     private readonly StrategyServiceImpl _service;
-    private readonly Mock<IOrchestrationClient> _orchestrationClientMock;
+    private readonly Mock<IPublishEndpoint> _publishEndpointMock;
 
     public StrategyServiceImplTests()
     {
@@ -28,8 +29,8 @@ public class StrategyServiceImplTests : IDisposable
             .Options;
 
         _context = new GoalDbContext(options);
-        _orchestrationClientMock = new Mock<IOrchestrationClient>();
-        _service = new StrategyServiceImpl(_context, _orchestrationClientMock.Object);
+        _publishEndpointMock = new Mock<IPublishEndpoint>();
+        _service = new StrategyServiceImpl(_context, _publishEndpointMock.Object);
     }
 
     public void Dispose()
