@@ -53,7 +53,7 @@ export class OrganizationsComponent implements OnInit {
     load(): void {
         this.loading = true;
         this.deptApi.getOrganizations({ page: this.pageNumber, size: this.pageSize }).subscribe({
-            next: res => { this.orgs = res.items ?? []; this.totalCount = res.totalCount ?? 0; this.loading = false; },
+            next: res => { this.orgs = res.items ?? []; this.totalCount = res.total ?? 0; this.loading = false; },
             error: () => { this.loading = false; }
         });
     }

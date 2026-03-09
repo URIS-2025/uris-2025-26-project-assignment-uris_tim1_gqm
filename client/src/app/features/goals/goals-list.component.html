@@ -27,6 +27,7 @@
             <mat-select [(ngModel)]="statusFilter" (selectionChange)="onStatusChange()" placeholder="All Statuses">
                 <mat-option value="">All Statuses</mat-option>
                 <mat-option value="Active">Active</mat-option>
+                <mat-option value="Draft">Draft</mat-option>
                 <mat-option value="OnHold">On Hold</mat-option>
                 <mat-option value="Completed">Completed</mat-option>
                 <mat-option value="Cancelled">Cancelled</mat-option>
@@ -54,8 +55,8 @@
     <div class="goal-cards">
         @for (g of goals; track g.id) {
         <a [routerLink]="['/goals', g.id]" class="goal-card" [class.status-active]="g.status === 'Active'"
-            [class.status-onhold]="g.status === 'OnHold'" [class.status-completed]="g.status === 'Completed'"
-            [class.status-cancelled]="g.status === 'Cancelled'">
+            [class.status-draft]="g.status === 'Draft'" [class.status-onhold]="g.status === 'OnHold'"
+            [class.status-completed]="g.status === 'Completed'" [class.status-cancelled]="g.status === 'Cancelled'">
 
             <div class="goal-card-body">
                 <div class="goal-card-main">
