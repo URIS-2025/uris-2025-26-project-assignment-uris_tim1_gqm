@@ -99,12 +99,16 @@ builder.Services.AddOpenTelemetry()
                .AddHttpClientInstrumentation()
                .AddPrometheusExporter()
                .AddRuntimeInstrumentation()
-               .AddProcessInstrumentation();
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
     })
     .WithTracing(tracing =>
     {
         tracing.AddAspNetCoreInstrumentation()
                .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
                .AddOtlpExporter(opt =>
                {
                    opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
@@ -142,5 +146,9 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
+
+
+
+
 
 
