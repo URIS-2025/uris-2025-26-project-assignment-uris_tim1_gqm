@@ -7,6 +7,8 @@ using GoalService.Domain.Enums;
 using GoalService.Domain.Exceptions;
 using GoalService.Application.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
+using Shared.Contracts.Messages;
 
 namespace GoalService.Application.Services;
 
@@ -16,20 +18,20 @@ public class GoalServiceImpl : IGoalService
     private readonly IPremiseClient _premiseClient;
     private readonly IAssessmentClient _assessmentClient;
     private readonly IQgmGoalClient _qgmGoalClient;
-    private readonly IOrchestrationClient _orchestrationClient;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public GoalServiceImpl(
         IGoalDbContext context, 
         IPremiseClient premiseClient, 
         IAssessmentClient assessmentClient, 
         IQgmGoalClient qgmGoalClient,
-        IOrchestrationClient orchestrationClient)
+        IPublishEndpoint publishEndpoint)
     {
         _context = context;
         _premiseClient = premiseClient;
         _assessmentClient = assessmentClient;
         _qgmGoalClient = qgmGoalClient;
-        _orchestrationClient = orchestrationClient;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<PaginationResponse<GoalResponse>> GetAllPaginatedAsync(PaginationRequest request)
@@ -88,11 +90,49 @@ public class GoalServiceImpl : IGoalService
     {
         var goal = request.ToEntity();
 
-        _context.Goals.Add(goal);
-        await _context.SaveChangesAsync();
+        await _publishEndpoint.Publish<IAuditLogCreated>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            ActorId = Guid.Empty,
+            ActorRole = "System",
+            Service = "goal-service",
+            Action = "GoalCreated",
+            EntityType = "Goal",
+            EntityId = goal.Id,
+            Metadata = System.Text.Json.JsonSerializer.Serialize(new { goal.Focus }),
+            OccurredAt = DateTime.UtcNow
+        });
 
-        await _orchestrationClient.StartWorkflowAsync(goal.Id);
-        await _orchestrationClient.RecordStepAsync(goal.Id, "GoalCreated", $"api/Goal/{goal.Id}", "{}");
+        await _publishEndpoint.Publish<IGoalDomainEvent>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            GoalId = goal.Id,
+            EventType = "GoalCreated",
+            Payload = "{}",
+            OccurredAt = DateTime.UtcNow
+        });
+
+        await _publishEndpoint.Publish<IWorkflowTransitionRequested>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            GoalId = goal.Id,
+            StepName = "StartWorkflow",
+            CompensationEndpoint = "",
+            CompensationPayload = "{}",
+            RequestedAt = DateTime.UtcNow
+        });
+
+        await _publishEndpoint.Publish<IWorkflowTransitionRequested>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            GoalId = goal.Id,
+            StepName = "GoalCreated",
+            CompensationEndpoint = $"api/Goal/{goal.Id}",
+            CompensationPayload = "{}",
+            RequestedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
 
         return goal.ToResponse();
     }
@@ -138,13 +178,18 @@ public class GoalServiceImpl : IGoalService
             throw new InvalidGoalStateException($"Goal '{id}' must be in Draft state to activate (current: {goal.Status}).");
 
         var blockers = await CollectActivationBlockersAsync(id);
-        if (blockers.Count > 0)
-            throw new GoalActivationException(blockers);
+        await _publishEndpoint.Publish<IWorkflowTransitionRequested>(new
+        {
+            CorrelationId = Guid.NewGuid(),
+            GoalId = goal.Id,
+            StepName = "Activated",
+            CompensationEndpoint = $"api/Goal/{goal.Id}/revert-to-draft",
+            CompensationPayload = "{}",
+            RequestedAt = DateTime.UtcNow
+        });
 
         goal.Status = GoalStatus.Active;
         await _context.SaveChangesAsync();
-
-        await _orchestrationClient.RecordStepAsync(goal.Id, "Activated", $"api/Goal/{goal.Id}/revert-to-draft", "{}");
 
         return goal.ToResponse();
     }

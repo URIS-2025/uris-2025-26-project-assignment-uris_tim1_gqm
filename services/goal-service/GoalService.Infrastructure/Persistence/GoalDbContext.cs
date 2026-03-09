@@ -1,5 +1,6 @@
 using GoalService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
 using GoalService.Application.Interfaces.Persistence;
 
 namespace GoalService.Infrastructure.Persistence;
@@ -15,6 +16,11 @@ public class GoalDbContext : DbContext, IGoalDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GoalDbContext).Assembly);
     }
 }
