@@ -98,6 +98,15 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+builder.Services.AddHttpClient<IDepartmentClient, DepartmentClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:DepartmentService"] ?? "http://department-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+builder.Services.AddHttpContextAccessor();
+
 // --- Controllers ---
 builder.Services.AddControllers();
 

@@ -59,6 +59,18 @@ export class AuthService {
         return this._state$.value.user?.organizationId ?? null;
     }
 
+    switchOrganization(orgId: string): void {
+        const currentUser = this.currentUser;
+        if (currentUser) {
+            const org = currentUser.organizations.find(o => o.id === orgId);
+            if (org) {
+                this._updateState({
+                    user: { ...currentUser, organizationId: org.id, organization: org }
+                });
+            }
+        }
+    }
+
     /**
      * Login flow:
      * 1. POST /auth/login → get tokens
