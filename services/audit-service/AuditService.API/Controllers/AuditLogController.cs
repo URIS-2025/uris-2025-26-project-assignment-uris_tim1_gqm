@@ -19,29 +19,6 @@ public class AuditLogController : ControllerBase
     }
 
     /// <summary>
-    /// Creates an audit log entry. Always returns 2xx — never propagates errors to callers.
-    /// </summary>
-    [HttpPost("log")]
-    [ProducesResponseType(typeof(AuditLogResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Log([FromBody] CreateAuditLogRequest request)
-    {
-        try
-        {
-            var result = await _auditLogService.CreateAsync(request);
-            if (result is null)
-                return Ok(new { message = "Audit log could not be persisted but request was accepted." });
-
-            return StatusCode(StatusCodes.Status201Created, result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unhandled error in AuditLog POST /audit/log");
-            return Ok(new { message = "Audit log request acknowledged." });
-        }
-    }
-
-    /// <summary>
     /// Returns paginated audit logs with optional filters.
     /// </summary>
     [HttpGet]

@@ -1,6 +1,7 @@
 using AuditService.Application.Interfaces;
 using AuditService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
 
 namespace AuditService.Infrastructure.Data;
 
@@ -14,6 +15,9 @@ public class AuditDbContext : DbContext, IApplicationDbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
         modelBuilder.Entity<AuditLog>(entity =>
         {
             entity.HasKey(e => e.Id);
