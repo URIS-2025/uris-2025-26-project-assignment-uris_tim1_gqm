@@ -87,8 +87,10 @@ services:
       - Services__QgmGoalService=http://gqm-goal-service:8080
       - Services__OrchestrationService=http://orchestration-service:8080
       - Services__AuditService=http://audit-service:8080
+      - RabbitMQ__Host=rabbitmq://rabbitmq
     depends_on:
       - goal-db
+      - rabbitmq
 
   goal-db:
     image: postgres:17-alpine
@@ -195,8 +197,10 @@ services:
       - DATABASE_URL=Host=orchestration-db;Port=5432;Database=orchestrationdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
       - Services__AuditService=http://audit-service:8080
+      - RabbitMQ__Host=rabbitmq://rabbitmq
     depends_on:
       - orchestration-db
+      - rabbitmq
 
   orchestration-db:
     image: postgres:17-alpine
@@ -221,8 +225,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=audit-db;Port=5432;Database=auditdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - RabbitMQ__Host=rabbitmq://rabbitmq
     depends_on:
       - audit-db
+      - rabbitmq
 
   audit-db:
     image: postgres:17-alpine
@@ -236,6 +242,15 @@ services:
     volumes:
       - audit-db-data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
 volumes:
   department-db-data:
   goal-db-data:
@@ -245,3 +260,4 @@ volumes:
   user-db-data:
   orchestration-db-data:
   audit-db-data:
+  rabbitmq-data:
