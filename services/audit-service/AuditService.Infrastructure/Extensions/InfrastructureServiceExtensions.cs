@@ -36,9 +36,9 @@ public static class InfrastructureServiceExtensions
 
             x.UsingRabbitMq((ctx, cfg) =>
             {
-                var rabbitMqHost = configuration["RabbitMQ:Host"] ?? "rabbitmq://localhost";
-                var rabbitMqUsername = configuration["RabbitMQ:Username"] ?? "guest";
-                var rabbitMqPassword = configuration["RabbitMQ:Password"] ?? "guest";
+                var rabbitMqHost = configuration["RabbitMQ:Host"] ?? throw new InvalidOperationException("RabbitMQ:Host is not configured.");
+                var rabbitMqUsername = configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured.");
+                var rabbitMqPassword = configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.");
 
                 cfg.Host(rabbitMqHost, h =>
                 {

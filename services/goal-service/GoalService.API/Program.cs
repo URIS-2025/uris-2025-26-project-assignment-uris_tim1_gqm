@@ -71,9 +71,9 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
-        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq://localhost";
-        var rabbitMqUsername = builder.Configuration["RabbitMQ:Username"] ?? "guest";
-        var rabbitMqPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? throw new InvalidOperationException("RabbitMQ:Host is not configured.");
+        var rabbitMqUsername = builder.Configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured.");
+        var rabbitMqPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.");
 
         cfg.Host(rabbitMqHost, h =>
         {
