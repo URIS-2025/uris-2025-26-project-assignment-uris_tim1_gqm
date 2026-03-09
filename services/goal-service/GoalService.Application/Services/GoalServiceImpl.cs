@@ -89,6 +89,7 @@ public class GoalServiceImpl : IGoalService
     public async Task<GoalResponse> CreateAsync(GoalRequest request)
     {
         var goal = request.ToEntity();
+        _context.Goals.Add(goal);
 
         await _publishEndpoint.Publish<IAuditLogCreated>(new
         {
@@ -178,6 +179,9 @@ public class GoalServiceImpl : IGoalService
             throw new InvalidGoalStateException($"Goal '{id}' must be in Draft state to activate (current: {goal.Status}).");
 
         var blockers = await CollectActivationBlockersAsync(id);
+        if (blockers.Any())
+            throw new GoalActivationException(blockers);
+            
         await _publishEndpoint.Publish<IWorkflowTransitionRequested>(new
         {
             CorrelationId = Guid.NewGuid(),
