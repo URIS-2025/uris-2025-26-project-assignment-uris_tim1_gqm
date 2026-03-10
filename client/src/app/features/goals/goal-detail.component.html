@@ -35,9 +35,10 @@
     </div>
 
     <!-- Tab bar -->
-    <mat-tab-group animationDuration="150ms" class="detail-tabs" dynamicHeight>
+    <mat-tab-group animationDuration="150ms" class="detail-tabs" dynamicHeight
+        (selectedTabChange)="onTabChange($event.index)">
 
-        <!-- OVERVIEW TAB -->
+        <!-- ══════════════════════════════════════════ OVERVIEW TAB -->
         <mat-tab label="Overview">
             <div class="tab-body">
                 <!-- Stat cards row -->
@@ -114,58 +115,147 @@
             </div>
         </mat-tab>
 
-        <!-- STRATEGIES TAB -->
+        <!-- ══════════════════════════════════════════ STRATEGIES TAB -->
         <mat-tab label="Strategies">
             <div class="tab-body">
                 <div class="tab-header-row">
-                    <h3 class="section-title">Derivation Strategies</h3>
-                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-stroked-button class="btn-sm">
-                        <mat-icon>add</mat-icon> Link Strategy
+                    <h3 class="section-title">Derivation Strategies
+                        @if (goal.strategies?.length) {
+                        <span class="count-badge">{{ goal.strategies!.length }}</span>
+                        }
+                    </h3>
+                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-stroked-button class="btn-sm"
+                        (click)="showStrategyForm = true" [disabled]="showStrategyForm">
+                        <mat-icon>add</mat-icon> Add Strategy
                     </button>
                 </div>
-                @if (goal.strategy) {
-                <div class="detail-section-card">
-                    <div class="detail-fields-grid">
-                        <div class="detail-field">
-                            <span class="field-label">Name</span>
-                            <span class="field-value">{{ goal.strategy.name }}</span>
-                        </div>
-                        <div class="detail-field">
-                            <span class="field-label">Refinement</span>
-                            <span class="chip chip-default">{{ goal.strategy.refinementType }}</span>
-                        </div>
-                        <div class="detail-field full-width">
-                            <span class="field-label">Description</span>
-                            <span class="field-value">{{ goal.strategy.description }}</span>
-                        </div>
+
+                <!-- ── NEW STRATEGY FORM ── -->
+                @if (showStrategyForm) {
+                <div class="inline-form-card" [formGroup]="strategyForm">
+                    <h4 class="inline-form-title">
+                        <mat-icon>lightbulb</mat-icon> New Strategy
+                    </h4>
+                    <div class="form-row-2">
+                        <mat-form-field appearance="outline" class="form-field-full">
+                            <mat-label>Name</mat-label>
+                            <input matInput formControlName="name" placeholder="Strategy name" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="form-field-full">
+                            <mat-label>Refinement Type</mat-label>
+                            <mat-select formControlName="refinementType">
+                                <mat-option value="AND">AND — all sub-goals must be achieved</mat-option>
+                                <mat-option value="OR">OR — any sub-goal suffices</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <mat-form-field appearance="outline" style="width:100%;margin-bottom:8px;">
+                        <mat-label>Description</mat-label>
+                        <textarea matInput rows="3" formControlName="description"
+                            placeholder="Describe how this strategy derives sub-goals"></textarea>
+                    </mat-form-field>
+                    <div class="inline-form-actions">
+                        <button mat-button (click)="cancelStrategy()" [disabled]="strategySubmitting">Cancel</button>
+                        <button mat-flat-button color="primary" (click)="submitStrategy()"
+                            [disabled]="strategyForm.invalid || strategySubmitting">
+                            @if (strategySubmitting) { <mat-spinner diameter="16"></mat-spinner> }
+                            @else { <mat-icon>save</mat-icon> Save Strategy }
+                        </button>
                     </div>
                 </div>
+                }
+                @if (goal.strategies?.length) {
+                @for (strategy of goal.strategies; track strategy.id) {
+                <div class="detail-section-card" style="margin-bottom: 12px;">
+                    <div class="strategy-header-row">
+                        <div class="strategy-name-block">
+                            <mat-icon class="strategy-icon">lightbulb</mat-icon>
+                            <div>
+                                <div class="strategy-name">{{ strategy.name }}</div>
+                                <span [class]="'chip ' + (strategy.refinementType === 'AND' ? 'chip-info' : 'chip-warning')">
+                                    {{ strategy.refinementType }} refinement
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <mat-divider class="section-divider"></mat-divider>
+                    <div class="detail-fields-grid">
+                        <div class="detail-field full-width">
+                            <span class="field-label">Description</span>
+                            <span class="field-value">{{ strategy.description }}</span>
+                        </div>
+                        @if (strategy.originStrategyId) {
+                        <div class="detail-field full-width">
+                            <span class="field-label">Origin Strategy ID</span>
+                            <span class="field-value field-mono">{{ strategy.originStrategyId }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
                 } @else {
                 <div class="empty-tab-state">
                     <span class="material-icons-round">lightbulb_outline</span>
-                    <p>No strategies linked yet.</p>
+                    <p>No strategy linked yet.</p>
                 </div>
                 }
             </div>
         </mat-tab>
 
-        <!-- PREMISES TAB -->
+        <!-- ══════════════════════════════════════════ PREMISES TAB -->
         <mat-tab label="Premises">
             <div class="tab-body">
                 <div class="tab-header-row">
-                    <h3 class="section-title">Premises</h3>
-                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-stroked-button class="btn-sm">
+                    <h3 class="section-title">Premises
+                        @if (goal.premises?.length) {
+                        <span class="count-badge">{{ goal.premises!.length }}</span>
+                        }
+                    </h3>
+                    <button [hasPermission]="'edit_goals'" permissionMode="hide" mat-stroked-button class="btn-sm"
+                        (click)="showPremiseForm = true" [disabled]="showPremiseForm">
                         <mat-icon>add</mat-icon> Add Premise
                     </button>
                 </div>
+
+                <!-- ── NEW PREMISE FORM ── -->
+                @if (showPremiseForm) {
+                <div class="inline-form-card" [formGroup]="premiseForm">
+                    <h4 class="inline-form-title">
+                        <mat-icon>description</mat-icon> New Premise
+                    </h4>
+                    <div class="form-row-2">
+                        <mat-form-field appearance="outline" class="form-field-full">
+                            <mat-label>Type</mat-label>
+                            <mat-select formControlName="type">
+                                <mat-option value="Assumption">Assumption</mat-option>
+                                <mat-option value="Context">Context</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <mat-form-field appearance="outline" style="width:100%;margin-bottom:8px;">
+                        <mat-label>Description</mat-label>
+                        <textarea matInput rows="3" formControlName="description"
+                            placeholder="Describe the premise or assumption"></textarea>
+                    </mat-form-field>
+                    <div class="inline-form-actions">
+                        <button mat-button (click)="cancelPremise()" [disabled]="premiseSubmitting">Cancel</button>
+                        <button mat-flat-button color="primary" (click)="submitPremise()"
+                            [disabled]="premiseForm.invalid || premiseSubmitting">
+                            @if (premiseSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
+                            @else { <mat-icon>save</mat-icon> Save Premise }
+                        </button>
+                    </div>
+                </div>
+                }
                 @if (goal.premises?.length) {
                 <div class="detail-section-card">
                     @for (p of goal.premises; track p.id; let last = $last) {
                     <div class="premise-row">
                         <div class="premise-row-meta">
-                            <span [class]="'chip ' + (p.type === 'Assumption' ? 'chip-info' : 'chip-warning')">{{
-                                p.type }}</span>
-                            <span class="text-muted" style="font-size: 11px;">v{{ p.version || 1 }}</span>
+                            <span [class]="'chip ' + (p.type === 'Assumption' ? 'chip-info' : 'chip-warning')">
+                                {{ p.type }}
+                            </span>
+                            <span class="text-muted version-tag">v{{ p.version || 1 }}</span>
                             @if (!p.isActive) { <span class="chip chip-error">Inactive</span> }
                         </div>
                         <p class="premise-desc">{{ p.description }}</p>
@@ -175,66 +265,509 @@
                 </div>
                 } @else {
                 <div class="empty-tab-state">
-                    <span class="material-icons-round">description</span>
+                    <span class="material-icons-round">policy</span>
                     <p>No premises established.</p>
                 </div>
                 }
             </div>
         </mat-tab>
 
-        <!-- GQM STRUCTURE TAB -->
+        <!-- ══════════════════════════════════════════ GQM STRUCTURE TAB -->
         <mat-tab label="GQM Structure">
             <div class="tab-body">
                 <div class="tab-header-row">
-                    <h3 class="section-title">Questions & Targets</h3>
+                    <h3 class="section-title">GQM Goals · Questions · Targets</h3>
+                    <button [hasPermission]="'manage_gqm'" permissionMode="disable"
+                        mat-stroked-button class="btn-sm"
+                        (click)="showGqmGoalForm = true; showQuestionFormFor = null; showTargetFormFor = null"
+                        [disabled]="showGqmGoalForm || gqmLoading">
+                        <mat-icon>add</mat-icon> Add GQM Goal
+                    </button>
                 </div>
-                @if (goal.gqmGoals?.length) {
-                <div class="detail-section-card">
-                    @for (gqm of goal.gqmGoals; track gqm.id) {
-                    <div class="detail-field full-width">
-                        <span class="field-label">GQM Goal</span>
-                        <span class="field-value">{{ gqm.description }}</span>
+
+                @if (gqmLoading) {
+                <div class="loading-wrap"><mat-spinner diameter="32"></mat-spinner></div>
+                } @else if (gqmError) {
+                <div class="error-state">{{ gqmError }}</div>
+                } @else {
+
+                <!-- ── ADD GQM GOAL FORM ── -->
+                @if (showGqmGoalForm) {
+                <div class="inline-form-card" [formGroup]="gqmGoalForm">
+                    <h4 class="inline-form-title"><mat-icon>flag</mat-icon> New GQM Goal</h4>
+                    <p class="inline-form-hint">Describe what you want to measure for this goal (G in GQM).</p>
+                    <mat-form-field appearance="outline" class="form-field-full">
+                        <mat-label>Description</mat-label>
+                        <input matInput formControlName="description"
+                            placeholder="e.g. Measure the quality of the software process" />
+                    </mat-form-field>
+                    <div class="inline-form-actions">
+                        <button mat-button (click)="cancelGqmGoal()" [disabled]="gqmGoalSubmitting">Cancel</button>
+                        <button mat-flat-button color="primary" (click)="submitGqmGoal()"
+                            [disabled]="gqmGoalForm.invalid || gqmGoalSubmitting">
+                            @if (gqmGoalSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
+                            @else { <mat-icon>save</mat-icon> Create GQM Goal }
+                        </button>
+                    </div>
+                </div>
+                }
+
+                @if (gqmLoaded && gqmStructure.length === 0 && !showGqmGoalForm) {
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">help_outline</span>
+                    <p>No GQM Goals linked to this goal yet.</p>
+                    <button mat-stroked-button class="btn-sm" style="margin-top:12px"
+                        (click)="showGqmGoalForm = true">
+                        <mat-icon>add</mat-icon> Add first GQM Goal
+                    </button>
+                </div>
+                } @else if (gqmLoaded) {
+                <mat-accordion multi>
+                    @for (gqmGoal of gqmStructure; track gqmGoal.id) {
+                    <mat-expansion-panel class="gqm-panel" expanded>
+                        <mat-expansion-panel-header>
+                            <mat-panel-title class="gqm-panel-title">
+                                <mat-icon class="gqm-icon gqm-icon-goal">flag</mat-icon>
+                                <span>{{ gqmGoal.description }}</span>
+                            </mat-panel-title>
+                            <mat-panel-description>
+                                {{ gqmGoal.questions.length }} question(s)
+                            </mat-panel-description>
+                        </mat-expansion-panel-header>
+
+                        <div class="gqm-questions-list">
+                            @if (gqmGoal.questions.length === 0 && showQuestionFormFor !== gqmGoal.id) {
+                            <p class="gqm-empty-line">No questions yet.</p>
+                            }
+
+                            @for (q of gqmGoal.questions; track q.id; let qLast = $last) {
+                            <div class="gqm-question-block">
+                                <div class="gqm-question-header">
+                                    <mat-icon class="gqm-icon gqm-icon-question">help_outline</mat-icon>
+                                    <span class="gqm-question-text">{{ q.text }}</span>
+                                </div>
+
+                                @if (q.targets.length > 0) {
+                                <div class="gqm-targets-list">
+                                    @for (t of q.targets; track t.id) {
+                                    <div class="gqm-target-row">
+                                        <div class="gqm-target-header">
+                                            <mat-icon class="gqm-icon gqm-icon-target">gps_fixed</mat-icon>
+                                            <span class="gqm-target-name">{{ t.name }}</span>
+                                            <span class="chip chip-default unit-chip">{{ t.unit }}</span>
+                                            <span class="measurement-count-badge" [matTooltip]="t.measurements.length + ' measurement(s) recorded'">
+                                                <mat-icon style="font-size:11px;width:11px;height:11px;vertical-align:middle">bar_chart</mat-icon>
+                                                {{ t.measurements.length }}
+                                            </span>
+                                        </div>
+                                        @if (t.description) {
+                                        <p class="gqm-target-desc">{{ t.description }}</p>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                                } @else if (showTargetFormFor !== q.id) {
+                                <p class="gqm-empty-line gqm-indent">No targets yet.</p>
+                                }
+
+                                <!-- Add Target inline form -->
+                                @if (showTargetFormFor === q.id) {
+                                <div class="gqm-inline-sub-form" [formGroup]="targetForm">
+                                    <h5 class="gqm-sub-form-title"><mat-icon>gps_fixed</mat-icon> New Target (M in GQM)</h5>
+                                    <div class="form-row-2">
+                                        <mat-form-field appearance="outline" class="form-field-full">
+                                            <mat-label>Name</mat-label>
+                                            <input matInput formControlName="name" placeholder="e.g. Defect density" />
+                                        </mat-form-field>
+                                        <mat-form-field appearance="outline" class="form-field-full">
+                                            <mat-label>Unit</mat-label>
+                                            <mat-select formControlName="unit">
+                                                @for (u of commonUnits; track u) {
+                                                <mat-option [value]="u">{{ u }}</mat-option>
+                                                }
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </div>
+                                    <mat-form-field appearance="outline" class="form-field-full">
+                                        <mat-label>Description (optional)</mat-label>
+                                        <input matInput formControlName="description" placeholder="e.g. Number of defects per KLOC" />
+                                    </mat-form-field>
+                                    <div class="inline-form-actions">
+                                        <button mat-button (click)="cancelTarget()" [disabled]="targetSubmitting">Cancel</button>
+                                        <button mat-flat-button color="primary" (click)="submitTarget(q.id)"
+                                            [disabled]="targetForm.invalid || targetSubmitting">
+                                            @if (targetSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
+                                            @else { <mat-icon>save</mat-icon> Add Target }
+                                        </button>
+                                    </div>
+                                </div>
+                                } @else {
+                                <button mat-button class="gqm-add-btn"
+                                    (click)="showTargetFormFor = q.id; showQuestionFormFor = null">
+                                    <mat-icon>add</mat-icon> Add Target
+                                </button>
+                                }
+                            </div>
+                            @if (!qLast) { <mat-divider class="my-divider"></mat-divider> }
+                            }
+
+                            <!-- Add Question inline form -->
+                            @if (showQuestionFormFor === gqmGoal.id) {
+                            <div class="gqm-inline-sub-form" [formGroup]="questionForm">
+                                <h5 class="gqm-sub-form-title"><mat-icon>help_outline</mat-icon> New Question (Q in GQM)</h5>
+                                <mat-form-field appearance="outline" class="form-field-full">
+                                    <mat-label>Question text</mat-label>
+                                    <input matInput formControlName="text"
+                                        placeholder="e.g. What is the defect density of the software?" />
+                                </mat-form-field>
+                                <div class="inline-form-actions">
+                                    <button mat-button (click)="cancelQuestion()" [disabled]="questionSubmitting">Cancel</button>
+                                    <button mat-flat-button color="primary" (click)="submitQuestion(gqmGoal.id)"
+                                        [disabled]="questionForm.invalid || questionSubmitting">
+                                        @if (questionSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
+                                        @else { <mat-icon>save</mat-icon> Add Question }
+                                    </button>
+                                </div>
+                            </div>
+                            } @else {
+                            <button mat-button class="gqm-add-btn"
+                                (click)="showQuestionFormFor = gqmGoal.id; showTargetFormFor = null">
+                                <mat-icon>add</mat-icon> Add Question
+                            </button>
+                            }
+                        </div>
+                    </mat-expansion-panel>
+                    }
+                </mat-accordion>
+                }
+
+                }<!-- end @else gqmLoaded -->
+            </div>
+        </mat-tab>
+
+        <!-- ══════════════════════════════════════════ MEASUREMENTS TAB -->
+        <mat-tab label="Measurements">
+            <div class="tab-body">
+                <div class="tab-header-row">
+                    <h3 class="section-title">Measurements
+                        @if (gqmLoaded) {
+                        <span class="count-badge">{{ getTotalMeasurements() }}</span>
+                        }
+                    </h3>
+                    <button [hasPermission]="'manage_probability_assessments'" permissionMode="disable"
+                        mat-stroked-button class="btn-sm" (click)="showMeasurementForm = true"
+                        [disabled]="showMeasurementForm || !gqmLoaded">
+                        <mat-icon>add</mat-icon> New Measurement
+                    </button>
+                </div>
+
+                @if (gqmLoading) {
+                <div class="loading-wrap"><mat-spinner diameter="32"></mat-spinner></div>
+                } @else {
+
+                <!-- ── NEW MEASUREMENT FORM ── -->
+                @if (showMeasurementForm) {
+                <div class="inline-form-card">
+                    <h4 class="inline-form-title">
+                        <mat-icon>add_chart</mat-icon> New Measurement
+                    </h4>
+                    @if (gqmLoaded && gqmStructure.length === 0) {
+                    <div class="gqm-empty-notice">
+                        <mat-icon>info_outline</mat-icon>
+                        No GQM Goals are linked to this goal. Go to the <strong>GQM Structure</strong> tab and create one first.
+                    </div>
+                    } @else {
+                    <p class="inline-form-hint">Select the GQM Goal, then the Question, then the Target.</p>
+
+                    <div class="form-row-3">
+                        <!-- Step 1: GQM Goal — plain mat-select, no formControlName -->
+                        <mat-form-field appearance="outline" class="form-field-full" floatLabel="always">
+                            <mat-label>GQM Goal</mat-label>
+                            <mat-select [value]="selectedGqmGoalId"
+                                placeholder="Select GQM Goal"
+                                (selectionChange)="onGqmGoalChange($event.value)">
+                                @for (g of gqmStructure; track g.id) {
+                                <mat-option [value]="g.id">{{ g.description }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <!-- Step 2: Question -->
+                        <mat-form-field appearance="outline" class="form-field-full" floatLabel="always">
+                            <mat-label>Question</mat-label>
+                            <mat-select [value]="selectedQuestionId"
+                                placeholder="Select Question"
+                                [disabled]="!selectedGqmGoalId"
+                                (selectionChange)="onQuestionChange($event.value)">
+                                @for (q of filteredQuestions; track q.id) {
+                                <mat-option [value]="q.id">{{ q.text }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <!-- Step 3: Target -->
+                        <mat-form-field appearance="outline" class="form-field-full" floatLabel="always">
+                            <mat-label>Target</mat-label>
+                            <mat-select [value]="selectedTargetId"
+                                placeholder="Select Target"
+                                [disabled]="!selectedQuestionId"
+                                (selectionChange)="onTargetChange($event.value)">
+                                @for (t of filteredTargets; track t.id) {
+                                <mat-option [value]="t.id">{{ t.name }} ({{ t.unit }})</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+
+                    <!-- Value + Date use reactive form -->
+                    <div class="form-row-2" [formGroup]="measurementForm">
+                        <mat-form-field appearance="outline" class="form-field-full">
+                            <mat-label>Value</mat-label>
+                            <input matInput formControlName="value" placeholder="e.g. 42.5" />
+                            @if (getSelectedTargetUnit()) {
+                            <mat-hint>Unit: {{ getSelectedTargetUnit() }}</mat-hint>
+                            }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="form-field-full">
+                            <mat-label>Measured At</mat-label>
+                            <input matInput [matDatepicker]="mPicker" formControlName="measuredAt" />
+                            <mat-datepicker-toggle matIconSuffix [for]="mPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #mPicker></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    } <!-- end @else: gqm has data -->
+
+                    <div class="inline-form-actions">
+                        <button mat-button (click)="cancelMeasurement()" [disabled]="measurementSubmitting">
+                            Cancel
+                        </button>
+                        <button mat-flat-button color="primary" (click)="submitMeasurement()"
+                            [disabled]="!measurementFormValid || measurementSubmitting">
+                            @if (measurementSubmitting) {
+                            <mat-spinner diameter="16"></mat-spinner>
+                            } @else {
+                            <mat-icon>save</mat-icon> Save Measurement
+                            }
+                        </button>
+                    </div>
+                </div>
+                }
+
+                <!-- ── MEASUREMENTS LIST grouped by GQM Goal › Question › Target ── -->
+                @if (gqmLoaded && allTargets.length === 0 && !showMeasurementForm) {
+                <div class="empty-tab-state">
+                    <span class="material-icons-round">analytics</span>
+                    <p>No targets defined. Add targets in the GQM Structure first.</p>
+                </div>
+                }
+
+                @for (gqmGoal of gqmStructure; track gqmGoal.id) {
+                @for (q of gqmGoal.questions; track q.id) {
+                @if (q.targets.length > 0) {
+                <div class="measurements-group">
+                    <div class="measurements-group-header">
+                        <mat-icon class="gqm-icon gqm-icon-goal" style="font-size:14px;width:14px;height:14px;">flag</mat-icon>
+                        <span class="text-muted">{{ gqmGoal.description }}</span>
+                        <span class="breadcrumb-sep">›</span>
+                        <mat-icon class="gqm-icon gqm-icon-question" style="font-size:14px;width:14px;height:14px;">help_outline</mat-icon>
+                        <span class="measurements-question-label">{{ q.text }}</span>
+                    </div>
+
+                    @for (t of q.targets; track t.id) {
+                    <div class="detail-section-card measurements-target-card">
+                        <div class="measurements-target-header">
+                            <div class="measurements-target-title">
+                                <mat-icon class="gqm-icon gqm-icon-target">gps_fixed</mat-icon>
+                                <strong>{{ t.name }}</strong>
+                                <span class="chip chip-default unit-chip">{{ t.unit }}</span>
+                            </div>
+                            @if (t.description) {
+                            <p class="gqm-target-desc">{{ t.description }}</p>
+                            }
+                        </div>
+
+                        @if (t.measurements.length > 0) {
+                        <mat-divider class="section-divider"></mat-divider>
+                        <div class="measurements-table-wrap">
+                            <table class="measurements-table">
+                                <thead>
+                                    <tr>
+                                        <th>Value</th>
+                                        <th>Unit</th>
+                                        <th>Measured At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (m of t.measurements; track m.id) {
+                                    <tr>
+                                        <td class="measurement-value-cell">{{ m.value }}</td>
+                                        <td>{{ t.unit }}</td>
+                                        <td class="text-muted">{{ formatDate(m.measuredAt) }}</td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        } @else {
+                        <p class="gqm-empty-line" style="margin-top: 8px;">No measurements yet.</p>
+                        }
                     </div>
                     }
                 </div>
-                } @else {
-                <div class="empty-tab-state">
-                    <span class="material-icons-round">help_outline</span>
-                    <p>GQM Structure not yet defined.</p>
-                </div>
+                }
+                }
+                }
+
                 }
             </div>
         </mat-tab>
 
-        <!-- INFLUENCE TAB -->
+        <!-- ══════════════════════════════════════════ INFLUENCE TAB -->
         <mat-tab label="Influence">
             <div class="tab-body">
+                <div class="tab-header-row">
+                    <h3 class="section-title">Strategy → Goal Influence Tree
+                        @if (goalTree) {
+                        <span class="count-badge">{{ getTotalChildGoals() }} derived</span>
+                        }
+                    </h3>
+                </div>
+
+                <!-- Legend -->
+                <div class="influence-legend">
+                    <span class="influence-legend-item"><span class="legend-dot pos"></span>Positive influence</span>
+                    <span class="influence-legend-item"><span class="legend-dot neg"></span>Negative influence</span>
+                    <span class="influence-legend-item"><span class="legend-dot neu"></span>Neutral influence</span>
+                </div>
+
+                @if (influenceLoading) {
+                <div class="loading-row"><mat-spinner diameter="28"></mat-spinner><span>Loading influence tree…</span></div>
+                } @else if (influenceLoaded && !goalTree) {
                 <div class="empty-tab-state">
                     <span class="material-icons-round">cable</span>
-                    <p>Influence DAG Visualization will render here.</p>
+                    <p>No influence data available for this goal.</p>
                 </div>
+                } @else if (influenceLoaded && goalTree) {
+
+                <!-- Root goal banner -->
+                <div class="influence-root-card">
+                    <mat-icon class="influence-root-icon">flag</mat-icon>
+                    <div class="influence-root-body">
+                        <div class="influence-root-focus">{{ goalTree.focus }}</div>
+                        <div class="influence-root-sub">{{ goalTree.object }} · {{ goalTree.magnitude }}</div>
+                    </div>
+                    <span class="goal-status-badge status-{{ goalTree.status | lowercase }}">{{ goalTree.status }}</span>
+                </div>
+
+                @if (goalTree.strategies.length === 0) {
+                <div class="empty-tab-state" style="margin-top:1.5rem">
+                    <span class="material-icons-round">device_hub</span>
+                    <p>No strategies link this goal to derived goals.</p>
+                </div>
+                } @else {
+                @for (strategy of goalTree.strategies; track strategy.id) {
+                <div class="influence-strategy-block">
+
+                    <!-- Strategy header -->
+                    <div class="influence-strategy-header">
+                        <div class="influence-connector-line"></div>
+                        <div class="influence-strategy-card">
+                            <mat-icon class="influence-strategy-icon">route</mat-icon>
+                            <div class="influence-strategy-info">
+                                <span class="influence-strategy-name">{{ strategy.name }}</span>
+                                <span class="influence-strategy-desc">{{ strategy.description }}</span>
+                            </div>
+                            <span class="refinement-badge badge-{{ strategy.refinementType | lowercase }}">{{ strategy.refinementType }}</span>
+                        </div>
+                    </div>
+
+                    @if (strategy.childGoals.length === 0) {
+                    <div class="influence-no-children">No derived goals via this strategy.</div>
+                    } @else {
+                    <div class="influence-children-grid">
+                        @for (child of strategy.childGoals; track child.goal.id) {
+                        <div class="influence-child-card influence-{{ child.influenceType | lowercase }}">
+
+                            <div class="influence-child-header">
+                                <mat-icon class="influence-child-icon">subdirectory_arrow_right</mat-icon>
+                                <div class="influence-child-info">
+                                    <span class="influence-child-focus">{{ child.goal.focus }}</span>
+                                    <span class="influence-child-object">{{ child.goal.object }}</span>
+                                </div>
+                                <span class="influence-type-pill pill-{{ child.influenceType | lowercase }}">{{ child.influenceType }}</span>
+                            </div>
+
+                            <!-- Strength + Confidence bars -->
+                            <div class="influence-bars">
+                                <div class="influence-bar-row">
+                                    <span class="influence-bar-label">Strength</span>
+                                    <div class="influence-bar-track">
+                                        <div class="influence-bar-fill bar-strength"
+                                            [style.width.%]="child.strength * 100"></div>
+                                    </div>
+                                    <span class="influence-bar-val">{{ (child.strength * 100).toFixed(0) }}%</span>
+                                </div>
+                                <div class="influence-bar-row">
+                                    <span class="influence-bar-label">Confidence</span>
+                                    <div class="influence-bar-track">
+                                        <div class="influence-bar-fill bar-confidence"
+                                            [style.width.%]="child.confidence * 100"></div>
+                                    </div>
+                                    <span class="influence-bar-val">{{ (child.confidence * 100).toFixed(0) }}%</span>
+                                </div>
+                            </div>
+
+                            <div class="influence-child-metrics">
+                                <span class="goal-status-badge status-{{ child.goal.status | lowercase }}">{{ child.goal.status }}</span>
+                            </div>
+
+                            @if (child.notes) {
+                            <div class="influence-child-notes">{{ child.notes }}</div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+                }
+
+                } @else {
+                <div class="loading-row"><mat-spinner diameter="28"></mat-spinner><span>Loading…</span></div>
+                }
             </div>
         </mat-tab>
 
-        <!-- ASSESSMENTS TAB -->
+        <!-- ══════════════════════════════════════════ ASSESSMENTS TAB -->
         <mat-tab label="Assessments">
             <div class="tab-body">
                 <div class="tab-header-row">
-                    <h3 class="section-title">Probability Assessments</h3>
-                    <button [hasPermission]="'manage_probability_assessments'" permissionMode="disable"
-                        mat-stroked-button class="btn-sm">
-                        <mat-icon>add</mat-icon> New Assessment
-                    </button>
+                    <h3 class="section-title">Probability Assessments
+                        @if (goal.assessments?.length) {
+                        <span class="count-badge">{{ goal.assessments!.length }}</span>
+                        }
+                    </h3>
                 </div>
+
                 @if (goal.assessments?.length) {
                 <div class="detail-section-card">
                     @for (a of goal.assessments; track a.id; let last = $last) {
                     <div class="assessment-row">
-                        <div class="assessment-prob">{{ (a.probability * 100).toFixed(0) }}%</div>
+                        <div class="assessment-prob-block">
+                            <div class="assessment-prob">{{ (a.probability * 100).toFixed(0) }}%</div>
+                            <div class="assessment-prob-bar">
+                                <div class="assessment-prob-fill"
+                                    [style.width.%]="a.probability * 100"
+                                    [class.fill-low]="a.probability < 0.4"
+                                    [class.fill-mid]="a.probability >= 0.4 && a.probability < 0.7"
+                                    [class.fill-high]="a.probability >= 0.7">
+                                </div>
+                            </div>
+                        </div>
                         <div class="assessment-info">
                             <p class="assessment-notes">{{ a.notes || 'No notes' }}</p>
-                            <span class="text-muted" style="font-size: 11px;">{{ formatDate(a.assessedAt || '')
-                                }}</span>
+                            <span class="text-muted" style="font-size: 11px;">{{ formatDate(a.assessedAt || '') }}</span>
                         </div>
                     </div>
                     @if (!last) { <mat-divider class="my-divider"></mat-divider> }
