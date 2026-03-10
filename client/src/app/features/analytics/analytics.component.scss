@@ -1,0 +1,93 @@
+.analytics-page {
+    padding: 24px;
+    height: calc(100vh - 64px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.filter-field {
+    min-width: 220px;
+}
+
+.filter-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+}
+
+.reset-btn {
+    height: 56px;
+    border-color: #cbd5e1;
+}
+
+.reset-btn mat-icon {
+    margin-right: 4px;
+}
+
+.analytics-content {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 100;
+    border-radius: 12px;
+}
+
+.loading-overlay p {
+    margin-top: 16px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 70fr 30fr;
+    gap: 24px;
+    height: 100%;
+    transition: opacity 0.2s;
+}
+
+.content-grid.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.graph-panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    min-height: 500px;
+}
+
+.dashboard-panel {
+    background: #f8fafc;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 60vh auto;
+    }
+}

@@ -6,7 +6,8 @@ import {
     Goal, GoalDetails, GoalRequest,
     Strategy, StrategyRequest,
     GoalInfluence, GoalInfluenceRequest,
-    PaginationParams, PaginatedResponse
+    PaginationParams, PaginatedResponse,
+    GoalTreeNode, GoalAnalytics
 } from './api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -84,5 +85,25 @@ export class GoalApiService {
 
     deleteInfluence(goalId: string): Observable<void> {
         return this.http.delete<void>(`${this.base}/goalinfluence/${goalId}`);
+    }
+
+    // Analytics
+    getRootGoalsByDepartment(departmentId: string): Observable<Goal[]> {
+        return this.http.get<Goal[]>(`${this.base}/goal/department/${departmentId}/roots`);
+    }
+
+    getGoalTree(goalId: string): Observable<GoalTreeNode> {
+        return this.http.get<GoalTreeNode>(`${this.base}/goal/${goalId}/tree`);
+    }
+
+    getAnalytics(departmentId?: string, rootGoalId?: string): Observable<GoalAnalytics> {
+        let params = new HttpParams();
+        if (departmentId) {
+            params = params.set('departmentId', departmentId);
+        }
+        if (rootGoalId) {
+            params = params.set('rootGoalId', rootGoalId);
+        }
+        return this.http.get<GoalAnalytics>(`${this.base}/goal/analytics`, { params });
     }
 }

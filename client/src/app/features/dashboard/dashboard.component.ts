@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { forkJoin } from 'rxjs';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { HasPermissionDirective } from '../../core/permissions/has-permission.directive';
@@ -17,7 +18,7 @@ import { Goal, Assessment, Department } from '../../core/api/api.models';
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, PageHeaderComponent, HasPermissionDirective],
+    imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, PageHeaderComponent, HasPermissionDirective],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.css',
 })

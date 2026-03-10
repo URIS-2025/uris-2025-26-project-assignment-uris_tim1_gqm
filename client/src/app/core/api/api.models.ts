@@ -259,3 +259,110 @@ export interface AssignRoleRequest {
     userId: string;
     roleId: string;
 }
+
+// ========== Analytics Models ==========
+
+// Goal tree node (recursive)
+export interface GoalTreeNode {
+    id: string;
+    focus: string;
+    object: string;
+    status: GoalStatus;
+    baselineProbability: number;
+    departmentId: string;
+    activeFrom: string;
+    activeTo: string;
+    magnitude: string;
+    constraints: string;
+    strategies: StrategyTreeNode[];
+}
+
+// Strategy tree node
+export interface StrategyTreeNode {
+    id: string;
+    name: string;
+    description: string;
+    refinementType: 'AND' | 'OR';
+    effectiveness: string;
+    isActive: boolean;
+    childGoals: ChildGoalInfluence[];
+}
+
+// Child goal with influence data
+export interface ChildGoalInfluence {
+    goal: GoalTreeNode;
+    influenceType: 'Positive' | 'Negative' | 'Neutral';
+    strength: number;
+    confidence: number;
+    notes?: string;
+}
+
+// Analytics response - matches backend GoalAnalyticsResponse DTO exactly
+export interface GoalAnalytics {
+    totalGoals: number;
+    activeGoals: number;
+    completedGoals: number;
+    draftGoals: number;
+    statusDistribution: Record<string, number>;
+    probabilityDistribution: Record<string, number>;
+    depthDistribution: Record<string, number>;
+    refinementDistribution: Record<string, number>;
+    highestProbabilityGoal: GoalInsightSimple | null;
+    lowestProbabilityActiveGoal: GoalInsightSimple | null;
+    mostProductiveStrategy: StrategyInsightSimple | null;
+    mostActiveDepartment: DepartmentInsightSimple | null;
+}
+
+// Simple insight models matching backend flat DTO shapes
+export interface GoalInsightSimple {
+    id: string;
+    focus: string;
+    object: string;
+    status: string;
+    baselineProbability: number;
+    departmentId: string;
+}
+
+export interface StrategyInsightSimple {
+    id: string;
+    name: string;
+    goalId: string;
+    goalFocus: string;
+    derivedGoalsCount: number;
+}
+
+export interface DepartmentInsightSimple {
+    id: string;
+    name: string;
+    activeGoalsCount: number;
+}
+
+// Graph visualization types (for ngx-graph)
+export interface GraphNode {
+    id: string;
+    label: string;
+    data: GoalNodeData | StrategyNodeData;
+}
+
+export interface GoalNodeData {
+    type: 'goal';
+    goal: GoalTreeNode;
+}
+
+export interface StrategyNodeData {
+    type: 'strategy';
+    strategy: StrategyTreeNode;
+    parentGoalId: string;
+}
+
+export interface GraphEdge {
+    id: string;
+    source: string;
+    target: string;
+    label?: string;
+    data?: {
+        influenceType?: string;
+        strength?: number;
+        confidence?: number;
+    };
+}

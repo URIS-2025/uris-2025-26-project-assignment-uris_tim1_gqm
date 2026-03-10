@@ -155,4 +155,45 @@ public class GoalController : ControllerBase
 
         return NoContent();
     }
+
+    // ========== Analytics Endpoints ==========
+
+    /// <summary>
+    /// Get root goals for a department (goals with no parent/influence).
+    /// </summary>
+    [HttpGet("department/{departmentId:guid}/roots")]
+    [RequirePermission("view_analytics")]
+    public async Task<ActionResult<IEnumerable<GoalResponse>>> GetRootGoals(Guid departmentId)
+    {
+        var rootGoals = await _goalService.GetRootGoalsByDepartmentAsync(departmentId);
+        return Ok(rootGoals);
+    }
+
+    /// <summary>
+    /// Get the complete goal tree structure starting from a root goal.
+    /// Returns recursive structure: Goal → Strategies → Child Goals → ...
+    /// </summary>
+    [HttpGet("{id:guid}/tree")]
+    [RequirePermission("view_analytics")]
+    public async Task<ActionResult<GoalTreeNodeResponse>> GetGoalTree(Guid id)
+    {
+        var tree = await _goalService.GetGoalTreeAsync(id);
+        if (tree is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(tree);
+    }
+
+    /// <summary>
+    /// Get analytics data for a scope (department or root goal tree).
+    /// </summary>
+    [HttpGet("analytics")]
+    [RequirePermission("view_analytics")]
+    public async Task<ActionResult<GoalAnalyticsResponse>> GetAnalytics(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? rootGoalId)
+    {
+        var analytics = await _goalService.GetAnalyticsAsync(departmentId, rootGoalId);
+        return Ok(analytics);
+    }
 }
