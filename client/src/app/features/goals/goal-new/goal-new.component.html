@@ -274,8 +274,8 @@
         <form [formGroup]="step4" class="step-form">
             <div class="step-header">
                 <h3 class="step-title">Strategy</h3>
-                <p class="step-description">Define the strategies for achieving this goal and their refinement
-                    relationships.</p>
+                <p class="step-description">Define the strategy for achieving this goal and optionally link it to a
+                    parent strategy.</p>
             </div>
 
             <div class="step-body">
@@ -285,10 +285,23 @@
                         <label class="figma-label">Parent Strategy <span class="optional-tag">(optional)</span></label>
                         <mat-form-field appearance="outline">
                             <mat-select formControlName="originStrategyId" id="select-origin-strategy">
-                                <mat-option [value]="''">None - top-level goal</mat-option>
+                                <mat-option [value]="''">None — top-level goal</mat-option>
+                                @if (loadingStrategies) {
+                                <mat-option disabled>Loading strategies...</mat-option>
+                                } @else {
+                                @for (s of availableStrategies; track s.id) {
+                                <mat-option [value]="s.id">{{ s.name }}</mat-option>
+                                }
+                                }
                             </mat-select>
                         </mat-form-field>
-                        <span class="figma-hint">Link this goal to a parent strategy if it's a refinement</span>
+                        <span class="figma-hint">
+                            @if (availableStrategies.length === 0 && !loadingStrategies) {
+                            No existing strategies found in this department — this will be a root goal.
+                            } @else {
+                            Select a parent strategy to place this goal in the hierarchy, or leave as top-level.
+                            }
+                        </span>
                     </div>
                     <div class="info-panel blue">
                         <h4><mat-icon class="info-panel-icon">lightbulb</mat-icon> Refinement Types</h4>
@@ -296,6 +309,73 @@
                         <p><strong>OR:</strong> Any strategy success leads to goal achievement</p>
                     </div>
                 </div>
+
+                <!-- GoalInfluence section — shown only when a parent strategy is selected -->
+                @if (hasParentStrategy) {
+                <div class="figma-input-card influence-section">
+                    <div class="influence-section-header">
+                        <mat-icon class="influence-icon">account_tree</mat-icon>
+                        <div>
+                            <h4 class="influence-title">Goal Influence Details</h4>
+                            <p class="influence-subtitle">Describe how the parent strategy influences this goal.</p>
+                        </div>
+                    </div>
+
+                    <div class="two-col-layout">
+                        <div class="col">
+                            <div class="figma-field">
+                                <label class="figma-label">Influence Type <span class="required">*</span></label>
+                                <mat-form-field appearance="outline">
+                                    <mat-select formControlName="influenceType" id="select-influence-type">
+                                        @for (t of INFLUENCE_TYPES; track t) {
+                                        <mat-option [value]="t">{{ t }}</mat-option>
+                                        }
+                                    </mat-select>
+                                </mat-form-field>
+                                <span class="figma-hint">How the parent strategy affects this goal</span>
+                            </div>
+
+                            <div class="figma-field">
+                                <label class="figma-label">Influence Notes <span class="optional-tag">(optional)</span></label>
+                                <mat-form-field appearance="outline">
+                                    <textarea matInput formControlName="influenceNotes" id="input-influence-notes" rows="2"
+                                        placeholder="Describe the nature of this influence..."></textarea>
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <div class="figma-field">
+                                <label class="figma-label">Strength <span class="required">*</span></label>
+                                <mat-slider min="0" max="1" step="0.01" class="figma-slider">
+                                    <input matSliderThumb formControlName="strength" id="slider-strength">
+                                </mat-slider>
+                                <div class="probability-row">
+                                    <mat-form-field appearance="outline" class="probability-input">
+                                        <input matInput type="number" formControlName="strength" min="0" max="1" step="0.01">
+                                    </mat-form-field>
+                                    <span class="probability-pct">{{ getInfluenceStrength() }}%</span>
+                                </div>
+                                <span class="figma-hint">How strongly the parent strategy drives this goal (0–1)</span>
+                            </div>
+
+                            <div class="figma-field">
+                                <label class="figma-label">Confidence <span class="required">*</span></label>
+                                <mat-slider min="0" max="1" step="0.01" class="figma-slider">
+                                    <input matSliderThumb formControlName="confidence" id="slider-confidence">
+                                </mat-slider>
+                                <div class="probability-row">
+                                    <mat-form-field appearance="outline" class="probability-input">
+                                        <input matInput type="number" formControlName="confidence" min="0" max="1" step="0.01">
+                                    </mat-form-field>
+                                    <span class="probability-pct">{{ getInfluenceConfidence() }}%</span>
+                                </div>
+                                <span class="figma-hint">Confidence level in this influence assessment (0–1)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
 
                 <!-- Strategy form card -->
                 <div class="figma-input-card">
@@ -310,33 +390,22 @@
                     </div>
 
                     <div class="figma-field">
-                        <label class="figma-label">Description <span class="required">*</span></label>
+                        <label class="figma-label">Description <span class="optional-tag">(optional)</span></label>
                         <mat-form-field appearance="outline">
                             <textarea matInput formControlName="description" rows="2"
                                 placeholder="Describe how this strategy will help achieve the goal..."></textarea>
                         </mat-form-field>
                     </div>
 
-                    <div class="input-row-with-btn">
-                        <div class="figma-field" style="flex:1; max-width: 50%;">
-                            <label class="figma-label">Refinement Type</label>
-                            <mat-form-field appearance="outline">
-                                <mat-select formControlName="refinementType" id="select-refinement">
-                                    @for (r of REFINEMENT_TYPES; track r) {
-                                    <mat-option [value]="r">{{ r }}</mat-option> }
-                                </mat-select>
-                            </mat-form-field>
-                        </div>
-                        <button mat-flat-button type="button" class="btn-add-action">
-                            <mat-icon>add</mat-icon> Add Strategy
-                        </button>
+                    <div class="figma-field" style="max-width: 50%;">
+                        <label class="figma-label">Refinement Type</label>
+                        <mat-form-field appearance="outline">
+                            <mat-select formControlName="refinementType" id="select-refinement">
+                                @for (r of REFINEMENT_TYPES; track r) {
+                                <mat-option [value]="r">{{ r }}</mat-option> }
+                            </mat-select>
+                        </mat-form-field>
                     </div>
-                </div>
-
-                <!-- Empty state -->
-                <div class="empty-items-card">
-                    <span class="material-icons-round empty-icon">lightbulb_outline</span>
-                    <p>No strategies added yet. Add at least one strategy to continue.</p>
                 </div>
             </div>
 
@@ -496,13 +565,11 @@
                         <div class="target-row" [formGroupName]="ti">
                             <mat-form-field appearance="outline" class="flex-1">
                                 <mat-label>Target Name</mat-label>
-                                <input matInput formControlName="name" [id]="'t-name-' + qi + '-' + ti"
-                                    placeholder="e.g. Reduce CPU Usage">
+                                <input matInput formControlName="name" [id]="'t-name-' + qi + '-' + ti">
                             </mat-form-field>
                             <mat-form-field appearance="outline" class="flex-1">
                                 <mat-label>Description</mat-label>
-                                <input matInput formControlName="description" [id]="'t-desc-' + qi + '-' + ti"
-                                    placeholder="Optional context">
+                                <input matInput formControlName="description" [id]="'t-desc-' + qi + '-' + ti">
                             </mat-form-field>
                             <mat-form-field appearance="outline" style="width:140px">
                                 <mat-label>Unit</mat-label>

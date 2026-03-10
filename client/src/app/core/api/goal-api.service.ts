@@ -70,6 +70,10 @@ export class GoalApiService {
         return this.http.delete<void>(`${this.base}/strategy/${id}`);
     }
 
+    getStrategiesByDepartment(departmentId: string): Observable<Strategy[]> {
+        return this.http.get<Strategy[]>(`${this.base}/strategy/department/${departmentId}`);
+    }
+
     // GoalInfluence
     getInfluencesByGoal(goalId: string): Observable<GoalInfluence[]> {
         return this.http.get<GoalInfluence[]>(`${this.base}/goalinfluence/goal/${goalId}`);

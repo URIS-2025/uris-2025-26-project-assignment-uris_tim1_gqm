@@ -32,6 +32,20 @@ public class StrategyServiceImpl : IStrategyService
         return strategies.Select(s => s.ToResponse());
     }
 
+    public async Task<IEnumerable<StrategyResponse>> GetByDepartmentIdAsync(Guid departmentId)
+    {
+        var strategies = await _context.Strategies
+            .Include(s => s.GoalInfluences)
+            .Where(s => _context.Goals
+                .Where(g => g.DepartmentId == departmentId)
+                .Select(g => g.Id)
+                .Contains(s.GoalId))
+            .AsNoTracking()
+            .ToListAsync();
+
+        return strategies.Select(s => s.ToResponse());
+    }
+
     public async Task<StrategyResponse?> GetByIdAsync(Guid id)
     {
         var strategy = await _context.Strategies

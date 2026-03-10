@@ -74,17 +74,25 @@ export interface StrategyRequest {
 }
 
 // GoalInfluence models
+export type InfluenceType = 'Positive' | 'Negative' | 'Neutral';
+
 export interface GoalInfluence {
-    id: string;
     goalId: string;
     strategyId: string;
-    description: string;
+    influenceType: InfluenceType;
+    strength: number;
+    confidence: number;
+    notes?: string;
+    createdAt?: string;
 }
 
 export interface GoalInfluenceRequest {
     goalId: string;
     strategyId: string;
-    description: string;
+    influenceType: InfluenceType;
+    strength: number;
+    confidence: number;
+    notes?: string;
 }
 
 // Department models
