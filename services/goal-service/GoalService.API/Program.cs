@@ -149,9 +149,7 @@ app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
-
-
-
-
-
-
+namespace GoalService.API
+{
+    public partial class Program { }
+}

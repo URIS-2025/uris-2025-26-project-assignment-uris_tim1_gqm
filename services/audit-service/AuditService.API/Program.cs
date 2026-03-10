@@ -89,11 +89,7 @@ app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
-public partial class Program { }
-
-
-
-
-
-
-
+namespace AuditService.API
+{
+    public partial class Program { }
+}

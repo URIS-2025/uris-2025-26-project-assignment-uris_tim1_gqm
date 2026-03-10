@@ -146,9 +146,7 @@ app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
-
-
-
-
-
-
+namespace OrchestrationService.API
+{
+    public partial class Program { }
+}
