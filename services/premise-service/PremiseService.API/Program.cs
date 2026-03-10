@@ -1,3 +1,6 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentValidation;
@@ -88,6 +91,31 @@ builder.Services.AddControllers()
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper));
     });
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("premise-service"))
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // --- Global Exception Handler (first in pipeline) ---
@@ -181,4 +209,13 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "premise-service" }))
     .WithName("HealthCheck");
 
+app.MapPrometheusScrapingEndpoint();
+
 app.Run();
+
+
+
+
+
+
+

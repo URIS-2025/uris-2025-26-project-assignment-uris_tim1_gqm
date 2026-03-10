@@ -1,3 +1,6 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using AssessmentService.API.Middleware;
 using AssessmentService.Application.Interfaces;
 using AssessmentService.Application.Interfaces.Clients;
@@ -64,6 +67,31 @@ builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
 }).AddHttpMessageHandler<HmacDelegatingHandler>();
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("assessment-service"))
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // Apply database schema and seed data in development
@@ -104,4 +132,13 @@ app.UseMiddleware<HmacMiddleware>();
 
 app.MapControllers();
 
+app.MapPrometheusScrapingEndpoint();
+
 app.Run();
+
+
+
+
+
+
+

@@ -1,3 +1,6 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using AuditService.API.Middleware;
 using AuditService.Application.Mappings;
 using AuditService.Infrastructure.Data;
@@ -36,6 +39,31 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddSwaggerGen();
 }
 
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("audit-service"))
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
 // Migrate DB on startup
@@ -56,6 +84,8 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
