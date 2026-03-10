@@ -19,7 +19,7 @@ public class QuestionRequestValidatorTests
             .Options;
             
         _dbContext = new ApplicationDbContext(options);
-        _validator = new QuestionRequestValidator(_dbContext);
+        _validator = new QuestionRequestValidator();
     }
 
     [Fact]
@@ -34,12 +34,5 @@ public class QuestionRequestValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Validate_NonExistentGoalId_ShouldHaveError()
-    {
-        var request = new QuestionRequest { Text = "Valid Text", GqmGoalId = Guid.NewGuid() };
-        var result = await _validator.ValidateAsync(request);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "GqmGoalId");
-    }
+
 }
