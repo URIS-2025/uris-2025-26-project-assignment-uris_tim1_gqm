@@ -1,7 +1,6 @@
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using AuditService.API.Middleware;
 using AuditService.Application.Mappings;
 using AuditService.Infrastructure.Data;
 using AuditService.Infrastructure.Extensions;

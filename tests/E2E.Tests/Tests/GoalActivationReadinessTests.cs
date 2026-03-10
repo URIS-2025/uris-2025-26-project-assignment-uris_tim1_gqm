@@ -32,12 +32,12 @@ public sealed class GoalActivationReadinessTests : E2ETestBase
             departmentId = Guid.NewGuid(),
         };
 
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.ReadAs<GoalDto>();
 
         // 2. Check Readiness (should be false with 3 blockers)
-        var readinessResponse = await GoalClient.GetAsync($"/api/Goal/{created.Id}/readiness");
+        var readinessResponse = await GoalClient.GetAsync($"/api/v1/Goal/{created.Id}/readiness");
         readinessResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var readiness = await readinessResponse.ReadAs<ReadinessDto>();
 
@@ -47,11 +47,11 @@ public sealed class GoalActivationReadinessTests : E2ETestBase
         readiness.Blockers.Should().Contain(b => b.Contains("GQM structure"));
 
         // 3. Attempt Activation (should return 422 UnprocessableEntity because readiness check fails)
-        var activateResponse = await GoalClient.PostAsync($"/api/Goal/{created.Id}/activate", null);
+        var activateResponse = await GoalClient.PostAsync($"/api/v1/Goal/{created.Id}/activate", null);
         activateResponse.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         
         // Final verification: status remains Draft
-        var goalInfo = await GoalClient.GetFromJsonAsync<GoalDto>($"/api/Goal/{created.Id}");
+        var goalInfo = await GoalClient.GetFromJsonAsync<GoalDto>($"/api/v1/Goal/{created.Id}");
         goalInfo!.Status.Should().Be("Draft");
     }
 }

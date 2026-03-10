@@ -49,7 +49,7 @@ public sealed class GoalDomainEventQueueTests : E2ETestBase
         };
 
         // Act
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.ReadAs<GoalDto>();
 

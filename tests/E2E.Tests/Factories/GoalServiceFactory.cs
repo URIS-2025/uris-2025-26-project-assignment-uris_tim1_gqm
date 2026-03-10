@@ -1,9 +1,9 @@
 using GoalService.Infrastructure.Persistence;
+using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace E2E.Tests.Factories;
 
@@ -40,11 +40,22 @@ public sealed class GoalServiceFactory : WebApplicationFactory<GoalService.API.P
         builder.UseSetting("RabbitMQ:Username", _rabbitMqUsername);
         builder.UseSetting("RabbitMQ:Password", _rabbitMqPassword);
         builder.UseSetting("HMAC_SECRET_KEY", "e2e-test-hmac-secret-key-at-least-32-chars!");
+        builder.UseSetting("Jwt:SecretKey", "e2e-test-jwt-secret-key-at-least-32-chars!!");
+        builder.UseSetting("Jwt:Issuer", "e2e-test-issuer");
+        builder.UseSetting("Jwt:Audience", "e2e-test-audience");
         builder.UseSetting("Services:PremiseService", "http://localhost");
         builder.UseSetting("Services:AssessmentService", "http://localhost");
         builder.UseSetting("Services:QgmGoalService", "http://localhost");
         builder.UseSetting("Services:OrchestrationService", "http://localhost");
         builder.UseSetting("Services:AuditService", "http://localhost");
+
+        builder.ConfigureServices(services =>
+        {
+            services.PostConfigure<OutboxDeliveryServiceOptions>(options =>
+            {
+                options.QueryDelay = TimeSpan.FromMilliseconds(200);
+            });
+        });
     }
 
     /// <summary>

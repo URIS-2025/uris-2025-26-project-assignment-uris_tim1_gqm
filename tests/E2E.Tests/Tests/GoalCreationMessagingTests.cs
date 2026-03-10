@@ -10,7 +10,7 @@ namespace E2E.Tests.Tests;
 /// Critical path: creating a Goal triggers asynchronous messaging across three services.
 ///
 /// Flow under test:
-///   POST /api/Goal (GoalService)
+///   POST /api/v1/Goal (GoalService)
 ///     → publishes IAuditLogCreated      → AuditService.AuditLogCreatedConsumer persists it
 ///     → publishes IGoalDomainEvent      (no consumer in scope, fire-and-forget)
 ///     → publishes IWorkflowTransitionRequested (StepName=StartWorkflow)
@@ -33,7 +33,7 @@ public sealed class GoalCreationMessagingTests : E2ETestBase
         var payload = BuildGoalPayload("HTTP persistence smoke test");
 
         // Act
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
 
         // Assert — HTTP layer
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -41,7 +41,7 @@ public sealed class GoalCreationMessagingTests : E2ETestBase
         created.Focus.Should().Be("HTTP persistence smoke test");
 
         // Assert — DB read-back via GET
-        var getResponse = await GoalClient.GetAsync($"/api/Goal/{created.Id}");
+        var getResponse = await GoalClient.GetAsync($"/api/v1/Goal/{created.Id}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var fetched = await getResponse.ReadAs<GoalDto>();
         fetched.Id.Should().Be(created.Id);
@@ -56,7 +56,7 @@ public sealed class GoalCreationMessagingTests : E2ETestBase
         var payload = BuildGoalPayload("Audit messaging test");
 
         // Act — create goal (publishes IAuditLogCreated)
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.ReadAs<GoalDto>();
 
@@ -64,7 +64,7 @@ public sealed class GoalCreationMessagingTests : E2ETestBase
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await AuditClient.GetAsync($"/audit/Goal/{created.Id}");
+                var r = await AuditClient.GetAsync($"/api/v1/AuditLog/Goal/{created.Id}");
                 if (!r.IsSuccessStatusCode) return false;
                 var page = await r.ReadAs<PaginatedResponse<AuditLogDto>>();
                 return page.Items.Any(a =>
@@ -85,7 +85,7 @@ public sealed class GoalCreationMessagingTests : E2ETestBase
         var payload = BuildGoalPayload("Workflow messaging test");
 
         // Act
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.ReadAs<GoalDto>();
 
@@ -95,7 +95,7 @@ public sealed class GoalCreationMessagingTests : E2ETestBase
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await OrchestrationClient.GetAsync($"/workflow/{created.Id}");
+                var r = await OrchestrationClient.GetAsync($"/api/v1/Workflow/{created.Id}");
                 if (!r.IsSuccessStatusCode) return false;
                 workflow = await r.ReadAs<WorkflowDto>();
                 // Final state: InProgress with at least the GoalCreated step recorded

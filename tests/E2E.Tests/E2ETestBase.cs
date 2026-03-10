@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using E2E.Tests.Factories;
+using E2E.Tests.Helpers;
 using E2E.Tests.Infrastructure;
 
 namespace E2E.Tests;
@@ -68,13 +70,17 @@ public abstract class E2ETestBase : IAsyncLifetime
         OrchestrationClient = _orchestrationFactory.CreateClient();
         GoalClient          = _goalFactory.CreateClient();
 
+        var token = JwtTokenHelper.GenerateToken();
+        GoalClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
         // Run DB migrations for services that don't auto-migrate outside Development.
         await _goalFactory.InitializeDatabaseAsync();
         await _orchestrationFactory.InitializeDatabaseAsync();
         // AuditService migrates unconditionally in Program.cs — no extra call needed.
 
         // Give consumers a moment to connect to RabbitMQ and declare queues.
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(3));
 
         await OnInitializeAsync();
     }

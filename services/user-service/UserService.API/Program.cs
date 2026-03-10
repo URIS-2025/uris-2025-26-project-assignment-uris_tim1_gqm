@@ -4,7 +4,6 @@ using OpenTelemetry.Trace;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using UserService.API.Middleware;
 using UserService.Application.Interfaces.Clients;
 using UserService.Application.Mappings;
 using UserService.Application.Validators;

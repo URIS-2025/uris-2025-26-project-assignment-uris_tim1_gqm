@@ -39,21 +39,13 @@ public class DepartmentControllerTests
     // ── GetAll ──
 
     [Fact]
-    public async Task GetAll_ReturnsOk_WithPagedResponse_WhenNoOrgClaim()
+    public async Task GetAll_ReturnsUnauthorized_WhenNoOrgClaim()
     {
         SetupUser(null);
-        var pagedResponse = new PaginationResponse<DepartmentResponse>
-        {
-            Items = [new DepartmentResponse { Id = Guid.NewGuid(), Name = "Dept 1" }],
-            Total = 1, PageNumber = 1, PageSize = 20
-        };
-        _serviceMock.Setup(s => s.GetAllAsync(1, 20)).ReturnsAsync(pagedResponse);
 
         var result = await _sut.GetAll();
 
-        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var value = okResult.Value.Should().BeOfType<PaginationResponse<DepartmentResponse>>().Subject;
-        value.Items.Should().HaveCount(1);
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
     }
 
     [Fact]
@@ -80,13 +72,14 @@ public class DepartmentControllerTests
     [Fact]
     public async Task GetAll_CallsServiceWithCorrectPagination()
     {
-        SetupUser(null);
-        _serviceMock.Setup(s => s.GetAllAsync(2, 5))
+        var orgId = Guid.NewGuid();
+        SetupUser(orgId);
+        _serviceMock.Setup(s => s.GetByOrganizationIdAsync(orgId, 2, 5))
             .ReturnsAsync(new PaginationResponse<DepartmentResponse>());
 
         await _sut.GetAll(page: 2, size: 5);
 
-        _serviceMock.Verify(s => s.GetAllAsync(2, 5), Times.Once);
+        _serviceMock.Verify(s => s.GetByOrganizationIdAsync(orgId, 2, 5), Times.Once);
     }
 
     // ── GetById ──
