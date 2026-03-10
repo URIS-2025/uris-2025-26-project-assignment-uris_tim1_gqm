@@ -36,6 +36,16 @@ public class StrategyController : ControllerBase
     }
 
     /// <summary>
+    /// Get all strategies for goals belonging to a specific department.
+    /// </summary>
+    [HttpGet("department/{departmentId:guid}")]
+    public async Task<ActionResult<IEnumerable<StrategyResponse>>> GetByDepartmentId(Guid departmentId)
+    {
+        var strategies = await _strategyService.GetByDepartmentIdAsync(departmentId);
+        return Ok(strategies);
+    }
+
+    /// <summary>
     /// Get a specific strategy by ID.
     /// </summary>
     [HttpGet("{id:guid}")]

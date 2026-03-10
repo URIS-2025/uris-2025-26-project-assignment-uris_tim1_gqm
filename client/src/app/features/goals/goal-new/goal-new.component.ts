@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,9 +17,10 @@ import { PremiseApiService } from '../../../core/api/premise-api.service';
 import { AssessmentApiService } from '../../../core/api/assessment-api.service';
 import { GqmApiService } from '../../../core/api/gqm-api.service';
 import { DepartmentApiService } from '../../../core/api/department-api.service';
+import { OrchestrationApiService } from '../../../core/api/orchestration-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PermissionService } from '../../../core/permissions/permission.service';
-import { Department, Goal, MeasurementUnit } from '../../../core/api/api.models';
+import { Department, Goal, MeasurementUnit, Strategy } from '../../../core/api/api.models';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -37,6 +39,8 @@ import { firstValueFrom } from 'rxjs';
 })
 export class GoalNewComponent implements OnInit {
     departments: Department[] = [];
+    availableStrategies: Strategy[] = [];
+    loadingStrategies = false;
     submitting = false;
     submitError = '';
     currentStep = 0;
@@ -75,8 +79,19 @@ export class GoalNewComponent implements OnInit {
     readonly GOAL_STATUSES = ['Draft', 'Active', 'OnHold', 'Completed', 'Cancelled'];
     readonly REFINEMENT_TYPES = ['AND', 'OR'];
     readonly PREMISE_TYPES = ['Assumption', 'Context'];
+    readonly INFLUENCE_TYPES = ['Positive', 'Negative', 'Neutral'];
 
     private fb = inject(FormBuilder);
+    private router = inject(Router);
+    private goalApi = inject(GoalApiService);
+    private premiseApi = inject(PremiseApiService);
+    private assessmentApi = inject(AssessmentApiService);
+    private gqmApi = inject(GqmApiService);
+    private deptApi = inject(DepartmentApiService);
+    private auth = inject(AuthService);
+    public permissions = inject(PermissionService);
+    private orchestrationApi = inject(OrchestrationApiService);
+    private destroyRef = inject(DestroyRef);
 
     // Step forms
     step1 = this.fb.group({ departmentId: ['', Validators.required] });
@@ -98,6 +113,11 @@ export class GoalNewComponent implements OnInit {
         description: [''],
         refinementType: ['AND', Validators.required],
         originStrategyId: [''],
+        // GoalInfluence fields (only required when originStrategyId is set)
+        influenceType: ['Positive'],
+        strength: [0.5, [Validators.min(0), Validators.max(1)]],
+        confidence: [0.5, [Validators.min(0), Validators.max(1)]],
+        influenceNotes: [''],
     });
     step5 = this.fb.group({
         probability: [0.5, [Validators.required, Validators.min(0), Validators.max(1)]],
@@ -108,18 +128,24 @@ export class GoalNewComponent implements OnInit {
         questions: this.fb.array([this._newQuestion()])
     });
 
-    constructor(
-        private router: Router,
-        private goalApi: GoalApiService,
-        private premiseApi: PremiseApiService,
-        private assessmentApi: AssessmentApiService,
-        private gqmApi: GqmApiService,
-        private deptApi: DepartmentApiService,
-        private auth: AuthService,
-        private permissions: PermissionService,
-    ) { }
-
     ngOnInit(): void {
+        this.auth.organizationId$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(orgId => {
+            if (orgId) {
+                // When organization changes, reload departments and reset wizard back to Step 1
+                this.loadDepartments();
+                this.currentStep = 0;
+                this.submitError = '';
+                
+                // Partially reset forms so user is forced to re-select valid inputs for new org
+                this.step1.reset();
+                this.step2.reset({ status: 'Draft', baselineProbability: 0.5 });
+            }
+        });
+    }
+
+    private loadDepartments(): void {
         this.deptApi.getDepartments({ page: 1, size: 100 }).subscribe({
             next: res => {
                 const all = res.items ?? [];
@@ -167,6 +193,19 @@ export class GoalNewComponent implements OnInit {
         if (t.length > 1) t.removeAt(ti);
     }
 
+    get hasParentStrategy(): boolean {
+        const val = this.step4.get('originStrategyId')?.value;
+        return !!val && val !== '';
+    }
+
+    getSelectedStrategy(): Strategy | undefined {
+        const id = this.step4.get('originStrategyId')?.value;
+        return this.availableStrategies.find(s => s.id === id);
+    }
+
+    getInfluenceStrength(): number { return Math.round((this.step4.get('strength')?.value ?? 0.5) * 100); }
+    getInfluenceConfidence(): number { return Math.round((this.step4.get('confidence')?.value ?? 0.5) * 100); }
+
     getBaseline(): number { return Math.round((this.step2.get('baselineProbability')?.value ?? 0.5) * 100); }
     getProbability(): number { return Math.round((this.step5.get('probability')?.value ?? 0.5) * 100); }
     getProbabilityLevel(): string {
@@ -207,7 +246,24 @@ export class GoalNewComponent implements OnInit {
         }
         if (this.currentStep < this.steps.length - 1) {
             this.currentStep++;
+            // When entering step 4 (Strategy), load available parent strategies
+            if (this.currentStep === 3) {
+                this._loadStrategiesForDepartment();
+            }
         }
+    }
+
+    private _loadStrategiesForDepartment(): void {
+        const departmentId = this.step1.get('departmentId')?.value;
+        if (!departmentId) return;
+        this.loadingStrategies = true;
+        this.goalApi.getStrategiesByDepartment(departmentId).subscribe({
+            next: strategies => {
+                this.availableStrategies = strategies;
+                this.loadingStrategies = false;
+            },
+            error: () => { this.loadingStrategies = false; }
+        });
     }
 
     prevStep(): void {
@@ -236,6 +292,7 @@ export class GoalNewComponent implements OnInit {
         this.submitting = true;
         this.submitError = '';
 
+        let createdGoalId: string | null = null;
         try {
             // 1. Create Goal
             const goal: Goal = await firstValueFrom(this.goalApi.create({
@@ -250,6 +307,7 @@ export class GoalNewComponent implements OnInit {
                 magnitude: this.step2.value.magnitude!,
                 constraints: this.step2.value.constraints ?? '',
             }));
+            createdGoalId = goal.id;
 
             // 2. Create Premises
             for (const p of this.premises.value) {
@@ -258,13 +316,24 @@ export class GoalNewComponent implements OnInit {
 
             // 3. Create Strategy
             await firstValueFrom(this.goalApi.createStrategy({
-                ...this.step4.value,
                 goalId: goal.id,
                 name: this.step4.value.name!,
                 description: this.step4.value.description ?? '',
                 refinementType: this.step4.value.refinementType as any,
                 originStrategyId: this.step4.value.originStrategyId || undefined,
             }));
+
+            // 3b. Create GoalInfluence if a parent strategy was selected
+            if (this.hasParentStrategy) {
+                await firstValueFrom(this.goalApi.createInfluence({
+                    goalId: goal.id,
+                    strategyId: this.step4.value.originStrategyId!,
+                    influenceType: this.step4.value.influenceType as any ?? 'Positive',
+                    strength: this.step4.value.strength ?? 0.5,
+                    confidence: this.step4.value.confidence ?? 0.5,
+                    notes: this.step4.value.influenceNotes || undefined,
+                }));
+            }
 
             // 4. Create Assessment
             await firstValueFrom(this.assessmentApi.create({
@@ -296,8 +365,18 @@ export class GoalNewComponent implements OnInit {
 
             this.router.navigate(['/goals', goal.id]);
         } catch (err) {
+            console.error('Goal creation failed:', err);
             this.submitError = 'Failed to create goal. Please check your inputs and try again.';
-            console.error(err);
+            
+            if (createdGoalId) {
+                try {
+                    await firstValueFrom(this.orchestrationApi.cancelWorkflow(createdGoalId));
+                    this.submitError += ' The partially created goal was successfully rolled back.';
+                } catch (rollbackErr) {
+                    console.error('Rollback of partially created goal failed:', rollbackErr);
+                    this.submitError += ' Warning: Rollback failed. The system may be in an inconsistent state.';
+                }
+            }
         } finally {
             this.submitting = false;
         }
