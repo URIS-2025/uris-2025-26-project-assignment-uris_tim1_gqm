@@ -132,6 +132,9 @@ app.UseMiddleware<HmacMiddleware>();
 
 app.MapControllers();
 
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "assessment-service" }))
+    .WithName("HealthCheck");
+
 app.MapPrometheusScrapingEndpoint();
 
 app.Run();
