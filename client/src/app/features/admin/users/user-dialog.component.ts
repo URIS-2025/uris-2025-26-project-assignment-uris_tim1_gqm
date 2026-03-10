@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -11,7 +12,7 @@ import { Role, Organization, Department } from '../../../core/api/api.models';
 import { UserApiService } from '../../../core/api/user-api.service';
 import { DepartmentApiService } from '../../../core/api/department-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, of, forkJoin } from 'rxjs';
 
 function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
   if (!control.value) return null;
@@ -86,8 +87,8 @@ function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
 
           @if (isDepartmentManagerSelected()) {
             <mat-form-field appearance="outline">
-              <mat-label>Managed Department</mat-label>
-              <mat-select formControlName="departmentId" required>
+              <mat-label>Managed Departments</mat-label>
+              <mat-select formControlName="departmentIds" multiple required>
                 @if (departmentsLoading()) {
                   <mat-option disabled>Loading...</mat-option>
                 } @else if (departments().length === 0) {
@@ -122,6 +123,7 @@ export class UserDialogComponent implements OnInit {
   private userService = inject(UserApiService);
   private departmentService = inject(DepartmentApiService);
   private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   userForm: FormGroup;
 
@@ -158,7 +160,7 @@ export class UserDialogComponent implements OnInit {
       email: ['', [Validators.required, Validators.email, gqmEmailValidator]],
       password: ['Test@123', Validators.required],
       roleId: ['', Validators.required],
-      departmentId: ['']
+      departmentIds: [[]]
     });
 
 
@@ -169,12 +171,12 @@ export class UserDialogComponent implements OnInit {
 
       // Allow computed value to update, then apply validation
       setTimeout(() => {
-        const deptControl = this.userForm.get('departmentId');
+        const deptControl = this.userForm.get('departmentIds');
         if (this.isDepartmentManagerSelected()) {
           deptControl?.setValidators(Validators.required);
         } else {
           deptControl?.clearValidators();
-          deptControl?.setValue('');
+          deptControl?.setValue([]);
         }
         deptControl?.updateValueAndValidity();
 
@@ -195,10 +197,19 @@ export class UserDialogComponent implements OnInit {
       this.initialLoading.set(false);
     });
 
-    const orgId = this.authService.organizationId;
-    if (orgId) {
-      this.loadDepartments(orgId);
-    }
+    // Reactively refresh departments if active organization changes
+    this.authService.organizationId$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(orgId => {
+      if (orgId) {
+        this.loadDepartments(orgId);
+        // Reset department selections if the organization changes while the popup is open
+        const deptControl = this.userForm.get('departmentIds');
+        if (deptControl && deptControl.value && deptControl.value.length > 0) {
+            deptControl.setValue([]);
+        }
+      }
+    });
   }
 
   private loadDepartments(orgId: string) {
@@ -232,21 +243,27 @@ export class UserDialogComponent implements OnInit {
           roleId: val.roleId
         }).subscribe({
           next: () => {
-            // Step 3: Set Department Manager if applicable
-            if (this.isDepartmentManagerSelected() && val.departmentId) {
-
-              // To update department, we need to fetch it first to get its current fields.
-              this.departmentService.getDepartmentById(val.departmentId).subscribe(dept => {
-                this.departmentService.updateDepartment(val.departmentId, {
+            // Step 3: Set Department Managers if applicable
+            if (this.isDepartmentManagerSelected() && val.departmentIds && val.departmentIds.length > 0) {
+              const deptsToUpdate = this.departments().filter(d => val.departmentIds.includes(d.id));
+              
+              const updateRequests = deptsToUpdate.map(dept => {
+                return this.departmentService.updateDepartment(dept.id, {
                   name: dept.name,
                   description: dept.description,
                   organizationId: dept.organizationId,
                   managerId: createdUser.id // <--- SET THE MANAGER
-                }).subscribe({
+                });
+              });
+
+              if (updateRequests.length > 0) {
+                forkJoin(updateRequests).subscribe({
                   next: () => this.dialogRef.close(true),
                   error: () => this.dialogRef.close(true) // Still close if it partially succeeded
                 });
-              });
+              } else {
+                this.dialogRef.close(true);
+              }
             } else {
               this.dialogRef.close(true); // Success without department assignment
             }

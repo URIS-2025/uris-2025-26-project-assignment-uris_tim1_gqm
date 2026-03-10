@@ -128,6 +128,7 @@ public class DepartmentAppService : IDepartmentService
         department.Name = request.Name;
         department.Description = request.Description;
         department.OrganizationId = request.OrganizationId;
+        department.ManagerId = request.ManagerId;
         department.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
