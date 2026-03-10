@@ -37,7 +37,7 @@ export interface Goal {
 export type GoalStatus = 'Active' | 'OnHold' | 'Completed' | 'Cancelled' | 'Draft';
 
 export interface GoalDetails extends Goal {
-    strategy?: Strategy;
+    strategies?: Strategy[];
     premises?: Premise[];
     assessments?: Assessment[];
     gqmGoals?: GqmGoal[];
