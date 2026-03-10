@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 using GQMGoalService.Application.Interfaces;
 using GQMGoalService.Application.Mappings;
@@ -23,9 +22,10 @@ public static class ApplicationServiceExtensions
             typeof(MeasurementMappingProfile)
         );
 
-        services.AddFluentValidationAutoValidation()
-                .AddFluentValidationClientsideAdapters();
-
+        // Note: validators are invoked manually via ValidateAndThrowAsync in each service.
+        // Do NOT use AddFluentValidationAutoValidation() — it runs validators synchronously
+        // before actions, which throws AsyncValidatorInvokedSynchronouslyException because
+        // AbstractValidator<T> implements IAsyncValidator<T>.
         services.AddValidatorsFromAssembly(typeof(GqmGoalRequestValidator).Assembly);
 
         services.AddScoped<IGqmGoalService, GqmGoalService>();
