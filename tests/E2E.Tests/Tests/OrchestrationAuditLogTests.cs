@@ -33,7 +33,7 @@ public sealed class OrchestrationAuditLogTests : E2ETestBase
         };
 
         // Act
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.ReadAs<GoalDto>();
 
@@ -42,7 +42,7 @@ public sealed class OrchestrationAuditLogTests : E2ETestBase
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await OrchestrationClient.GetAsync($"/workflow/{created.Id}");
+                var r = await OrchestrationClient.GetAsync($"/api/v1/Workflow/{created.Id}");
                 if (!r.IsSuccessStatusCode) return false;
                 var workflow = await r.ReadAs<WorkflowDto>();
                 sagaId = workflow.Id;
@@ -55,7 +55,7 @@ public sealed class OrchestrationAuditLogTests : E2ETestBase
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await AuditClient.GetAsync($"/audit/SagaWorkflow/{sagaId}");
+                var r = await AuditClient.GetAsync($"/api/v1/AuditLog/SagaWorkflow/{sagaId}");
                 if (!r.IsSuccessStatusCode) return false;
                 var page = await r.ReadAs<PaginatedResponse<AuditLogDto>>();
                 return page.Items.Any(a => a.Action == "WorkflowStarted")

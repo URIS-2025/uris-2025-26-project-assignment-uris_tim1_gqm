@@ -1,7 +1,6 @@
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using DepartmentService.API.Middleware;
 using DepartmentService.Application.Mappings;
 using DepartmentService.Application.Validators;
 using DepartmentService.Infrastructure;

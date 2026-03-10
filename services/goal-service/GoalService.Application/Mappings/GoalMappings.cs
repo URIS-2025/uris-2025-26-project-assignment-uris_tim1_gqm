@@ -32,8 +32,8 @@ public static class GoalMappings
             Id = Guid.NewGuid(),
             Focus = request.Focus,
             Object = request.Object,
-            ActiveFrom = request.ActiveFrom,
-            ActiveTo = request.ActiveTo,
+            ActiveFrom = DateTime.SpecifyKind(request.ActiveFrom, DateTimeKind.Utc),
+            ActiveTo = DateTime.SpecifyKind(request.ActiveTo, DateTimeKind.Utc),
             Magnitude = request.Magnitude,
             Constraints = request.Constraints,
             Status = Enum.Parse<GoalStatus>(request.Status, ignoreCase: true),
@@ -46,8 +46,8 @@ public static class GoalMappings
     {
         goal.Focus = request.Focus;
         goal.Object = request.Object;
-        goal.ActiveFrom = request.ActiveFrom;
-        goal.ActiveTo = request.ActiveTo;
+        goal.ActiveFrom = DateTime.SpecifyKind(request.ActiveFrom, DateTimeKind.Utc);
+        goal.ActiveTo = DateTime.SpecifyKind(request.ActiveTo, DateTimeKind.Utc);
         goal.Magnitude = request.Magnitude;
         goal.Constraints = request.Constraints;
         goal.Status = Enum.Parse<GoalStatus>(request.Status, ignoreCase: true);

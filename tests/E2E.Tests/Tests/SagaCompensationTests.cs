@@ -32,7 +32,7 @@ public sealed class SagaCompensationTests : E2ETestBase
             departmentId = Guid.NewGuid(),
         };
 
-        var createResponse = await GoalClient.PostAsJsonAsync("/api/Goal", payload);
+        var createResponse = await GoalClient.PostAsJsonAsync("/api/v1/Goal", payload);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.ReadAs<GoalDto>();
 
@@ -40,14 +40,14 @@ public sealed class SagaCompensationTests : E2ETestBase
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await OrchestrationClient.GetAsync($"/workflow/{created.Id}");
+                var r = await OrchestrationClient.GetAsync($"/api/v1/Workflow/{created.Id}");
                 return r.IsSuccessStatusCode;
             },
             $"Saga to be created for Goal/{created.Id}");
 
         // 3. Manually simulate "Activated" step via ID of the saga (for full coverage)
         // This gives us something nontrivial to compensate
-        var recordStepResponse = await OrchestrationClient.PostAsJsonAsync($"/workflow/{created.Id}/step", new
+        var recordStepResponse = await OrchestrationClient.PostAsJsonAsync($"/api/v1/Workflow/{created.Id}/step", new
         {
             StepName = "Activated",
             CompensationEndpoint = $"api/Goal/{created.Id}/revert-to-draft",
@@ -56,7 +56,7 @@ public sealed class SagaCompensationTests : E2ETestBase
         recordStepResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 4. Cancel the workflow
-        var cancelResponse = await OrchestrationClient.PostAsync($"/workflow/{created.Id}/cancel", null);
+        var cancelResponse = await OrchestrationClient.PostAsync($"/api/v1/Workflow/{created.Id}/cancel", null);
         cancelResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 5. Verify Compensation: Orchestration should have called revert-to-draft
@@ -67,7 +67,7 @@ public sealed class SagaCompensationTests : E2ETestBase
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await OrchestrationClient.GetAsync($"/workflow/{created.Id}");
+                var r = await OrchestrationClient.GetAsync($"/api/v1/Workflow/{created.Id}");
                 var workflow = await r.ReadAs<WorkflowDto>();
                 return workflow.Status == "Compensated";
             },
@@ -75,20 +75,20 @@ public sealed class SagaCompensationTests : E2ETestBase
             timeout: TimeSpan.FromSeconds(15));
 
         // 6. Double check GoalService (though we manually kept it in Draft, the call should have happened)
-        var goalInfo = await GoalClient.GetFromJsonAsync<GoalDto>($"/api/Goal/{created.Id}");
+        var goalInfo = await GoalClient.GetFromJsonAsync<GoalDto>($"/api/v1/Goal/{created.Id}");
         goalInfo!.Status.Should().Be("Draft");
         
         // 7. Check Audit Log for "WorkflowCompensated"
-        var auditResponse = await AuditClient.GetAsync($"/audit/SagaWorkflow/{created.Id}"); // Note: we used GoalId as EntityId for saga audits in some places? No, check WorkflowService.cs
+        var auditResponse = await AuditClient.GetAsync($"/api/v1/AuditLog/SagaWorkflow/{created.Id}"); // Note: we used GoalId as EntityId for saga audits in some places? No, check WorkflowService.cs
         // Actually WorkflowService.cs uses workflow.Id (Saga ID) for EntityId.
         // Let's get the workflow ID
-        var finalWorkflowR = await OrchestrationClient.GetAsync($"/workflow/{created.Id}");
+        var finalWorkflowR = await OrchestrationClient.GetAsync($"/api/v1/Workflow/{created.Id}");
         var finalWorkflow = await finalWorkflowR.ReadAs<WorkflowDto>();
         
         await PollingAssert.WaitUntilAsync(
             async () =>
             {
-                var r = await AuditClient.GetAsync($"/audit/SagaWorkflow/{finalWorkflow.Id}");
+                var r = await AuditClient.GetAsync($"/api/v1/AuditLog/SagaWorkflow/{finalWorkflow.Id}");
                 if (!r.IsSuccessStatusCode) return false;
                 var page = await r.ReadAs<PaginatedResponse<AuditLogDto>>();
                 return page.Items.Any(a => a.Action == "WorkflowCompensated");

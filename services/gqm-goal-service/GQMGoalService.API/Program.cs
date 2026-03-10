@@ -1,7 +1,6 @@
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using GQMGoalService.API.Middleware;
 using GQMGoalService.Application;
 using GQMGoalService.Application.Interfaces.Clients;
 using GQMGoalService.Infrastructure;

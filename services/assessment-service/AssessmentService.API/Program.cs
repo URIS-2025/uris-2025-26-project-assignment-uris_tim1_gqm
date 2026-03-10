@@ -1,7 +1,6 @@
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using AssessmentService.API.Middleware;
 using AssessmentService.Application.Interfaces;
 using AssessmentService.Application.Interfaces.Clients;
 using AssessmentService.Application.Services;
