@@ -51,6 +51,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "*.{woff,woff2}",
+                "input": "node_modules/material-icons/iconfont",
+                "output": "/"
               }
             ],
             "styles": [
