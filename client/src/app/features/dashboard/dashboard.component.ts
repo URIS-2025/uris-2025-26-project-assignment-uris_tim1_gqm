@@ -28,6 +28,7 @@ export class DashboardComponent implements OnInit {
     userRole = '';
 
     goals: Goal[] = [];
+    allGoals: Goal[] = [];
     assessments: Assessment[] = [];
     departments: Department[] = [];
 
@@ -89,6 +90,7 @@ export class DashboardComponent implements OnInit {
                 const deptIds = new Set(departmentsRes.items.map(d => d.id));
                 const filteredGoals = goalsRes.items.filter(g => deptIds.has(g.departmentId));
 
+                this.allGoals = goalsRes.items;
                 this.goals = filteredGoals;
                 this.departments = departmentsRes.items;
                 this.assessments = assessmentsRes.items;
@@ -137,7 +139,7 @@ export class DashboardComponent implements OnInit {
             .sort((a, b) => b.count - a.count);
 
         // Recent assessments (last 5, sorted by date)
-        const goalMap = new Map(this.goals.map(g => [g.id, g.focus]));
+        const goalMap = new Map(this.allGoals.map(g => [g.id, g.focus]));
         this.recentAssessments = [...this.assessments]
             .sort((a, b) => new Date(b.assessedAt || '').getTime() - new Date(a.assessedAt || '').getTime())
             .slice(0, 5)
