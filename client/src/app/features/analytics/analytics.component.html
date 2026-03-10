@@ -1,0 +1,80 @@
+<div class="analytics-page">
+    <app-page-header 
+        title="Goal Analytics" 
+        subtitle="Visualize goal hierarchies and analyze performance metrics."
+    ></app-page-header>
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <mat-form-field appearance="outline" class="filter-field">
+            <mat-select [(ngModel)]="selectedDepartmentId" (selectionChange)="onDepartmentChange()" placeholder="Select a department">
+                <mat-option [value]="null">All Departments</mat-option>
+                @for (dept of departments; track dept.id) {
+                    <mat-option [value]="dept.id">{{ dept.name }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="filter-field">
+            <mat-select 
+                [(ngModel)]="selectedRootGoalId" 
+                (selectionChange)="onRootGoalChange()"
+                [disabled]="!selectedDepartmentId"
+                placeholder="Select a root goal"
+            >
+                <mat-option [value]="null">Select a root goal</mat-option>
+                @for (goal of rootGoals; track goal.id) {
+                    <mat-option [value]="goal.id">{{ goal.focus }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        
+        <button 
+            mat-stroked-button 
+            class="reset-btn"
+            (click)="resetFilters()"
+            [disabled]="!selectedDepartmentId && !selectedRootGoalId"
+        >
+            <mat-icon>refresh</mat-icon>
+            Reset Filters
+        </button>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="analytics-content">
+        <!-- Loading State -->
+        @if (isLoading) {
+            <div class="loading-overlay">
+                <mat-spinner diameter="48"></mat-spinner>
+                <p>Loading analytics data...</p>
+            </div>
+        }
+        
+        <!-- Two Column Layout -->
+        <div class="content-grid" [class.loading]="isLoading">
+            <!-- Left: Goal Hierarchy Graph -->
+            <div class="graph-panel">
+                <app-goal-hierarchy-graph
+                    [rootGoal]="goalTree"
+                    (nodeSelected)="onNodeSelected($event)"
+                ></app-goal-hierarchy-graph>
+            </div>
+            
+            <!-- Right: Analytics Dashboard -->
+            <div class="dashboard-panel">
+                <app-analytics-dashboard
+                    [analytics]="analytics"
+                ></app-analytics-dashboard>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detail Drawer -->
+    <app-detail-drawer
+        [isOpen]="drawerOpen"
+        [selectedType]="selectedNodeType"
+        [selectedGoal]="selectedGoal"
+        [selectedStrategy]="selectedStrategy"
+        (close)="closeDrawer()"
+    ></app-detail-drawer>
+</div>

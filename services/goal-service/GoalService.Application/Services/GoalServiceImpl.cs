@@ -292,4 +292,303 @@ public class GoalServiceImpl : IGoalService
             QgmGoals = qgmGoalsTask.Result
         };
     }
+
+    // ========== Analytics Methods ==========
+
+    public async Task<IEnumerable<GoalResponse>> GetRootGoalsByDepartmentAsync(Guid departmentId)
+    {
+        // Root goals are goals that have no GoalInfluence (not derived from any strategy)
+        var rootGoals = await _context.Goals
+            .Include(g => g.Strategies)
+                .ThenInclude(s => s.GoalInfluences)
+            .Include(g => g.GoalInfluence)
+            .Where(g => g.DepartmentId == departmentId && g.GoalInfluence == null)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return rootGoals.Select(g => g.ToResponse());
+    }
+
+    public async Task<GoalTreeNodeResponse?> GetGoalTreeAsync(Guid rootGoalId)
+    {
+        var rootGoal = await _context.Goals
+            .Include(g => g.Strategies)
+                .ThenInclude(s => s.GoalInfluences)
+            .Include(g => g.GoalInfluence)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == rootGoalId);
+
+        if (rootGoal is null)
+            return null;
+
+        return await BuildGoalTreeNodeAsync(rootGoal);
+    }
+
+    private async Task<GoalTreeNodeResponse> BuildGoalTreeNodeAsync(Domain.Entities.Goal goal)
+    {
+        var strategyNodes = new List<StrategyTreeNodeResponse>();
+
+        foreach (var strategy in goal.Strategies)
+        {
+            var childGoals = new List<ChildGoalInfluenceResponse>();
+
+            // Get all goals influenced by this strategy
+            var influences = await _context.GoalInfluences
+                .Include(gi => gi.Goal)
+                    .ThenInclude(g => g.Strategies)
+                        .ThenInclude(s => s.GoalInfluences)
+                .Where(gi => gi.StrategyId == strategy.Id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            foreach (var influence in influences)
+            {
+                // Recursively build the child goal tree
+                var childGoalNode = await BuildGoalTreeNodeAsync(influence.Goal);
+                childGoals.Add(new ChildGoalInfluenceResponse
+                {
+                    Goal = childGoalNode,
+                    InfluenceType = influence.InfluenceType.ToString(),
+                    Strength = influence.Strength,
+                    Confidence = influence.Confidence,
+                    Notes = influence.Notes
+                });
+            }
+
+            strategyNodes.Add(new StrategyTreeNodeResponse
+            {
+                Id = strategy.Id,
+                Name = strategy.Name,
+                Description = strategy.Description,
+                RefinementType = strategy.RefinementType.ToString(),
+                Effectiveness = strategy.Effectiveness.ToString(),
+                IsActive = strategy.IsActive,
+                ChildGoals = childGoals
+            });
+        }
+
+        return new GoalTreeNodeResponse
+        {
+            Id = goal.Id,
+            Focus = goal.Focus,
+            Object = goal.Object,
+            Status = goal.Status.ToString(),
+            BaselineProbability = goal.BaselineProbability,
+            DepartmentId = goal.DepartmentId,
+            ActiveFrom = goal.ActiveFrom,
+            ActiveTo = goal.ActiveTo,
+            Magnitude = goal.Magnitude,
+            Constraints = goal.Constraints,
+            Strategies = strategyNodes
+        };
+    }
+
+    public async Task<GoalAnalyticsResponse> GetAnalyticsAsync(Guid? departmentId, Guid? rootGoalId)
+    {
+        List<Domain.Entities.Goal> goals;
+        List<Domain.Entities.Strategy> strategies;
+        var depthMap = new Dictionary<Guid, int>();
+
+        if (rootGoalId.HasValue)
+        {
+            // Get all goals in the tree rooted at rootGoalId
+            goals = await GetAllGoalsInTreeAsync(rootGoalId.Value, depthMap, 0);
+            strategies = goals.SelectMany(g => g.Strategies).ToList();
+        }
+        else if (departmentId.HasValue)
+        {
+            // Get all goals for the department
+            goals = await _context.Goals
+                .Include(g => g.Strategies)
+                .Include(g => g.GoalInfluence)
+                .Where(g => g.DepartmentId == departmentId.Value)
+                .AsNoTracking()
+                .ToListAsync();
+            strategies = goals.SelectMany(g => g.Strategies).ToList();
+            
+            // Calculate depth for department-scoped goals
+            var rootGoals = goals.Where(g => g.GoalInfluence == null).ToList();
+            foreach (var root in rootGoals)
+            {
+                await CalculateDepthsAsync(root.Id, depthMap, 0);
+            }
+        }
+        else
+        {
+            // Get all goals for user's departments
+            var departmentIds = await _departmentClient.GetMyDepartmentIdsAsync();
+            goals = await _context.Goals
+                .Include(g => g.Strategies)
+                .Include(g => g.GoalInfluence)
+                .Where(g => departmentIds.Contains(g.DepartmentId))
+                .AsNoTracking()
+                .ToListAsync();
+            strategies = goals.SelectMany(g => g.Strategies).ToList();
+            
+            // Calculate depth for all goals
+            var rootGoals = goals.Where(g => g.GoalInfluence == null).ToList();
+            foreach (var root in rootGoals)
+            {
+                await CalculateDepthsAsync(root.Id, depthMap, 0);
+            }
+        }
+
+        // KPIs
+        var totalGoals = goals.Count;
+        var activeGoals = goals.Count(g => g.Status == GoalStatus.Active);
+        var completedGoals = goals.Count(g => g.Status == GoalStatus.Completed);
+        var draftGoals = goals.Count(g => g.Status == GoalStatus.Draft);
+
+        // Status distribution
+        var statusDistribution = goals
+            .GroupBy(g => g.Status.ToString())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Probability distribution (5 buckets)
+        var probabilityDistribution = new Dictionary<string, int>
+        {
+            { "0-20%", goals.Count(g => g.BaselineProbability >= 0 && g.BaselineProbability < 0.2m) },
+            { "20-40%", goals.Count(g => g.BaselineProbability >= 0.2m && g.BaselineProbability < 0.4m) },
+            { "40-60%", goals.Count(g => g.BaselineProbability >= 0.4m && g.BaselineProbability < 0.6m) },
+            { "60-80%", goals.Count(g => g.BaselineProbability >= 0.6m && g.BaselineProbability < 0.8m) },
+            { "80-100%", goals.Count(g => g.BaselineProbability >= 0.8m && g.BaselineProbability <= 1.0m) }
+        };
+
+        // Depth distribution
+        var depthDistribution = depthMap
+            .GroupBy(kv => kv.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Refinement distribution
+        var refinementDistribution = strategies
+            .GroupBy(s => s.RefinementType.ToString())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Insights
+        var highestProbGoal = goals
+            .OrderByDescending(g => g.BaselineProbability)
+            .FirstOrDefault();
+
+        var lowestProbActiveGoal = goals
+            .Where(g => g.Status == GoalStatus.Active)
+            .OrderBy(g => g.BaselineProbability)
+            .FirstOrDefault();
+
+        var mostProductiveStrategy = strategies
+            .Select(s => new { Strategy = s, ChildCount = s.GoalInfluences.Count })
+            .OrderByDescending(x => x.ChildCount)
+            .FirstOrDefault();
+
+        // Most active department (only for org-wide analytics)
+        DepartmentInsightResponse? mostActiveDept = null;
+        if (!departmentId.HasValue && !rootGoalId.HasValue)
+        {
+            var deptGroup = goals
+                .Where(g => g.Status == GoalStatus.Active)
+                .GroupBy(g => g.DepartmentId)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+
+            if (deptGroup != null)
+            {
+                var deptInfo = await _departmentClient.GetDepartmentAsync(deptGroup.Key);
+                if (deptInfo != null)
+                {
+                    mostActiveDept = new DepartmentInsightResponse
+                    {
+                        Id = deptGroup.Key,
+                        Name = deptInfo.Name,
+                        ActiveGoalsCount = deptGroup.Count()
+                    };
+                }
+            }
+        }
+
+        return new GoalAnalyticsResponse
+        {
+            TotalGoals = totalGoals,
+            ActiveGoals = activeGoals,
+            CompletedGoals = completedGoals,
+            DraftGoals = draftGoals,
+            StatusDistribution = statusDistribution,
+            ProbabilityDistribution = probabilityDistribution,
+            DepthDistribution = depthDistribution,
+            RefinementDistribution = refinementDistribution,
+            HighestProbabilityGoal = highestProbGoal != null ? new GoalInsightResponse
+            {
+                Id = highestProbGoal.Id,
+                Focus = highestProbGoal.Focus,
+                Object = highestProbGoal.Object,
+                Status = highestProbGoal.Status.ToString(),
+                BaselineProbability = highestProbGoal.BaselineProbability,
+                DepartmentId = highestProbGoal.DepartmentId
+            } : null,
+            LowestProbabilityActiveGoal = lowestProbActiveGoal != null ? new GoalInsightResponse
+            {
+                Id = lowestProbActiveGoal.Id,
+                Focus = lowestProbActiveGoal.Focus,
+                Object = lowestProbActiveGoal.Object,
+                Status = lowestProbActiveGoal.Status.ToString(),
+                BaselineProbability = lowestProbActiveGoal.BaselineProbability,
+                DepartmentId = lowestProbActiveGoal.DepartmentId
+            } : null,
+            MostProductiveStrategy = mostProductiveStrategy?.ChildCount > 0 ? new StrategyInsightResponse
+            {
+                Id = mostProductiveStrategy.Strategy.Id,
+                Name = mostProductiveStrategy.Strategy.Name,
+                GoalId = mostProductiveStrategy.Strategy.GoalId,
+                GoalFocus = goals.FirstOrDefault(g => g.Id == mostProductiveStrategy.Strategy.GoalId)?.Focus ?? "",
+                DerivedGoalsCount = mostProductiveStrategy.ChildCount
+            } : null,
+            MostActiveDepartment = mostActiveDept
+        };
+    }
+
+    private async Task<List<Domain.Entities.Goal>> GetAllGoalsInTreeAsync(Guid goalId, Dictionary<Guid, int> depthMap, int depth)
+    {
+        var goal = await _context.Goals
+            .Include(g => g.Strategies)
+                .ThenInclude(s => s.GoalInfluences)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == goalId);
+
+        if (goal is null)
+            return [];
+
+        var result = new List<Domain.Entities.Goal> { goal };
+        depthMap[goal.Id] = depth;
+
+        foreach (var strategy in goal.Strategies)
+        {
+            foreach (var influence in strategy.GoalInfluences)
+            {
+                var childGoals = await GetAllGoalsInTreeAsync(influence.GoalId, depthMap, depth + 1);
+                result.AddRange(childGoals);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task CalculateDepthsAsync(Guid goalId, Dictionary<Guid, int> depthMap, int depth)
+    {
+        if (depthMap.ContainsKey(goalId))
+            return;
+
+        depthMap[goalId] = depth;
+
+        var strategies = await _context.Strategies
+            .Include(s => s.GoalInfluences)
+            .Where(s => s.GoalId == goalId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        foreach (var strategy in strategies)
+        {
+            foreach (var influence in strategy.GoalInfluences)
+            {
+                await CalculateDepthsAsync(influence.GoalId, depthMap, depth + 1);
+            }
+        }
+    }
 }

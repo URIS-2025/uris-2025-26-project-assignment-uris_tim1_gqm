@@ -1,0 +1,165 @@
+        <div class="graph-container" [class.empty]="!rootGoal">
+            @if (!rootGoal) {
+                <div class="empty-state">
+                    <span class="material-icons">account_tree</span>
+                    <h3>Select a Root Goal</h3>
+                    <p>Choose a department and root goal to visualize the goal hierarchy.</p>
+                </div>
+            } @else {
+                <!-- Graph Controls -->
+                <div class="graph-controls">
+                    <button class="control-btn" (click)="triggerFit()" title="Fit to screen">
+                        <span class="material-icons">fit_screen</span>
+                    </button>
+                    <button class="control-btn" (click)="triggerCenter()" title="Center">
+                        <span class="material-icons">center_focus_strong</span>
+                    </button>
+                </div>
+
+                <!-- Legend -->
+                <div class="graph-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot active"></span>
+                        <span>Active</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot completed"></span>
+                        <span>Completed</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot draft"></span>
+                        <span>Draft</span>
+                    </div>
+                </div>
+
+                <ngx-graph
+                    class="goal-graph"
+                    [nodes]="nodes"
+                    [links]="edges"
+                    [layout]="layout"
+                    [autoZoom]="true"
+                    [autoCenter]="true"
+                    [enableZoom]="true"
+                    [zoomSpeed]="0.05"
+                    [minZoomLevel]="0.15"
+                    [maxZoomLevel]="3"
+                    #graphRef
+                    (nodeClick)="onNodeClick($event)"
+                >
+                    <!-- Goal Node Template -->
+                    <ng-template #nodeTemplate let-node>
+                        @if (node.data.type === 'goal') {
+                            <svg:g class="node goal-node-wrapper" (click)="onNodeClick(node)">
+                                <svg:foreignObject [attr.width]="270" [attr.height]="130" x="-135" y="-65">
+                                    <xhtml:div class="goal-card" [class]="'status-' + node.data.goal.status.toLowerCase()">
+                                        <div class="goal-header">
+                                            <div class="goal-header-left">
+                                                <div class="goal-icon-wrap" [class]="'icon-' + node.data.goal.status.toLowerCase()">
+                                                    <span class="material-icons">track_changes</span>
+                                                </div>
+                                                <span class="status-badge" [class]="'badge-' + node.data.goal.status.toLowerCase()">
+                                                    {{ node.data.goal.status.toUpperCase() }}
+                                                </span>
+                                            </div>
+                                            <span class="probability-pct">{{ (node.data.goal.baselineProbability * 100) | number:'1.0-0' }}%</span>
+                                        </div>
+                                        <div class="goal-body">
+                                            <h4 class="goal-focus">{{ node.data.goal.focus }}</h4>
+                                            <p class="goal-object">{{ node.data.goal.object }}</p>
+                                        </div>
+                                        <div class="goal-footer">
+                                            <span class="prob-label">Success Probability</span>
+                                            <div class="probability-bar">
+                                                <div class="probability-fill" [style.width.%]="node.data.goal.baselineProbability * 100" [class]="'fill-' + node.data.goal.status.toLowerCase()"></div>
+                                            </div>
+                                        </div>
+                                    </xhtml:div>
+                                </svg:foreignObject>
+                            </svg:g>
+                        } @else if (node.data.type === 'strategy') {
+                            <svg:g class="node strategy-node-wrapper" (click)="onNodeClick(node)">
+                                <svg:foreignObject [attr.width]="190" [attr.height]="72" x="-95" y="-36">
+                                    <xhtml:div class="strategy-card">
+                                        <div class="strategy-top">
+                                            <span class="refinement-badge" [class]="'ref-' + node.data.strategy.refinementType.toLowerCase()">
+                                                {{ node.data.strategy.refinementType }}
+                                            </span>
+                                        </div>
+                                        <h5 class="strategy-name">{{ node.data.strategy.name }}</h5>
+                                    </xhtml:div>
+                                </svg:foreignObject>
+                            </svg:g>
+                        }
+                    </ng-template>
+
+                    <!-- SVG Marker Definitions (arrowheads) -->
+                    <ng-template #defsTemplate>
+                        <svg:defs>
+                            <!-- Source connection dot -->
+                            <svg:marker
+                                id="source-dot"
+                                viewBox="-4 -4 8 8"
+                                refX="0"
+                                refY="0"
+                                markerWidth="4"
+                                markerHeight="4"
+                            >
+                                <svg:circle cx="0" cy="0" r="3.5" fill="#2CB1A1"/>
+                            </svg:marker>
+                            <!-- Solid arrowhead for Goal → Strategy edges -->
+                            <svg:marker
+                                id="arrow-solid"
+                                viewBox="0 -5 10 10"
+                                refX="8"
+                                refY="0"
+                                markerWidth="6"
+                                markerHeight="6"
+                                orient="auto"
+                            >
+                                <svg:path d="M0,-5L10,0L0,5" fill="#2CB1A1"></svg:path>
+                            </svg:marker>
+                            <!-- Smaller arrowhead for Strategy → ChildGoal influence edges -->
+                            <svg:marker
+                                id="arrow-dashed"
+                                viewBox="0 -5 10 10"
+                                refX="8"
+                                refY="0"
+                                markerWidth="5"
+                                markerHeight="5"
+                                orient="auto"
+                            >
+                                <svg:path d="M0,-5L10,0L0,5" fill="#2CB1A1"></svg:path>
+                            </svg:marker>
+                        </svg:defs>
+                    </ng-template>
+
+                    <!-- Edge Template -->
+                    <ng-template #linkTemplate let-link>
+                        <svg:g class="edge-group">
+                            <svg:path
+                                [attr.d]="link.line"
+                                stroke="#2CB1A1"
+                                [attr.stroke-width]="link.data?.isInfluence ? 1.5 : 2"
+                                [attr.stroke-dasharray]="link.data?.isInfluence ? '6,4' : 'none'"
+                                fill="none"
+                                marker-start="url(#source-dot)"
+                                [attr.marker-end]="link.data?.isInfluence ? 'url(#arrow-dashed)' : 'url(#arrow-solid)'"
+                            ></svg:path>
+                            @if (link.data?.strength) {
+                                <svg:text
+                                    [attr.x]="link.midPoint?.x"
+                                    [attr.y]="(link.midPoint?.y ?? 0) - 8"
+                                    text-anchor="middle"
+                                    fill="#2CB1A1"
+                                    font-size="11"
+                                    font-weight="600"
+                                    font-family="Inter, sans-serif"
+                                >
+                                    {{ (link.data.strength * 100) | number:'1.0-0' }}%
+                                </svg:text>
+                            }
+                        </svg:g>
+                    </ng-template>
+                </ngx-graph>
+            }
+        </div>

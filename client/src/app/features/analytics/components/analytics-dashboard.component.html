@@ -1,0 +1,184 @@
+<div class="dashboard-container" #container>
+    @if (!analytics) {
+        <div class="empty-state">
+            <span class="material-icons">analytics</span>
+            <h3>No Data Available</h3>
+            <p>Select a department or root goal to view analytics.</p>
+        </div>
+    } @else {
+        <!-- KPI Cards 2x2 grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card total">
+                <div class="kpi-icon">
+                    <span class="material-icons">flag</span>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-value">{{ analytics.totalGoals }}</span>
+                    <span class="kpi-label">Total Goals</span>
+                </div>
+            </div>
+
+            <div class="kpi-card active">
+                <div class="kpi-icon">
+                    <span class="material-icons">play_circle</span>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-value">{{ analytics.activeGoals }}</span>
+                    <span class="kpi-label">Active Goals</span>
+                </div>
+            </div>
+
+            <div class="kpi-card completed">
+                <div class="kpi-icon">
+                    <span class="material-icons">check_circle</span>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-value">{{ analytics.completedGoals }}</span>
+                    <span class="kpi-label">Completed</span>
+                </div>
+            </div>
+
+            <div class="kpi-card draft">
+                <div class="kpi-icon">
+                    <span class="material-icons">edit_note</span>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-value">{{ analytics.draftGoals }}</span>
+                    <span class="kpi-label">Draft</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Distribution Donut Chart -->
+        <div class="chart-section">
+            <h3 class="section-title">Goal Status Distribution</h3>
+            <div class="chart-wrapper donut">
+                @if (statusData.length > 0) {
+                    <ngx-charts-pie-chart
+                        [view]="chartViewDonut"
+                        [results]="statusData"
+                        [legend]="true"
+                        [legendPosition]="legendBelow"
+                        [labels]="false"
+                        [doughnut]="true"
+                        [arcWidth]="0.35"
+                        [scheme]="statusColorScheme"
+                        [animations]="true"
+                        [tooltipDisabled]="false"
+                    ></ngx-charts-pie-chart>
+                } @else {
+                    <div class="chart-empty">No data</div>
+                }
+            </div>
+        </div>
+
+        <!-- Probability Distribution Bar Chart -->
+        <div class="chart-section">
+            <h3 class="section-title">Probability Distribution</h3>
+            <div class="chart-wrapper bar">
+                @if (probabilityData.length > 0) {
+                    <ngx-charts-bar-vertical
+                        [view]="chartViewBar"
+                        [results]="probabilityData"
+                        [xAxis]="true"
+                        [yAxis]="true"
+                        [showXAxisLabel]="false"
+                        [showYAxisLabel]="false"
+                        [scheme]="probabilityColorScheme"
+                        [animations]="true"
+                        [gradient]="false"
+                        [roundDomains]="true"
+                    ></ngx-charts-bar-vertical>
+                } @else {
+                    <div class="chart-empty">No data</div>
+                }
+            </div>
+        </div>
+
+        <!-- Depth Distribution Chart -->
+        <div class="chart-section">
+            <h3 class="section-title">Goals by Hierarchy Depth</h3>
+            <div class="chart-wrapper bar">
+                @if (depthData.length > 0) {
+                    <ngx-charts-bar-vertical
+                        [view]="chartViewBar"
+                        [results]="depthData"
+                        [xAxis]="true"
+                        [yAxis]="true"
+                        [showXAxisLabel]="false"
+                        [showYAxisLabel]="false"
+                        [scheme]="depthColorScheme"
+                        [animations]="true"
+                        [gradient]="false"
+                        [roundDomains]="true"
+                    ></ngx-charts-bar-vertical>
+                } @else {
+                    <div class="chart-empty">No data</div>
+                }
+            </div>
+        </div>
+
+        <!-- Refinement Type Pie Chart -->
+        <div class="chart-section">
+            <h3 class="section-title">Strategy Refinement Types</h3>
+            <div class="chart-wrapper donut">
+                @if (refinementData.length > 0) {
+                    <ngx-charts-pie-chart
+                        [view]="chartViewDonut"
+                        [results]="refinementData"
+                        [legend]="true"
+                        [legendPosition]="legendBelow"
+                        [labels]="false"
+                        [doughnut]="false"
+                        [scheme]="refinementColorScheme"
+                        [animations]="true"
+                    ></ngx-charts-pie-chart>
+                } @else {
+                    <div class="chart-empty">No data</div>
+                }
+            </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div class="insights-section">
+            <h3 class="section-title">Key Insights</h3>
+
+            @if (analytics.highestProbabilityGoal) {
+                <div class="insight-card insight-high">
+                    <span class="insight-icon material-icons">trending_up</span>
+                    <div class="insight-content">
+                        <span class="insight-label">Highest Probability</span>
+                        <span class="insight-title">{{ analytics.highestProbabilityGoal.focus }}</span>
+                        <span class="insight-value">{{ (analytics.highestProbabilityGoal.baselineProbability * 100) | number:'1.0-0' }}% · {{ analytics.highestProbabilityGoal.status }}</span>
+                    </div>
+                </div>
+            }
+
+            @if (analytics.lowestProbabilityActiveGoal) {
+                <div class="insight-card insight-low">
+                    <span class="insight-icon material-icons">warning_amber</span>
+                    <div class="insight-content">
+                        <span class="insight-label">Needs Attention</span>
+                        <span class="insight-title">{{ analytics.lowestProbabilityActiveGoal.focus }}</span>
+                        <span class="insight-value">{{ (analytics.lowestProbabilityActiveGoal.baselineProbability * 100) | number:'1.0-0' }}% probability (lowest active)</span>
+                    </div>
+                </div>
+            }
+
+            @if (analytics.mostProductiveStrategy) {
+                <div class="insight-card insight-strategy">
+                    <span class="insight-icon material-icons">psychology</span>
+                    <div class="insight-content">
+                        <span class="insight-label">Most Productive Strategy</span>
+                        <span class="insight-title">{{ analytics.mostProductiveStrategy.name }}</span>
+                        <span class="insight-value">{{ analytics.mostProductiveStrategy.derivedGoalsCount }} derived goal{{ analytics.mostProductiveStrategy.derivedGoalsCount !== 1 ? 's' : '' }}</span>
+                    </div>
+                </div>
+            }
+
+            @if (!analytics.highestProbabilityGoal && !analytics.lowestProbabilityActiveGoal && !analytics.mostProductiveStrategy) {
+                <p class="no-insights">No insights available for the selected scope.</p>
+            }
+        </div>
+    }
+</div>

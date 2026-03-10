@@ -15,4 +15,9 @@ public interface IGoalService
     Task<ActivationReadinessResponse> ReadinessAsync(Guid id);
     Task<GoalResponse?> ActivateAsync(Guid id);
     Task<GoalResponse?> RevertToDraftAsync(Guid id);
+    
+    // Analytics methods
+    Task<IEnumerable<GoalResponse>> GetRootGoalsByDepartmentAsync(Guid departmentId);
+    Task<GoalTreeNodeResponse?> GetGoalTreeAsync(Guid rootGoalId);
+    Task<GoalAnalyticsResponse> GetAnalyticsAsync(Guid? departmentId, Guid? rootGoalId);
 }

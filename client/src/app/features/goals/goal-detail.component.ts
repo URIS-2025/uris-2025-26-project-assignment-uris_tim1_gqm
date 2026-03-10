@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
-import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { HasPermissionDirective } from '../../core/permissions/has-permission.directive';
 import { GoalApiService } from '../../core/api/goal-api.service';
 import { GoalDetails } from '../../core/api/api.models';
@@ -17,7 +16,7 @@ import { GoalDetails } from '../../core/api/api.models';
     imports: [
         RouterLink, MatCardModule, MatButtonModule, MatIconModule,
         MatProgressSpinnerModule, MatDividerModule, MatTabsModule,
-        PageHeaderComponent, HasPermissionDirective
+        HasPermissionDirective
     ],
     templateUrl: './goal-detail.component.html',
     styleUrl: './goal-detail.component.css',

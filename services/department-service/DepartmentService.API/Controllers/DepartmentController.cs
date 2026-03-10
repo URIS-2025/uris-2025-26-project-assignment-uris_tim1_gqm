@@ -25,14 +25,11 @@ public class DepartmentController : ControllerBase
         [FromQuery] int size = 20)
     {
         var orgId = User.GetOrganizationId();
-        if (orgId.HasValue)
-        {
-            var result = await _departmentService.GetByOrganizationIdAsync(orgId.Value, page, size);
-            return Ok(result);
-        }
+        if (!orgId.HasValue)
+            return Unauthorized(new { message = "Organization context is required. Ensure the X-Organization-Id header is present." });
 
-        var allResult = await _departmentService.GetAllAsync(page, size);
-        return Ok(allResult);
+        var result = await _departmentService.GetByOrganizationIdAsync(orgId.Value, page, size);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]

@@ -1,0 +1,144 @@
+        <div class="drawer-overlay" [class.open]="isOpen" (click)="close.emit()"></div>
+        <div class="drawer-container" [class.open]="isOpen">
+            <div class="drawer-header">
+                <h2 class="drawer-title">
+                    @if (selectedType === 'goal') {
+                        Goal Details
+                    } @else {
+                        Strategy Details
+                    }
+                </h2>
+                <button class="close-btn" (click)="close.emit()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <div class="drawer-content">
+                @if (selectedType === 'goal' && selectedGoal) {
+                    <div class="detail-section">
+                        <label class="detail-label">Focus</label>
+                        <p class="detail-value focus">{{ selectedGoal.focus }}</p>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <label class="detail-label">Object</label>
+                        <p class="detail-value">{{ selectedGoal.object || 'Not specified' }}</p>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-section">
+                            <label class="detail-label">Status</label>
+                            <span class="status-badge" [class]="'status-' + selectedGoal.status.toLowerCase()">
+                                {{ selectedGoal.status }}
+                            </span>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <label class="detail-label">Active Period</label>
+                            <span class="period-text">
+                                {{ selectedGoal.activeFrom | date:'mediumDate' }} - 
+                                {{ selectedGoal.activeTo | date:'mediumDate' }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <label class="detail-label">Baseline Probability</label>
+                        <div class="probability-display">
+                            <span class="probability-value">{{ (selectedGoal.baselineProbability * 100) | number:'1.0-0' }}%</span>
+                            <div class="probability-bar">
+                                <div class="probability-fill" [style.width.%]="selectedGoal.baselineProbability * 100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (selectedGoal.magnitude) {
+                        <div class="detail-section">
+                            <label class="detail-label">Magnitude</label>
+                            <p class="detail-value">{{ selectedGoal.magnitude }}</p>
+                        </div>
+                    }
+                    
+                    @if (selectedGoal.constraints) {
+                        <div class="detail-section">
+                            <label class="detail-label">Constraints</label>
+                            <p class="detail-value">{{ selectedGoal.constraints }}</p>
+                        </div>
+                    }
+                    
+                    <div class="detail-section">
+                        <label class="detail-label">Strategies</label>
+                        @if (selectedGoal.strategies.length === 0) {
+                            <p class="detail-value muted">No strategies defined</p>
+                        } @else {
+                            <div class="strategies-list">
+                                @for (strategy of selectedGoal.strategies; track strategy.id) {
+                                    <div class="strategy-item">
+                                        <span class="refinement-type" [class]="'type-' + strategy.refinementType.toLowerCase()">
+                                            {{ strategy.refinementType }}
+                                        </span>
+                                        <span class="strategy-name">{{ strategy.name }}</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                } @else if (selectedType === 'strategy' && selectedStrategy) {
+                    <div class="detail-section">
+                        <label class="detail-label">Name</label>
+                        <p class="detail-value focus">{{ selectedStrategy.name }}</p>
+                    </div>
+                    
+                    @if (selectedStrategy.description) {
+                        <div class="detail-section">
+                            <label class="detail-label">Description</label>
+                            <p class="detail-value">{{ selectedStrategy.description }}</p>
+                        </div>
+                    }
+                    
+                    <div class="detail-section">
+                        <label class="detail-label">Refinement Type</label>
+                        <span class="refinement-badge" [class]="'type-' + selectedStrategy.refinementType.toLowerCase()">
+                            {{ selectedStrategy.refinementType }}
+                        </span>
+                        <p class="refinement-explanation">
+                            @if (selectedStrategy.refinementType === 'AND') {
+                                All child goals must be achieved for this strategy to succeed.
+                            } @else {
+                                At least one child goal must be achieved for this strategy to succeed.
+                            }
+                        </p>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <label class="detail-label">Child Goals ({{ selectedStrategy.childGoals.length }})</label>
+                        @if (selectedStrategy.childGoals.length === 0) {
+                            <p class="detail-value muted">No child goals linked</p>
+                        } @else {
+                            <div class="child-goals-list">
+                                @for (child of selectedStrategy.childGoals; track child.goal.id) {
+                                    <div class="child-goal-item">
+                                        <div class="child-goal-header">
+                                            <span class="child-goal-focus">{{ child.goal.focus }}</span>
+                                            <span class="influence-type" [class]="'influence-' + child.influenceType.toLowerCase()">
+                                                {{ child.influenceType }}
+                                            </span>
+                                        </div>
+                                        <div class="child-goal-meta">
+                                            <span class="meta-item">
+                                                <span class="meta-label">Strength:</span>
+                                                {{ (child.strength * 100) | number:'1.0-0' }}%
+                                            </span>
+                                            <span class="meta-item">
+                                                <span class="meta-label">Confidence:</span>
+                                                {{ (child.confidence * 100) | number:'1.0-0' }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
