@@ -36,6 +36,11 @@ services:
       - Services__AuditService=http://audit-service:8080
     depends_on:
       - user-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   user-db:
     image: postgres:17-alpine
@@ -60,6 +65,11 @@ services:
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
     depends_on:
       - department-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   department-db:
     image: postgres:17-alpine
@@ -93,6 +103,11 @@ services:
     depends_on:
       - goal-db
       - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   goal-db:
     image: postgres:17-alpine
@@ -119,6 +134,11 @@ services:
       - Services__AuditService=http://audit-service:8080
     depends_on:
       - premise-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   premise-db:
     image: postgres:17-alpine
@@ -145,6 +165,11 @@ services:
       - Services__AuditService=http://audit-service:8080
     depends_on:
       - gqm-goal-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   gqm-goal-db:
     image: postgres:17-alpine
@@ -174,6 +199,11 @@ services:
       - "5006:8080"
     depends_on:
       - assessment-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   assessment-db:
     image: postgres:17-alpine
@@ -205,6 +235,11 @@ services:
     depends_on:
       - orchestration-db
       - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   orchestration-db:
     image: postgres:17-alpine
@@ -235,6 +270,11 @@ services:
     depends_on:
       - audit-db
       - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   audit-db:
     image: postgres:17-alpine
@@ -289,6 +329,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
       - prometheus
 
