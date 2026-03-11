@@ -19,7 +19,7 @@ public class QuestionRequestValidatorTests
             .Options;
             
         _dbContext = new ApplicationDbContext(options);
-        _validator = new QuestionRequestValidator();
+        _validator = new QuestionRequestValidator(_dbContext);
     }
 
     [Fact]
