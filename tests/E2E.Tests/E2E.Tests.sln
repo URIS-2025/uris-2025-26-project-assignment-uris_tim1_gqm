@@ -1,0 +1,16 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2E.Tests", "tests/E2E.Tests/E2E.Tests.csproj", "{E2E00000-0000-0000-0000-000000000000}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E2E00000-0000-0000-0000-000000000000}.Debug|Any CPU = Debug|Any CPU
+		{E2E00000-0000-0000-0000-000000000000}.Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+EndGlobal

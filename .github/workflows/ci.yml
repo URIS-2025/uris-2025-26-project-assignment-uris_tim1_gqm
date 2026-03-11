@@ -5,6 +5,9 @@ permissions:
   checks: write
   pull-requests: write
 
+env:
+  MSBUILDFAILONDRIVEENUMERATINGWILDCARD: 0
+
 on:
   push:
     branches: [ main, dev ]
@@ -21,67 +24,47 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      access: ${{ steps.filter.outputs.access }}
       department: ${{ steps.filter.outputs.department }}
       goal: ${{ steps.filter.outputs.goal }}
       premise: ${{ steps.filter.outputs.premise }}
-      qgm-goal: ${{ steps.filter.outputs.qgm-goal }}
+      gqm-goal: ${{ steps.filter.outputs.gqm-goal }}
       assessment: ${{ steps.filter.outputs.assessment }}
+      user: ${{ steps.filter.outputs.user }}  
+      orchestration: ${{ steps.filter.outputs.orchestration }}
+      audit: ${{ steps.filter.outputs.audit }}
       shared: ${{ steps.filter.outputs.shared }}
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
+      e2e: ${{ steps.filter.outputs.e2e }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            access:
-              - 'services/access-service/**'
+
             department:
               - 'services/department-service/**'
             goal:
               - 'services/goal-service/**'
             premise:
               - 'services/premise-service/**'
-            qgm-goal:
-              - 'services/qgm-goal-service/**'
+            gqm-goal:
+              - 'services/gqm-goal-service/**'
             assessment:
               - 'services/assessment-service/**'
+            user:
+              - 'services/user-service/**'
+            orchestration:
+              - 'services/orchestration-service/**'
+            audit:
+              - 'services/audit-service/**'
             shared:
               - 'shared/**'
             infrastructure:
               - 'docker-compose.yaml'
               - 'nginx.conf'
-  
-  build-access:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.access == 'true' || needs.detect-changes.outputs.shared == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
-      - name: Build Shared.HMAC
-        run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
-      - name: Build Access Service
-        run: dotnet build services/access-service/AccessService.API/AccessService.API.csproj --configuration Release
-      - name: Run Access Service Tests
-        run: dotnet test services/access-service/AccessService.Tests/AccessService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
-      - name: Publish Test Results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Access Service Tests
-          path: test-results/*.trx
-          reporter: dotnet-trx
+            e2e:
+              - 'tests/E2E.Tests/**'
   
   build-department:
     needs: detect-changes
@@ -91,7 +74,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.103'
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -112,6 +95,7 @@ jobs:
           name: Department Service Tests
           path: test-results/*.trx
           reporter: dotnet-trx
+          fail-on-empty: false
   
   build-goal:
     needs: detect-changes
@@ -121,7 +105,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.103'
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -142,6 +126,7 @@ jobs:
           name: Goal Service Tests
           path: test-results/*.trx
           reporter: dotnet-trx
+          fail-on-empty: false
   
   build-premise:
     needs: detect-changes
@@ -151,7 +136,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.103'
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -172,16 +157,17 @@ jobs:
           name: Premise Service Tests
           path: test-results/*.trx
           reporter: dotnet-trx
+          fail-on-empty: false
   
-  build-qgm-goal:
+  build-gqm-goal:
     needs: detect-changes
-    if: needs.detect-changes.outputs.qgm-goal == 'true' || needs.detect-changes.outputs.shared == 'true'
+    if: needs.detect-changes.outputs.gqm-goal == 'true' || needs.detect-changes.outputs.shared == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.103'
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -191,17 +177,18 @@ jobs:
             nuget-${{ runner.os }}-
       - name: Build Shared.HMAC
         run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
-      - name: Build QGM-Goal Service
-        run: dotnet build services/qgm-goal-service/QGMGoalService.API/QGMGoalService.API.csproj --configuration Release
-      - name: Run QGM-Goal Service Tests
-        run: dotnet test services/qgm-goal-service/QGMGoalService.Tests/QGMGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Build gqm-Goal Service
+        run: dotnet build services/gqm-goal-service/GQMGoalService.API/GQMGoalService.API.csproj --configuration Release
+      - name: Run gqm-Goal Service Tests
+        run: dotnet test services/gqm-goal-service/GQMGoalService.Tests/GQMGoalService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
       - name: Publish Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: QGM-Goal Service Tests
+          name: gqm-Goal Service Tests
           path: test-results/*.trx
           reporter: dotnet-trx
+          fail-on-empty: false
   
   build-assessment:
     needs: detect-changes
@@ -211,7 +198,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.103'
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -232,10 +219,151 @@ jobs:
           name: Assessment Service Tests
           path: test-results/*.trx
           reporter: dotnet-trx
+          fail-on-empty: false
+
+  build-user:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.user == 'true' || needs.detect-changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.103'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Build Shared.HMAC
+        run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
+      - name: Build Shared.Contracts
+        run: dotnet build shared/Shared.Contracts/Shared.Contracts.csproj --configuration Release
+      - name: Build User Service
+        run: dotnet build services/user-service/UserService.API/UserService.API.csproj --configuration Release
+      - name: Run User Service Tests
+        run: dotnet test services/user-service/UserService.Tests/UserService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: User Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
+          fail-on-empty: false
+
+  build-audit:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.audit == 'true' || needs.detect-changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.103'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Build Shared.HMAC
+        run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
+      - name: Build Shared.Contracts
+        run: dotnet build shared/Shared.Contracts/Shared.Contracts.csproj --configuration Release
+      - name: Build Audit Service
+        run: dotnet build services/audit-service/AuditService.API/AuditService.API.csproj --configuration Release
+      - name: Run Audit Service Tests
+        run: dotnet test services/audit-service/AuditService.Tests/AuditService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Audit Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
+          fail-on-empty: false
   
+  build-orchestration:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.orchestration == 'true' || needs.detect-changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.103'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Build Shared.HMAC
+        run: dotnet build shared/Shared.HMAC/Shared.HMAC.csproj --configuration Release
+      - name: Build Orchestration Service
+        run: dotnet build services/orchestration-service/OrchestrationService.API/OrchestrationService.API.csproj --configuration Release
+      - name: Run Orchestration Service Tests
+        run: dotnet test services/orchestration-service/OrchestrationService.Tests/OrchestrationService.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Orchestration Service Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
+          fail-on-empty: false
+
+  build-e2e:
+    needs: [detect-changes, build-department, build-goal, build-premise, build-gqm-goal, build-assessment, build-user, build-audit, build-orchestration]
+    if: |
+      always() && 
+      !cancelled() &&
+      !contains(needs.*.result, 'failure') &&
+      (needs.detect-changes.outputs.department == 'true' ||
+       needs.detect-changes.outputs.goal == 'true' || 
+       needs.detect-changes.outputs.premise == 'true' ||
+       needs.detect-changes.outputs.gqm-goal == 'true' ||
+       needs.detect-changes.outputs.assessment == 'true' ||
+       needs.detect-changes.outputs.user == 'true' ||
+       needs.detect-changes.outputs.audit == 'true' || 
+       needs.detect-changes.outputs.orchestration == 'true' ||
+       needs.detect-changes.outputs.shared == 'true' ||
+       needs.detect-changes.outputs.infrastructure == 'true' ||
+       needs.detect-changes.outputs.e2e == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.103'
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-e2e-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-e2e-${{ runner.os }}-
+      - name: Build E2E Tests
+        run: dotnet build tests/E2E.Tests/E2E.Tests.csproj --configuration Release
+      - name: Run E2E Tests
+        run: dotnet test tests/E2E.Tests/E2E.Tests.csproj --configuration Release --verbosity normal --logger trx --results-directory test-results
+      - name: Publish E2E Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Integration Tests
+          path: test-results/*.trx
+          reporter: dotnet-trx
+          fail-on-empty: false
+
   # docker-build:
   #   runs-on: ubuntu-latest
-  #   needs: [detect-changes, build-access, build-department, build-goal, build-premise, build-qgm-goal, build-assessment]
+  #   needs: [detect-changes, build-access, build-department, build-goal, build-premise, build-gqm-goal, build-assessment]
   #   if: |
   #     always() && 
   #     !cancelled() &&
@@ -246,7 +374,7 @@ jobs:
   #      needs.detect-changes.outputs.department == 'true' ||
   #      needs.detect-changes.outputs.goal == 'true' ||
   #      needs.detect-changes.outputs.premise == 'true' ||
-  #      needs.detect-changes.outputs.qgm-goal == 'true' ||
+  #      needs.detect-changes.outputs.gqm-goal == 'true' ||
   #      needs.detect-changes.outputs.assessment == 'true')
     
   #   steps:
@@ -283,8 +411,8 @@ jobs:
   #       if [ "${{ needs.detect-changes.outputs.premise }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
   #         SERVICES="$SERVICES premise-service"
   #       fi
-  #       if [ "${{ needs.detect-changes.outputs.qgm-goal }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
-  #         SERVICES="$SERVICES qgm-goal-service"
+  #       if [ "${{ needs.detect-changes.outputs.gqm-goal }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
+  #         SERVICES="$SERVICES gqm-goal-service"
   #       fi
   #       if [ "${{ needs.detect-changes.outputs.assessment }}" == "true" ] || [ "${{ needs.detect-changes.outputs.shared }}" == "true" ]; then
   #         SERVICES="$SERVICES assessment-service"
@@ -306,3 +434,4 @@ jobs:
   #   - name: Verify Docker images
   #     run: |
   #       docker images | grep uris-2025-26-project-assignment-uris_tim1_gqm || true
+

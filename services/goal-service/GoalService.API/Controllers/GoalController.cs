@@ -1,0 +1,199 @@
+using FluentValidation;
+using GoalService.Application.DTOs;
+using Shared.Contracts;
+using GoalService.Application.Interfaces;
+using MassTransit;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
+using Shared.Contracts.Messages;
+
+namespace GoalService.API.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+[Authorize]
+public class GoalController : ControllerBase
+{
+    private readonly IGoalService _goalService;
+    private readonly IValidator<GoalRequest> _validator;
+    private readonly IPublishEndpoint _publishEndpoint;
+
+    public GoalController(IGoalService goalService, IValidator<GoalRequest> validator, IPublishEndpoint publishEndpoint)
+    {
+        _goalService = goalService;
+        _validator = validator;
+        _publishEndpoint = publishEndpoint;
+    }
+
+    /// <summary>
+    /// Get all goals with their strategies and influences.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<PaginationResponse<GoalResponse>>> GetAll([FromQuery] PaginationRequest request)
+    {
+        var paginatedGoals = await _goalService.GetAllPaginatedAsync(request);
+        return Ok(paginatedGoals);
+    }
+
+    /// <summary>
+    /// Get a specific goal by ID.
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<GoalResponse>> GetById(Guid id)
+    {
+        var goal = await _goalService.GetByIdAsync(id);
+        if (goal is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(goal);
+    }
+
+    /// <summary>
+    /// Get a specific goal by ID along with its related external data (Premises, Assessments, QGM Goals).
+    /// </summary>
+    [HttpGet("{id:guid}/details")]
+    public async Task<ActionResult<GoalDetailsResponse>> GetDetails(Guid id)
+    {
+        var details = await _goalService.GetGoalDetailsAsync(id);
+        if (details is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(details);
+    }
+
+    /// <summary>
+    /// Get all goals belonging to a specific department.
+    /// </summary>
+    [HttpGet("department/{departmentId:guid}")]
+    public async Task<ActionResult<IEnumerable<GoalResponse>>> GetByDepartmentId(Guid departmentId)
+    {
+        var goals = await _goalService.GetByDepartmentIdAsync(departmentId);
+        return Ok(goals);
+    }
+
+    /// <summary>
+    /// Create a new goal.
+    /// </summary>
+    [HttpPost]
+    [RequirePermission("create_goals")]
+    public async Task<ActionResult<GoalResponse>> Create([FromBody] GoalRequest request)
+    {
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(new { errors = validation.Errors.Select(e => e.ErrorMessage) });
+
+        var goal = await _goalService.CreateAsync(request);
+        
+        return CreatedAtAction(nameof(GetById), new { id = goal.Id }, goal);
+    }
+
+    /// <summary>
+    /// Update an existing goal.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [RequirePermission("edit_goals")]
+    public async Task<ActionResult<GoalResponse>> Update(Guid id, [FromBody] GoalRequest request)
+    {
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(new { errors = validation.Errors.Select(e => e.ErrorMessage) });
+
+        var goal = await _goalService.UpdateAsync(id, request);
+        if (goal is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(goal);
+    }
+
+    /// <summary>
+    /// Check whether a goal meets all prerequisites for activation.
+    /// </summary>
+    [HttpGet("{id:guid}/readiness")]
+    public async Task<ActionResult<ActivationReadinessResponse>> Readiness(Guid id)
+    {
+        var readiness = await _goalService.ReadinessAsync(id);
+        return Ok(readiness);
+    }
+
+    /// <summary>
+    /// Activate a goal, completing its saga workflow.
+    /// </summary>
+    [HttpPost("{id:guid}/activate")]
+    public async Task<ActionResult<GoalResponse>> Activate(Guid id)
+    {
+        var goal = await _goalService.ActivateAsync(id);
+        if (goal is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(goal);
+    }
+
+    /// <summary>
+    /// Revert an active goal back to Draft (saga compensation endpoint).
+    /// </summary>
+    [HttpPost("{id:guid}/revert-to-draft")]
+    public async Task<ActionResult<GoalResponse>> RevertToDraft(Guid id)
+    {
+        var goal = await _goalService.RevertToDraftAsync(id);
+        if (goal is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(goal);
+    }
+
+    /// <summary>
+    /// Delete a goal and all its strategies and influences (cascade).
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [RequirePermission("delete_goals")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var deleted = await _goalService.DeleteAsync(id);
+        if (!deleted)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return NoContent();
+    }
+
+    // ========== Analytics Endpoints ==========
+
+    /// <summary>
+    /// Get root goals for a department (goals with no parent/influence).
+    /// </summary>
+    [HttpGet("department/{departmentId:guid}/roots")]
+    [RequirePermission("view_analytics")]
+    public async Task<ActionResult<IEnumerable<GoalResponse>>> GetRootGoals(Guid departmentId)
+    {
+        var rootGoals = await _goalService.GetRootGoalsByDepartmentAsync(departmentId);
+        return Ok(rootGoals);
+    }
+
+    /// <summary>
+    /// Get the complete goal tree structure starting from a root goal.
+    /// Returns recursive structure: Goal → Strategies → Child Goals → ...
+    /// </summary>
+    [HttpGet("{id:guid}/tree")]
+    [RequirePermission("view_analytics")]
+    public async Task<ActionResult<GoalTreeNodeResponse>> GetGoalTree(Guid id)
+    {
+        var tree = await _goalService.GetGoalTreeAsync(id);
+        if (tree is null)
+            return NotFound(new { message = $"Goal with ID '{id}' was not found." });
+
+        return Ok(tree);
+    }
+
+    /// <summary>
+    /// Get analytics data for a scope (department or root goal tree).
+    /// </summary>
+    [HttpGet("analytics")]
+    [RequirePermission("view_analytics")]
+    public async Task<ActionResult<GoalAnalyticsResponse>> GetAnalytics(
+        [FromQuery] Guid? departmentId,
+        [FromQuery] Guid? rootGoalId)
+    {
+        var analytics = await _goalService.GetAnalyticsAsync(departmentId, rootGoalId);
+        return Ok(analytics);
+    }
+}

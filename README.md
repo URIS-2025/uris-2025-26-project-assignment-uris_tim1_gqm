@@ -30,7 +30,7 @@ The system follows a microservices architecture with:
 - API Gateway via Nginx reverse proxy
 - Container orchestration via Docker Compose
 
-**Total: 13 containers** — 6 services + 6 databases + 1 gateway
+**Total: 15 containers** — 7 services + 7 databases + 1 gateway
 
 ---
 
@@ -42,20 +42,19 @@ root/
 ├── .github/
 │
 ├── services/
-│   ├── access-service/
-│   │   ├── AccessService.API/
-│   │   └── AccessService.Tests/
 │   ├── assessment-service/
 │   ├── department-service/
 │   ├── goal-service/
 │   ├── premise-service/
-│   └── qgm-goal-service/
+│   ├── gqm-goal-service/
+│   └── user-service/
 │
 ├── shared/
-│   └── Shared.HMAC/
+│   ├── Shared.HMAC/
+│   └── Shared.Contracts/
 │
 ├── .gitignore
-├── GqmPlus.sln
+├── GqmPlus.slnx
 ├── docker-compose.yaml
 └── nginx.conf
 ```
@@ -64,9 +63,10 @@ root/
 |------|-------------|
 | `services/` | All microservices |
 | `shared/Shared.HMAC/` | Shared HMAC authentication library |
+| `shared/Shared.Contracts/` | Shared DTOs and contracts library |
 | `docker-compose.yaml` | Container orchestration |
 | `nginx.conf` | API Gateway configuration |
-| `GqmPlus.sln` | .NET solution file |
+| `GqmPlus.slnx` | .NET solution file |
 
 ---
 
@@ -87,6 +87,7 @@ Each service follows a layered clean architecture:
 │   ├── Services/
 │   ├── DTOs/
 │   ├── Interfaces/
+│   │   └── Persistence/
 │   ├── Validators/
 │   └── Mappings/
 │
@@ -137,6 +138,7 @@ Each service follows a layered clean architecture:
 - Avoid magic strings
 - Use explicit domain exceptions
 - Validation handled in Application layer
+- Services must inject I{Service}DbContext from Application, never the EF Core DbContext directly
 - Use dependency injection
 - Use consistent formatting across all services
 
@@ -156,12 +158,12 @@ Host={service}-db;Port=5432;Database={service}db;Username=postgres;Password=post
 
 | DB Container | Database Name |
 |-------------|--------------|
-| `access-db` | `accessdb` |
 | `department-db` | `departmentdb` |
 | `goal-db` | `goaldb` |
 | `premise-db` | `premisedb` |
-| `qgm-goal-db` | `qgmgoaldb` |
+| `gqm-goal-db` | `gqmgoaldb` |
 | `assessment-db` | `assessmentdb` |
+| `user-db` | `userdb` |
 
 ### Database Rules
 
@@ -271,7 +273,7 @@ If you've made changes to only one service, you don't need to rebuild everything
 docker compose up --build --no-deps -d <service-name>
 
 # Example
-docker compose up --build --no-deps -d access-service
+docker compose up --build --no-deps -d department-service
 ```
 
 > `--no-deps` prevents restarting dependent containers. `-d` runs in detached mode.
@@ -282,7 +284,7 @@ docker compose up --build --no-deps -d access-service
 docker compose logs -f <service-name>
 
 # Example
-docker compose logs -f access-service
+docker compose logs -f department-service
 ```
 
 ### Restart a Service Without Rebuilding
@@ -365,7 +367,7 @@ The project uses GitHub Actions for automated build and test validation. The CI 
 ### How It Works
 
 1. **Change Detection** — On every push or PR, the pipeline detects which services have changed by analyzing modified file paths
-2. **Selective Builds** — Only affected services are built (e.g., if you modify `access-service`, only that service builds)
+2. **Selective Builds** — Only affected services are built (e.g., if you modify `department-service`, only that service builds)
 3. **Automated Testing** — Each service's test project (`.Tests`) runs automatically
 4. **Test Results** — Test results are published to the GitHub Actions UI for easy review
 5. **Fail-Fast** — If tests fail, the pipeline stops immediately to prevent broken code from progressing

@@ -1,0 +1,73 @@
+<div class="admin-page page-enter">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a routerLink="/">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">Departments</span>
+    </nav>
+
+    <app-page-header title="Departments" subtitle="Manage organizational departments">
+        <ng-template #actions>
+            <button [hasPermission]="'manage_departments'" permissionMode="disable" mat-flat-button
+                (click)="openCreate()" id="btn-create-dept" class="btn-create">
+                <mat-icon>add</mat-icon> Add Department
+            </button>
+        </ng-template>
+    </app-page-header>
+
+    @if (showForm) {
+    <div class="form-card">
+        <h3>{{ editing ? 'Edit Department' : 'New Department' }}</h3>
+        <form [formGroup]="form" (ngSubmit)="save()" class="inline-form">
+            <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" id="dept-name">
+                @if (form.get('name')?.invalid && form.touched) { <mat-error>Required</mat-error> }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="description">
+            </mat-form-field>
+
+            <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="cancelForm()">Cancel</button>
+                <button mat-flat-button type="submit" [disabled]="form.invalid">{{ editing ? 'Update' : 'Create'
+                    }}</button>
+            </div>
+        </form>
+    </div>
+    }
+
+    @if (loading) {
+    <div class="loading-wrap"><mat-spinner diameter="36"></mat-spinner></div>
+    } @else if (departments.length === 0) {
+    <div class="empty-state-card">
+        <span class="material-icons-round">business</span>
+        <p>No departments yet. Create your first department.</p>
+    </div>
+    } @else {
+    <div class="dept-grid">
+        @for (d of departments; track d.id) {
+        <div class="dept-card">
+            <div class="dept-card-header">
+                <div class="dept-icon-wrap">
+                    <span class="material-icons-round">business</span>
+                </div>
+                <div class="dept-info">
+                    <h4 class="dept-name">{{ d.name }}</h4>
+                    <p class="dept-meta">{{ d.description || getOrgName(d.organizationId) }}</p>
+                </div>
+            </div>
+            <div class="dept-card-actions">
+                <button [hasPermission]="'manage_departments'" permissionMode="disable" mat-stroked-button
+                    (click)="openEdit(d)" class="dept-action-btn">Edit</button>
+                <button [hasPermission]="'manage_departments'" permissionMode="disable" mat-stroked-button
+                    class="dept-action-btn danger" (click)="delete(d)">Delete</button>
+            </div>
+        </div>
+        }
+    </div>
+    <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25]" (page)="onPage($event)"
+        class="dept-paginator"></mat-paginator>
+    }
+</div>

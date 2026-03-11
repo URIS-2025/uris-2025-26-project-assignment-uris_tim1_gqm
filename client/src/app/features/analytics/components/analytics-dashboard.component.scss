@@ -1,0 +1,223 @@
+.dashboard-container {
+    padding: 16px;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.empty-state {
+    height: 100%;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #64748b;
+}
+
+.empty-state .material-icons {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+.empty-state h3 {
+    margin: 0 0 8px;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 13px;
+}
+
+/* KPI Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.kpi-card {
+    background: white;
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kpi-card.total .kpi-icon { background: #e8eaf6; color: #3F51B5; }
+.kpi-card.active .kpi-icon { background: #e8f5e9; color: #388e3c; }
+.kpi-card.completed .kpi-icon { background: #e0f2f1; color: #00897b; }
+.kpi-card.draft .kpi-icon { background: #f1f5f9; color: #64748b; }
+
+.kpi-icon .material-icons { font-size: 20px; }
+
+.kpi-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.kpi-label {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 3px;
+    white-space: nowrap;
+}
+
+/* Charts */
+.chart-section {
+    background: white;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.section-title {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.chart-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.chart-wrapper.donut { height: 300px; }
+.chart-wrapper.bar { height: 160px; }
+
+.chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* Insights */
+.insights-section { margin-top: 4px; }
+
+.insight-card {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 3px solid #94a3b8;
+}
+
+.insight-card.insight-high { border-left-color: #2CB1A1; }
+.insight-card.insight-low { border-left-color: #f59e0b; }
+.insight-card.insight-strategy { border-left-color: #3F51B5; }
+.insight-card.insight-department { border-left-color: #8b5cf6; }
+
+.insight-icon {
+    font-size: 18px;
+    color: #64748b;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.insight-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.insight-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+}
+
+.insight-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.insight-value {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.no-insights {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    font-style: italic;
+    padding: 8px 0;
+}
+
+/* Override ngx-charts text colors for readability */
+::ng-deep .ngx-charts text {
+    fill: #64748b !important;
+    font-family: 'Inter', sans-serif !important;
+}
+::ng-deep .ngx-charts .gridline-path { stroke: #f1f5f9 !important; }
+::ng-deep .ngx-charts .legend-title-text { display: none !important; }
+
+/* Fix ngx-charts legend overflow and wrapping */
+::ng-deep .ngx-charts .chart-legend {
+    display: flex;
+    justify-content: center;
+}
+::ng-deep .ngx-charts .chart-legend .legend-labels {
+    width: auto !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    background: transparent !important;
+    line-height: 24px;
+}
+::ng-deep .ngx-charts .chart-legend .legend-label {
+    width: auto !important;
+    margin-right: 16px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+}
+::ng-deep .ngx-charts .chart-legend .legend-wrap {
+    width: auto !important;
+}
+::ng-deep .ngx-charts .chart-legend .legend-label-text {
+    white-space: nowrap !important;
+    overflow: visible !important;
+}

@@ -1,0 +1,71 @@
+<div class="admin-page page-enter">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a routerLink="/">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">Organizations</span>
+    </nav>
+
+    <app-page-header title="Organizations" subtitle="Manage organisations in the platform.">
+        <ng-template #actions>
+            <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-flat-button
+                (click)="openCreate()" id="btn-create-org" class="btn-create">
+                <mat-icon>add</mat-icon> Add Organization
+            </button>
+        </ng-template>
+    </app-page-header>
+
+    @if (showForm) {
+    <div class="form-card">
+        <h3>{{ editing ? 'Edit Organization' : 'New Organization' }}</h3>
+        <form [formGroup]="form" (ngSubmit)="save()" class="inline-form">
+            <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" id="org-name">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="description">
+            </mat-form-field>
+            <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="cancelForm()">Cancel</button>
+                <button mat-flat-button type="submit" [disabled]="form.invalid">{{ editing ? 'Update' : 'Create'
+                    }}</button>
+            </div>
+        </form>
+    </div>
+    }
+
+    @if (loading) {
+    <div class="loading-wrap"><mat-spinner diameter="36"></mat-spinner></div>
+    } @else if (orgs.length === 0) {
+    <div class="empty-state-card">
+        <span class="material-icons-round">corporate_fare</span>
+        <p>No organizations yet. Create your first organization.</p>
+    </div>
+    } @else {
+    <div class="org-grid">
+        @for (o of orgs; track o.id) {
+        <div class="org-card">
+            <div class="org-card-header">
+                <div class="org-icon-wrap">
+                    <span class="material-icons-round">corporate_fare</span>
+                </div>
+                <div class="org-info">
+                    <h4 class="org-name">{{ o.name }}</h4>
+                    <p class="org-meta">{{ o.description || '—' }}</p>
+                </div>
+            </div>
+            <div class="org-card-actions">
+                <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-stroked-button
+                    (click)="openEdit(o)" class="org-action-btn">Edit</button>
+                <button [hasPermission]="'manage_organizations'" permissionMode="disable" mat-stroked-button
+                    class="org-action-btn danger" (click)="delete(o)">Delete</button>
+            </div>
+        </div>
+        }
+    </div>
+    <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[10, 25]" (page)="onPage($event)"
+        class="org-paginator"></mat-paginator>
+    }
+</div>

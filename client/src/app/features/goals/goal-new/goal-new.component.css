@@ -1,0 +1,760 @@
+.goal-new-page {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+/* ========================================================
+   BREADCRUMB
+======================================================== */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.breadcrumb a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-400);
+    text-decoration: underline;
+}
+
+.breadcrumb-sep {
+    color: var(--text-muted);
+    font-size: 14px;
+    user-select: none;
+}
+
+.breadcrumb-current {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ========================================================
+   PAGE HEADER
+======================================================== */
+.page-top-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.cancel-btn {
+    flex-shrink: 0;
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ========================================================
+   CUSTOM STEPPER
+======================================================== */
+.stepper-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.stepper-track {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.stepper-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    min-width: 80px;
+    transition: opacity var(--transition-fast);
+}
+
+.stepper-item:hover {
+    opacity: 0.8;
+}
+
+.stepper-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    border: 2px solid var(--border-color);
+    background: var(--surface-0);
+    color: var(--text-muted);
+    transition: all var(--transition-normal);
+    z-index: 1;
+}
+
+.stepper-item.active .stepper-circle {
+    background: var(--primary-500);
+    border-color: var(--primary-500);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(49, 73, 101, 0.15);
+}
+
+.stepper-item.completed .stepper-circle {
+    background: var(--primary-500);
+    border-color: var(--primary-500);
+    color: white;
+}
+
+.stepper-item.completed .stepper-circle .check-icon {
+    font-size: 18px;
+}
+
+.stepper-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 80px;
+    transition: color var(--transition-fast);
+}
+
+.stepper-item.active .stepper-label {
+    color: var(--primary-500);
+    font-weight: 600;
+}
+
+.stepper-item.completed .stepper-label {
+    color: var(--text-secondary);
+}
+
+.stepper-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border-color);
+    margin-top: 18px;
+    min-width: 24px;
+    max-width: 60px;
+    transition: background var(--transition-normal);
+}
+
+.stepper-line.completed {
+    background: var(--primary-500);
+}
+
+/* ========================================================
+   STEP CONTENT CARD
+======================================================== */
+.step-content-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.step-form {
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+}
+
+.step-header {
+    padding: 28px 32px 0;
+}
+
+.step-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+}
+
+.step-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.step-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 2px 0 0;
+}
+
+.step-body {
+    padding: 24px 32px;
+    flex: 1;
+}
+
+/* Step Actions */
+.step-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-top: 1px solid var(--border-color);
+    background: var(--surface-1);
+}
+
+.step-actions .spacer {
+    flex: 1;
+}
+
+.btn-next {
+    min-width: 100px;
+}
+
+.btn-back {
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ========================================================
+   FIGMA FIELD PATTERN
+======================================================== */
+.figma-field {
+    margin-bottom: 0;
+}
+
+.figma-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+}
+
+.figma-label .label-icon {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
+.required {
+    color: var(--error);
+    font-weight: 600;
+}
+
+.optional-tag {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.figma-hint {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: -14px;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+/* Form inputs inside step forms — smaller, tighter */
+.step-form .mat-mdc-input-element {
+    font-size: 13px !important;
+}
+
+.step-form .mat-mdc-input-element::placeholder {
+    font-size: 13px !important;
+    color: var(--text-muted) !important;
+    opacity: 0.6 !important;
+}
+
+.step-form .mat-mdc-select-value-text {
+    font-size: 13px !important;
+}
+
+.step-form .mat-mdc-select-placeholder {
+    font-size: 13px !important;
+    opacity: 0.6 !important;
+}
+
+.step-form .mdc-floating-label {
+    font-size: 12px !important;
+}
+
+/* ========================================================
+   TWO COLUMN LAYOUT
+======================================================== */
+.two-col-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
+}
+
+.two-col-layout>.col {
+    display: flex;
+    flex-direction: column;
+}
+
+.mb-field {
+    margin-bottom: 20px;
+}
+
+/* ========================================================
+   FIGMA INPUT CARD (bordered card for premises/strategy/questions)
+======================================================== */
+.figma-input-card {
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.input-row-with-btn {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+.btn-add-action {
+    background: var(--primary-500) !important;
+    color: white !important;
+    border-radius: var(--radius-md) !important;
+    min-height: 42px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-bottom: 22px;
+}
+
+.remove-item-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: var(--text-muted) !important;
+}
+
+/* ========================================================
+   EMPTY ITEMS CARD
+======================================================== */
+.empty-items-card {
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    text-align: center;
+    background: var(--surface-1);
+}
+
+.empty-items-card .empty-icon {
+    font-size: 36px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 8px;
+}
+
+.empty-items-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+.added-items-list {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    background: var(--surface-1);
+}
+
+.added-items-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.added-items-header .items-icon {
+    font-size: 20px;
+    color: var(--primary-400);
+}
+
+/* ========================================================
+   INFO PANELS
+======================================================== */
+.info-panel {
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.info-panel.blue {
+    background: #EEF2FF;
+    border: 1px solid #C7D2FE;
+}
+
+.info-panel.yellow {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+}
+
+.info-panel h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.info-panel .info-panel-icon {
+    font-size: 18px;
+    color: var(--primary-400);
+}
+
+.info-panel p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 2px 0;
+    line-height: 1.5;
+}
+
+.info-panel ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.info-panel ul li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    line-height: 1.5;
+}
+
+/* ========================================================
+   GOAL INFLUENCE SECTION
+======================================================== */
+.influence-section {
+    border-color: var(--primary-400) !important;
+    border-style: solid !important;
+    background: linear-gradient(135deg, rgba(49, 73, 101, 0.04) 0%, rgba(49, 73, 101, 0.01) 100%);
+    animation: fadeSlideIn 0.25s ease;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.influence-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.influence-icon {
+    font-size: 24px;
+    color: var(--primary-400);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.influence-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+}
+
+.influence-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+
+/* ========================================================
+   PROBABILITY ASSESSMENT
+======================================================== */
+.probability-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.probability-big-display {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+
+.confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.confidence-badge.confidence-high {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.confidence-badge.confidence-medium {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.confidence-badge.confidence-low {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.figma-slider {
+    width: 100%;
+}
+
+.precise-value-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.probability-input {
+    width: 80px !important;
+}
+
+.probability-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.probability-pct {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-400);
+}
+
+/* Probability Guide */
+.guide-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.guide-item p {
+    margin: 0;
+}
+
+.guide-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 40px;
+}
+
+.guide-badge.guide-green {
+    background: #10B981;
+}
+
+.guide-badge.guide-blue {
+    background: #3B82F6;
+}
+
+.guide-badge.guide-orange {
+    background: #F59E0B;
+}
+
+.guide-badge.guide-red-light {
+    background: #F97316;
+}
+
+.guide-badge.guide-red {
+    background: #EF4444;
+}
+
+.guide-green-text {
+    color: #059669;
+}
+
+.guide-blue-text {
+    color: #2563EB;
+}
+
+.guide-orange-text {
+    color: #D97706;
+}
+
+.guide-red-text {
+    color: #DC2626;
+}
+
+/* ========================================================
+   TARGETS / GQM
+======================================================== */
+.targets-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 12px;
+    border-left: 2px solid var(--border-color);
+    margin-top: 12px;
+}
+
+.target-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+/* ========================================================
+   REVIEW
+======================================================== */
+.review-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.review-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.review-block h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-300);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 12px;
+}
+
+.review-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.review-row span:first-child {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Error */
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    color: var(--error);
+    font-size: 13px;
+    margin-top: 16px;
+}
+
+/* ========================================================
+   RESPONSIVE
+======================================================== */
+@media (max-width: 768px) {
+    .stepper-card {
+        padding: 20px 16px;
+    }
+
+    .stepper-item {
+        min-width: 48px;
+    }
+
+    .stepper-label {
+        font-size: 10px;
+        max-width: 56px;
+    }
+
+    .stepper-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .stepper-line {
+        margin-top: 15px;
+    }
+
+    .step-header,
+    .step-body,
+    .step-actions {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .two-col-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .review-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .input-row-with-btn {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .figma-field[style*="max-width"] {
+        max-width: 100% !important;
+    }
+}

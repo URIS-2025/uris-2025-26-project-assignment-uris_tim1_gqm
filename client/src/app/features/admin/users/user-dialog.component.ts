@@ -1,0 +1,283 @@
+import { Component, OnInit, signal, computed, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Role, Organization, Department } from '../../../core/api/api.models';
+import { UserApiService } from '../../../core/api/user-api.service';
+import { DepartmentApiService } from '../../../core/api/department-api.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { catchError, finalize, of, forkJoin } from 'rxjs';
+
+function gqmEmailValidator(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+  return control.value.endsWith('@gqmplus.com') ? null : { invalidDomain: true };
+}
+
+@Component({
+  selector: 'app-user-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatProgressSpinnerModule
+  ],
+  styles: [`
+    .dialog-container { padding: 8px; }
+    mat-form-field { width: 100%; margin-bottom: 8px; }
+    .form-row { display: flex; gap: 16px; }
+    .form-row > * { flex: 1; }
+  `],
+  template: `
+    <h2 mat-dialog-title>Add New User</h2>
+    
+    <mat-dialog-content class="dialog-container">
+      @if (initialLoading()) {
+        <div style="display: flex; justify-content: center; padding: 24px;">
+          <mat-spinner diameter="32"></mat-spinner>
+        </div>
+      } @else {
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="firstName" required>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="lastName" required>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email (@gqmplus.com)</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="example@gqmplus.com" required>
+            @if (userForm.get('email')?.hasError('invalidDomain') && userForm.get('email')?.touched) {
+              <mat-error>Email must end with <strong>&#64;gqmplus.com</strong></mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput formControlName="password" required>
+          </mat-form-field>
+
+
+
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="roleId" required>
+              @for (role of roles(); track role.id) {
+                <mat-option [value]="role.id">{{ role.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (isDepartmentManagerSelected()) {
+            <mat-form-field appearance="outline">
+              <mat-label>Managed Departments</mat-label>
+              <mat-select formControlName="departmentIds" multiple required>
+                @if (departmentsLoading()) {
+                  <mat-option disabled>Loading...</mat-option>
+                } @else if (departments().length === 0) {
+                  <mat-option disabled>No departments in selected org.</mat-option>
+                } @else {
+                  @for (dept of departments(); track dept.id) {
+                    <mat-option [value]="dept.id">{{ dept.name }}</mat-option>
+                  }
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+
+        </form>
+      }
+    </mat-dialog-content>
+    
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close [disabled]="submitting()">Cancel</button>
+      <button mat-flat-button color="primary" [disabled]="!userForm.valid || submitting() || initialLoading()" (click)="onSubmit()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" style="display:inline-block; margin-right: 8px;"></mat-spinner>
+        }
+        Create User
+      </button>
+    </mat-dialog-actions>
+  `
+})
+export class UserDialogComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private dialogRef = inject(MatDialogRef<UserDialogComponent>);
+  private userService = inject(UserApiService);
+  private departmentService = inject(DepartmentApiService);
+  private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
+
+  userForm: FormGroup;
+
+  initialLoading = signal<boolean>(true);
+  submitting = signal<boolean>(false);
+  departmentsLoading = signal<boolean>(false);
+
+  roles = signal<Role[]>([]);
+  departments = signal<Department[]>([]);
+
+  selectedRoleId = signal<string>('');
+
+  isDepartmentManagerSelected = computed(() => {
+    const roleId = this.selectedRoleId();
+    const role = this.roles().find(r => r.id === roleId);
+    if (!role) return false;
+
+    // Return true if the role name implies department manager
+    return role.name.toLowerCase().includes('department manager');
+  });
+
+  isSystemAdminSelected = computed(() => {
+    const roleId = this.selectedRoleId();
+    const role = this.roles().find(r => r.id === roleId);
+    if (!role) return false;
+
+    return role.name.toLowerCase().includes('system admin');
+  });
+
+  constructor() {
+    this.userForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email, gqmEmailValidator]],
+      password: ['Test@123', Validators.required],
+      roleId: ['', Validators.required],
+      departmentIds: [[]]
+    });
+
+
+
+    // Track roleId changes using a signal for the computed property
+    this.userForm.get('roleId')?.valueChanges.subscribe(roleId => {
+      this.selectedRoleId.set(roleId);
+
+      // Allow computed value to update, then apply validation
+      setTimeout(() => {
+        const deptControl = this.userForm.get('departmentIds');
+        if (this.isDepartmentManagerSelected()) {
+          deptControl?.setValidators(Validators.required);
+        } else {
+          deptControl?.clearValidators();
+          deptControl?.setValue([]);
+        }
+        deptControl?.updateValueAndValidity();
+
+
+      });
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadInitialData();
+  }
+
+  private loadInitialData() {
+    this.userService.getRoles().pipe(
+      catchError(() => of([]))
+    ).subscribe(res => {
+      this.roles.set(res);
+      this.initialLoading.set(false);
+    });
+
+    // Reactively refresh departments if active organization changes
+    this.authService.organizationId$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(orgId => {
+      if (orgId) {
+        this.loadDepartments(orgId);
+        // Reset department selections if the organization changes while the popup is open
+        const deptControl = this.userForm.get('departmentIds');
+        if (deptControl && deptControl.value && deptControl.value.length > 0) {
+            deptControl.setValue([]);
+        }
+      }
+    });
+  }
+
+  private loadDepartments(orgId: string) {
+    this.departmentsLoading.set(true);
+    this.departmentService.getDepartmentsByOrg(orgId, { size: 100 }).pipe(
+      catchError(() => of({ items: [] })),
+      finalize(() => this.departmentsLoading.set(false))
+    ).subscribe(res => {
+      this.departments.set(res.items || []);
+    });
+  }
+
+  onSubmit() {
+    if (this.userForm.invalid || this.submitting()) return;
+
+    this.submitting.set(true);
+    const val = this.userForm.value;
+
+    // Step 1: Create User
+    this.userService.createUser({
+      firstName: val.firstName,
+      lastName: val.lastName,
+      email: val.email,
+      password: val.password,
+      organizationId: this.authService.organizationId!
+    }).subscribe({
+      next: (createdUser) => {
+        // Step 2: Assign Role
+        this.userService.assignRole({
+          userId: createdUser.id,
+          roleId: val.roleId
+        }).subscribe({
+          next: () => {
+            // Step 3: Set Department Managers if applicable
+            if (this.isDepartmentManagerSelected() && val.departmentIds && val.departmentIds.length > 0) {
+              const deptsToUpdate = this.departments().filter(d => val.departmentIds.includes(d.id));
+              
+              const updateRequests = deptsToUpdate.map(dept => {
+                return this.departmentService.updateDepartment(dept.id, {
+                  name: dept.name,
+                  description: dept.description,
+                  organizationId: dept.organizationId,
+                  managerId: createdUser.id // <--- SET THE MANAGER
+                });
+              });
+
+              if (updateRequests.length > 0) {
+                forkJoin(updateRequests).subscribe({
+                  next: () => this.dialogRef.close(true),
+                  error: () => this.dialogRef.close(true) // Still close if it partially succeeded
+                });
+              } else {
+                this.dialogRef.close(true);
+              }
+            } else {
+              this.dialogRef.close(true); // Success without department assignment
+            }
+          },
+          error: (err) => {
+            console.error('Failed to assign role', err);
+            this.submitting.set(false);
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Failed to create user', err);
+        this.submitting.set(false);
+      }
+    });
+  }
+}

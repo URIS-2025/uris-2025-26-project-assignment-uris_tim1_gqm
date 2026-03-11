@@ -1,51 +1,182 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using FluentValidation;
+using GoalService.Application.Interfaces;
+using GoalService.Application.Interfaces.Clients;
+using GoalService.Infrastructure.Clients;
+using GoalService.Infrastructure.Persistence;
+using GoalService.Application.Interfaces.Persistence;
+using GoalService.Application.Services;
+using GoalService.Infrastructure.Seed;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// --- Database ---
+var connectionString = builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Database connection string not configured.");
 
-// Add HMAC authentication
-var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+builder.Services.AddDbContext<GoalDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IGoalDbContext>(provider => provider.GetRequiredService<GoalDbContext>());
+
+// --- Application Services ---
+builder.Services.AddScoped<IGoalService, GoalServiceImpl>();
+builder.Services.AddScoped<IStrategyService, StrategyServiceImpl>();
+builder.Services.AddScoped<IGoalInfluenceService, GoalInfluenceServiceImpl>();
+
+// --- FluentValidation ---
+builder.Services.AddValidatorsFromAssemblyContaining<GoalServiceImpl>();
+
+// --- Swagger / OpenAPI ---
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// --- HMAC Authentication ---
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
+    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
+// --- Cross-Service HTTP Clients ---
+builder.Services.AddHttpClient<IPremiseClient, PremiseClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:PremiseService"] ?? "http://premise-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+builder.Services.AddHttpClient<IAssessmentClient, AssessmentClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AssessmentService"] ?? "http://assessment-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+builder.Services.AddHttpClient<IQgmGoalClient, QgmGoalClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:QgmGoalService"] ?? "http://gqm-goal-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+// --- MassTransit ---
+builder.Services.AddMassTransit(x =>
+{
+    x.AddEntityFrameworkOutbox<GoalDbContext>(o =>
+    {
+        o.UsePostgres();
+        o.UseBusOutbox();
+    });
+
+    x.UsingRabbitMq((ctx, cfg) =>
+    {
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? throw new InvalidOperationException("RabbitMQ:Host is not configured.");
+        var rabbitMqUsername = builder.Configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured.");
+        var rabbitMqPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.");
+
+        cfg.Host(rabbitMqHost, h =>
+        {
+            h.Username(rabbitMqUsername);
+            h.Password(rabbitMqPassword);
+        });
+
+        cfg.ConfigureEndpoints(ctx);
+    });
+});
+
+builder.Services.AddHttpClient<IDepartmentClient, DepartmentClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:DepartmentService"] ?? "http://department-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+builder.Services.AddHttpContextAccessor();
+
+// --- Controllers ---
+builder.Services.AddControllers();
+
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("goal-service"))
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
+
+// --- Seed Data & Swagger (development only) ---
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    await GoalDbSeeder.SeedAsync(app.Services);
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Goal Service API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();
 
-// Add HMAC middleware
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
+
+// --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// --- Map Controllers ---
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// --- Health Check ---
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "goal-service" }))
+    .WithName("HealthCheck");
+
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+namespace GoalService.API
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public partial class Program { }
 }

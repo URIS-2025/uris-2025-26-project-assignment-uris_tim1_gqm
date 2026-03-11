@@ -1,51 +1,166 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using AssessmentService.Application.Interfaces;
+using AssessmentService.Application.Interfaces.Clients;
+using AssessmentService.Application.Services;
+using AssessmentService.Application.Validators;
+using AssessmentService.Infrastructure.Clients;
+using AssessmentService.Infrastructure.Persistence;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Add controllers
+builder.Services.AddControllers();
+
+// Add Swagger/OpenAPI with XML comments
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+});
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // Add HMAC authentication
-var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
+    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
+builder.Services.AddScoped<IAssessmentService, AssessmentServiceImpl>();
+
+var connectionString = builder.Configuration["DATABASE_URL"]
+    ?? throw new InvalidOperationException("DATABASE_URL is not configured.");
+
+builder.Services.AddDbContext<AssessmentDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IAssessmentDbContext>(sp =>
+    sp.GetRequiredService<AssessmentDbContext>());
+
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateAssessmentValidator>();
+
+// Goal client (HTTP)
+builder.Services.AddHttpClient<IGoalClient, GoalClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:GoalService"] ?? "http://goal-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+})
+.AddHttpMessageHandler<HmacDelegatingHandler>()
+.AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+builder.Services.AddHttpClient<IOrchestrationClient, OrchestrationClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:OrchestrationService"] ?? "http://orchestration-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+builder.Services.AddHttpClient<IAuditClient, AuditClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:AuditService"] ?? "http://audit-service:8080";
+    client.BaseAddress = new Uri(baseUrl);
+}).AddHttpMessageHandler<HmacDelegatingHandler>()
+  .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
+
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("assessment-service"))
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Apply database schema and seed data in development
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    var retryCount = 0;
+    const int maxRetries = 10;
+
+    while (retryCount < maxRetries)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AssessmentDbContext>();
+            await dbContext.Database.EnsureCreatedAsync();
+            await AssessmentSeeder.SeedAsync(dbContext);
+            break;
+        }
+        catch (Exception ex)
+        {
+            retryCount++;
+            app.Logger.LogWarning(ex, "Database not ready (attempt {Attempt}/{Max}). Retrying in 3 seconds...", retryCount, maxRetries);
+            await Task.Delay(3000);
+        }
+    }
 }
 
-app.UseHttpsRedirection();
+// Configure the HTTP request pipeline
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("v1/swagger.json", "Assessment Service API v1");
+    options.RoutePrefix = "swagger";
+});
 
-// Add HMAC middleware
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
+
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
+
 app.UseMiddleware<HmacMiddleware>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "assessment-service" }))
+    .WithName("HealthCheck");
+
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+
+
+
+
+
+

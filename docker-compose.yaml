@@ -8,46 +8,75 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - access-service
       - department-service
       - goal-service
       - premise-service
-      - qgm-goal-service
+      - gqm-goal-service
       - assessment-service
+      - user-service
+      - orchestration-service
+      - audit-service
 
-  access-service:
+  user-service:
     build:
       context: .
-      dockerfile: ./services/access-service/AccessService.API/Dockerfile
-    container_name: access-service
+      dockerfile: ./services/user-service/UserService.API/Dockerfile
+    container_name: user-service
+    ports:
+      - "5020:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DATABASE_URL=Host=access-db;Port=5432;Database=accessdb;Username=postgres;Password=postgres
+      - DATABASE_URL=Host=user-db;Port=5432;Database=userdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
+      - Jwt__ExpiryMinutes=15
+      - App__FrontendBaseUrl=http://localhost:3000
+      - Services__AuditService=http://audit-service:8080
+      - Services__DepartmentService=http://department-service:8080
     depends_on:
-      - access-db
+      - user-db
+      - department-service
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
-  access-db:
+  user-db:
     image: postgres:17-alpine
-    container_name: access-db
+    container_name: user-db
     environment:
-      - POSTGRES_DB=accessdb
+      - POSTGRES_DB=userdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5435:5432"
     volumes:
-      - access-db-data:/var/lib/postgresql/data
+      - user-db-data:/var/lib/postgresql/data
 
   department-service:
     build:
       context: .
       dockerfile: ./services/department-service/DepartmentService.API/Dockerfile
     container_name: department-service
+    ports:
+      - "5015:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=department-db;Port=5432;Database=departmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - department-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   department-db:
     image: postgres:17-alpine
@@ -56,6 +85,8 @@ services:
       - POSTGRES_DB=departmentdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5440:5432"
     volumes:
       - department-db-data:/var/lib/postgresql/data
 
@@ -64,12 +95,31 @@ services:
       context: .
       dockerfile: ./services/goal-service/GoalService.API/Dockerfile
     container_name: goal-service
+    ports:
+      - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=goal-db;Port=5432;Database=goaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__PremiseService=http://premise-service:8080
+      - Services__AssessmentService=http://assessment-service:8080
+      - Services__QgmGoalService=http://gqm-goal-service:8080
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
+      - RabbitMQ__Host=rabbitmq://rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - goal-db
+      - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   goal-db:
     image: postgres:17-alpine
@@ -78,6 +128,8 @@ services:
       - POSTGRES_DB=goaldb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
     volumes:
       - goal-db-data:/var/lib/postgresql/data
 
@@ -90,12 +142,24 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=premise-db;Port=5432;Database=premisedb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
       - premise-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   premise-db:
     image: postgres:17-alpine
     container_name: premise-db
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_DB=premisedb
       - POSTGRES_USER=postgres
@@ -103,27 +167,39 @@ services:
     volumes:
       - premise-db-data:/var/lib/postgresql/data
 
-  qgm-goal-service:
+  gqm-goal-service:
     build:
       context: .
-      dockerfile: ./services/qgm-goal-service/QGMGoalService.API/Dockerfile
-    container_name: qgm-goal-service
+      dockerfile: ./services/gqm-goal-service/GQMGoalService.API/Dockerfile
+    container_name: gqm-goal-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DATABASE_URL=Host=qgm-goal-db;Port=5432;Database=qgmgoaldb;Username=postgres;Password=postgres
+      - DATABASE_URL=Host=gqm-goal-db;Port=5432;Database=gqmgoaldb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
     depends_on:
-      - qgm-goal-db
+      - gqm-goal-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
-  qgm-goal-db:
+  gqm-goal-db:
     image: postgres:17-alpine
-    container_name: qgm-goal-db
+    container_name: gqm-goal-db
+    ports:
+      - "5436:5432"
     environment:
-      - POSTGRES_DB=qgmgoaldb
+      - POSTGRES_DB=gqmgoaldb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - qgm-goal-db-data:/var/lib/postgresql/data
+      - gqm-goal-db-data:/var/lib/postgresql/data
 
   assessment-service:
     build:
@@ -134,8 +210,21 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DATABASE_URL=Host=assessment-db;Port=5432;Database=assessmentdb;Username=postgres;Password=postgres
       - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__GoalService=http://goal-service:8080
+      - Services__OrchestrationService=http://orchestration-service:8080
+      - Services__AuditService=http://audit-service:8080
+      - Jwt__SecretKey=your-super-secret-jwt-key-change-in-production-min-32-chars!!
+      - Jwt__Issuer=user-service
+      - Jwt__Audience=gqmplus-app
+    ports:
+      - "5006:8080"
     depends_on:
       - assessment-db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   assessment-db:
     image: postgres:17-alpine
@@ -144,13 +233,144 @@ services:
       - POSTGRES_DB=assessmentdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5434:5432"
     volumes:
       - assessment-db-data:/var/lib/postgresql/data
 
+  orchestration-service:
+    build:
+      context: .
+      dockerfile: ./services/orchestration-service/OrchestrationService.API/Dockerfile
+    container_name: orchestration-service
+    ports:
+      - "5010:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=orchestration-db;Port=5432;Database=orchestrationdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - Services__AuditService=http://audit-service:8080
+      - RabbitMQ__Host=rabbitmq://rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      - orchestration-db
+      - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  orchestration-db:
+    image: postgres:17-alpine
+    container_name: orchestration-db
+    environment:
+      - POSTGRES_DB=orchestrationdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - orchestration-db-data:/var/lib/postgresql/data
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: ./services/audit-service/AuditService.API/Dockerfile
+    container_name: audit-service
+    ports:
+      - "5025:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=Host=audit-db;Port=5432;Database=auditdb;Username=postgres;Password=postgres
+      - HMAC_SECRET_KEY=your-super-secret-hmac-key-change-in-production
+      - RabbitMQ__Host=rabbitmq://rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      - audit-db
+      - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  audit-db:
+    image: postgres:17-alpine
+    container_name: audit-db
+    environment:
+      - POSTGRES_DB=auditdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - audit-db-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - user-service
+      - department-service
+      - goal-service
+      - premise-service
+      - gqm-goal-service
+      - assessment-service
+      - orchestration-service
+      - audit-service
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
 volumes:
-  access-db-data:
   department-db-data:
   goal-db-data:
   premise-db-data:
-  qgm-goal-db-data:
+  gqm-goal-db-data:
   assessment-db-data:
+  user-db-data:
+  orchestration-db-data:
+  audit-db-data:
+  rabbitmq-data:
+  prometheus-data:
+  grafana-data:

@@ -1,14 +1,18 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy shared library
 COPY ["shared/Shared.HMAC/Shared.HMAC.csproj", "shared/Shared.HMAC/"]
-# Copy service project
+# Copy service projects
 COPY ["services/premise-service/PremiseService.API/PremiseService.API.csproj", "services/premise-service/PremiseService.API/"]
+COPY ["services/premise-service/PremiseService.Application/PremiseService.Application.csproj", "services/premise-service/PremiseService.Application/"]
+COPY ["services/premise-service/PremiseService.Domain/PremiseService.Domain.csproj", "services/premise-service/PremiseService.Domain/"]
+COPY ["services/premise-service/PremiseService.Infrastructure/PremiseService.Infrastructure.csproj", "services/premise-service/PremiseService.Infrastructure/"]
 
 RUN dotnet restore "services/premise-service/PremiseService.API/PremiseService.API.csproj"
 

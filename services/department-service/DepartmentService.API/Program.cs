@@ -1,70 +1,133 @@
+using OpenTelemetry.Resources;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using DepartmentService.Application.Mappings;
+using DepartmentService.Application.Validators;
+using DepartmentService.Infrastructure;
+using DepartmentService.Infrastructure.Persistence;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Shared.Auth;
+using Shared.ErrorHandling;
 using Shared.HMAC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// --- Controllers ---
+builder.Services.AddControllers();
 
-// Add HMAC authentication
-var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"] ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
+// --- Swagger / OpenAPI ---
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// --- JWT Authentication & Authorization ---
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// --- HMAC Authentication ---
+var hmacSecretKey = builder.Configuration["HMAC_SECRET_KEY"]
+    ?? throw new InvalidOperationException("HMAC_SECRET_KEY not configured");
 builder.Services.AddHmacAuthentication(hmacSecretKey);
 builder.Services.AddTransient<HmacDelegatingHandler>();
 
+// --- Correlation ID ---
+builder.Services.AddCorrelationId();
+
+// --- Infrastructure (DbContext, services) ---
+builder.Services.AddInfrastructure(builder.Configuration);
+
+// --- AutoMapper ---
+builder.Services.AddAutoMapper(typeof(OrganizationProfile).Assembly);
+
+// --- FluentValidation ---
+builder.Services.AddValidatorsFromAssemblyContaining<OrganizationRequestValidator>();
+
+
+// --- OpenTelemetry ---
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("department-service"))
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddPrometheusExporter()
+               .AddRuntimeInstrumentation()
+               .AddMeter("Npgsql")
+               .AddMeter("MassTransit");
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddEntityFrameworkCoreInstrumentation(opt => opt.SetDbStatementForText = true)
+               .AddSource("Npgsql")
+               .AddSource("MassTransit")
+               .AddOtlpExporter(opt =>
+               {
+                   opt.Endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://jaeger:4317");
+               });
+    });
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// --- Apply migrations and seed data ---
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    var dbContext = scope.ServiceProvider.GetRequiredService<DepartmentServiceDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Applying database migrations...");
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied successfully.");
+
+        await DataSeeder.SeedAsync(dbContext, logger);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+        throw;
+    }
 }
 
-app.UseHttpsRedirection();
+// --- Correlation ID & Global Exception Handler (first in pipeline) ---
+app.UseCorrelationId();
+app.UseStandardizedExceptionHandler();
 
-// Add HMAC middleware
+// --- Swagger ---
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Department Service API v1");
+    options.RoutePrefix = "swagger";
+});
+
+// --- Authentication & Authorization ---
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Organization Context ---
+app.UseMiddleware<OrganizationContextMiddleware>();
+
+// --- HMAC Middleware ---
 app.UseMiddleware<HmacMiddleware>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// --- Map Controllers ---
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// --- Health Check ---
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "department-service" }))
+    .WithName("HealthCheck");
 
-// Protected endpoint - requires HMAC
-app.MapGet("/departments", () =>
-{
-    return Results.Ok(new[] 
-    {
-        new { Id = 1, Name = "IT Department" },
-        new { Id = 2, Name = "HR Department" },
-        new { Id = 3, Name = "Finance Department" }
-    });
-})
-.WithName("GetDepartments");
-
-// Protected endpoint - requires HMAC
-app.MapPost("/departments", (object dto) =>
-{
-    return Results.Created("/departments/1", new { Id = 1, Message = "Department created" });
-})
-.WithName("CreateDepartment");
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+// Required for integration testing
+public partial class Program { }
+
+
+
+
+
+
+

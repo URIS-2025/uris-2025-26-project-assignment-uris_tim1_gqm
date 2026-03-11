@@ -11,6 +11,14 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Build output files (safety net for backslash path issues)
+*.dll
+*.exe
+*.pdb
+
+*.bin
+*.obj
+
 # Visual Studio / Rider
 .vs/
 .vscode/

@@ -1,0 +1,61 @@
+<mat-toolbar class="topbar">
+    <button mat-icon-button (click)="toggleSidenav.emit()" aria-label="Toggle navigation">
+        <mat-icon>{{ sidenavOpened ? 'menu_open' : 'menu' }}</mat-icon>
+    </button>
+
+    <div class="topbar-search">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search goals, metrics, users...">
+    </div>
+
+    <span class="spacer"></span>
+
+    @if (isSystemAdmin) {
+    <button mat-button [matMenuTriggerFor]="orgMenu" class="org-switcher">
+        <mat-icon class="org-icon">domain</mat-icon>
+        <span class="org-name">{{ currentOrgName }}</span>
+        <mat-icon class="dropdown-icon">expand_more</mat-icon>
+    </button>
+
+    <mat-menu #orgMenu="matMenu" xPosition="before">
+        <div class="menu-header">Select Organization</div>
+        <mat-divider></mat-divider>
+        @for (org of organizations; track org.id) {
+        <button mat-menu-item [class.active]="org.id === currentOrgId" (click)="switchOrganization(org.id)">
+            @if (org.id === currentOrgId) {
+            <mat-icon>check</mat-icon>
+            } @else {
+            <span style="display:inline-block; width:24px"></span>
+            }
+            {{ org.name }}
+        </button>
+        }
+    </mat-menu>
+    } @else {
+    <button mat-button class="org-switcher" disabled style="opacity: 1; cursor: default">
+        <mat-icon class="org-icon">domain</mat-icon>
+        <span class="org-name">{{ currentOrgName }}</span>
+    </button>
+    }
+
+
+    @if (user$ | async; as user) {
+    <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
+        <div class="avatar">{{ initials }}</div>
+        <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+        <mat-icon>expand_more</mat-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu" xPosition="before">
+        <div class="menu-user-info">
+            <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+            <span>{{ user.email }}</span>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign out</span>
+        </button>
+    </mat-menu>
+    }
+</mat-toolbar>

@@ -1,0 +1,448 @@
+.dashboard {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Loading */
+.loading-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 64px;
+}
+
+/* Create button */
+.btn-create {
+    gap: 6px;
+}
+
+/* ========================================================
+   PERMISSION BANNER
+======================================================== */
+.permission-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #EEF2FF;
+    border: 1px solid #C7D2FE;
+    border-radius: var(--radius-lg);
+    padding: 18px 24px;
+    margin-bottom: 24px;
+}
+
+.banner-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #DBEAFE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.banner-icon mat-icon {
+    color: #3B82F6;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.banner-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E3A5F;
+    margin: 0 0 4px;
+}
+
+.banner-text {
+    font-size: 13px;
+    color: #3B5998;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    background: #10B981;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* ========================================================
+   KPI CARDS
+======================================================== */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.kpi-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 8px;
+    font-weight: 500;
+}
+
+.kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.kpi-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.kpi-meta-green {
+    color: #059669;
+}
+
+.kpi-meta-orange {
+    color: #D97706;
+}
+
+.kpi-meta-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* ========================================================
+   CHARTS
+======================================================== */
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.section-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+}
+
+.chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+}
+
+.chart-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+}
+
+.chart-empty {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 24px;
+}
+
+/* Vertical bar chart */
+.bar-chart-v {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 32px;
+    height: 200px;
+    padding-top: 20px;
+}
+
+.bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    max-width: 80px;
+}
+
+.bar-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.bar-v {
+    width: 48px;
+    border-radius: 6px 6px 0 0;
+    min-height: 8px;
+    transition: height 0.6s ease;
+}
+
+.bar-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* Horizontal bar chart */
+.bar-chart-h {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bar-row-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    width: 100px;
+    text-align: right;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bar-row-track {
+    flex: 1;
+    height: 24px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar-h {
+    height: 100%;
+    background: #2CB1A1;
+    border-radius: 6px;
+    min-width: 8px;
+    transition: width 0.6s ease;
+}
+
+.bar-row-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    width: 24px;
+    text-align: right;
+}
+
+/* ========================================================
+   RECENT ASSESSMENTS
+======================================================== */
+.assessment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.assessment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.assessment-row:last-child {
+    border-bottom: none;
+}
+
+.assessment-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.assessment-goal {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 2px;
+}
+
+.assessment-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.assessment-prob {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ========================================================
+   ACTIVE GOALS LIST
+======================================================== */
+.active-goals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.active-goal-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.active-goal-row:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-200);
+}
+
+.active-goal-accent {
+    width: 4px;
+    height: 48px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.active-goal-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.active-goal-focus {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+}
+
+.active-goal-magnitude {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 8px;
+}
+
+.active-goal-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.active-goal-dept {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+}
+
+.active-goal-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.meta-icon-sm {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.active-goal-prob {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.prob-big {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.prob-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: block;
+}
+
+/* ========================================================
+   RESPONSIVE
+======================================================== */
+@media (max-width: 1024px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .active-goal-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .active-goal-accent {
+        width: 100%;
+        height: 4px;
+    }
+
+    .active-goal-prob {
+        text-align: left;
+    }
+}
