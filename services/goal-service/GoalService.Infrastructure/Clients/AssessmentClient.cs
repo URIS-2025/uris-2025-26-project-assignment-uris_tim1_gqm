@@ -20,7 +20,7 @@ public class AssessmentClient : IAssessmentClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/assessments/goal/{goalId}");
+            var response = await _httpClient.GetAsync($"/api/v1/assessment/goal/{goalId}");
             
             if (!response.IsSuccessStatusCode)
             {

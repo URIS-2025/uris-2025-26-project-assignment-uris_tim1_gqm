@@ -134,7 +134,7 @@ public class GoalServiceImpl : IGoalService
             CorrelationId = Guid.NewGuid(),
             GoalId = goal.Id,
             StepName = "GoalCreated",
-            CompensationEndpoint = $"api/Goal/{goal.Id}",
+            CompensationEndpoint = $"http://goal-service:8080/api/v1/goal/{goal.Id}",
             CompensationPayload = "{}",
             RequestedAt = DateTime.UtcNow
         });
@@ -193,7 +193,7 @@ public class GoalServiceImpl : IGoalService
             CorrelationId = Guid.NewGuid(),
             GoalId = goal.Id,
             StepName = "Activated",
-            CompensationEndpoint = $"api/Goal/{goal.Id}/revert-to-draft",
+            CompensationEndpoint = $"http://goal-service:8080/api/v1/goal/{goal.Id}/revert-to-draft",
             CompensationPayload = "{}",
             RequestedAt = DateTime.UtcNow
         });

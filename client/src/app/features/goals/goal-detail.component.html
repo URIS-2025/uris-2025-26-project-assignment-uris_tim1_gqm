@@ -159,7 +159,7 @@
                         <button mat-flat-button color="primary" (click)="submitStrategy()"
                             [disabled]="strategyForm.invalid || strategySubmitting">
                             @if (strategySubmitting) { <mat-spinner diameter="16"></mat-spinner> }
-                            @else { <mat-icon>save</mat-icon> Save Strategy }
+                            @else { <ng-container><mat-icon>save</mat-icon> Save Strategy</ng-container> }
                         </button>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
                         <button mat-flat-button color="primary" (click)="submitPremise()"
                             [disabled]="premiseForm.invalid || premiseSubmitting">
                             @if (premiseSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
-                            @else { <mat-icon>save</mat-icon> Save Premise }
+                            @else { <ng-container><mat-icon>save</mat-icon> Save Premise</ng-container> }
                         </button>
                     </div>
                 </div>
@@ -306,7 +306,7 @@
                         <button mat-flat-button color="primary" (click)="submitGqmGoal()"
                             [disabled]="gqmGoalForm.invalid || gqmGoalSubmitting">
                             @if (gqmGoalSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
-                            @else { <mat-icon>save</mat-icon> Create GQM Goal }
+                            @else { <ng-container><mat-icon>save</mat-icon> Create GQM Goal</ng-container> }
                         </button>
                     </div>
                 </div>
@@ -397,7 +397,7 @@
                                         <button mat-flat-button color="primary" (click)="submitTarget(q.id)"
                                             [disabled]="targetForm.invalid || targetSubmitting">
                                             @if (targetSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
-                                            @else { <mat-icon>save</mat-icon> Add Target }
+                                            @else { <ng-container><mat-icon>save</mat-icon> Add Target</ng-container> }
                                         </button>
                                     </div>
                                 </div>
@@ -425,7 +425,7 @@
                                     <button mat-flat-button color="primary" (click)="submitQuestion(gqmGoal.id)"
                                         [disabled]="questionForm.invalid || questionSubmitting">
                                         @if (questionSubmitting) { <mat-spinner diameter="16"></mat-spinner> }
-                                        @else { <mat-icon>save</mat-icon> Add Question }
+                                        @else { <ng-container><mat-icon>save</mat-icon> Add Question</ng-container> }
                                     </button>
                                 </div>
                             </div>
@@ -547,7 +547,7 @@
                             @if (measurementSubmitting) {
                             <mat-spinner diameter="16"></mat-spinner>
                             } @else {
-                            <mat-icon>save</mat-icon> Save Measurement
+                            <ng-container><mat-icon>save</mat-icon> Save Measurement</ng-container>
                             }
                         </button>
                     </div>

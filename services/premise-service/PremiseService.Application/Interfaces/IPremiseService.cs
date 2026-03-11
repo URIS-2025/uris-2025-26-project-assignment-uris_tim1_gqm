@@ -28,4 +28,7 @@ public interface IPremiseService
 
     /// <summary>Deletes a premise (soft-delete: sets IsActive to false).</summary>
     Task DeleteAsync(Guid id);
+
+    /// <summary>Soft-deletes all premises associated with a goal.</summary>
+    Task DeleteByGoalIdAsync(Guid goalId);
 }

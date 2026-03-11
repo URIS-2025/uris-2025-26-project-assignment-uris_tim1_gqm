@@ -85,7 +85,7 @@ public class GqmGoalService : IGqmGoalService
             .ToListAsync(cancellationToken);
 
         if (goals.Count == 0)
-            throw new NotFoundException("GqmGoal", $"GoalId: {goalId}");
+            return new List<GqmGoalResponse>();
             
         return _mapper.Map<IEnumerable<GqmGoalResponse>>(goals);
     }
@@ -100,7 +100,7 @@ public class GqmGoalService : IGqmGoalService
         _dbContext.GqmGoals.Add(goal);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _orchestrationClient.RecordStepAsync(request.GoalId, "GQMBuilt", $"api/GqmGoal/by-goal/{request.GoalId}", "{}");
+        await _orchestrationClient.RecordStepAsync(request.GoalId, "GQMBuilt", $"http://gqm-goal-service:8080/api/v1/gqmgoal/by-goal/{request.GoalId}", "{}");
 
         return _mapper.Map<GqmGoalResponse>(goal);
     }
@@ -132,6 +132,22 @@ public class GqmGoalService : IGqmGoalService
             throw new ConflictException("Cannot delete GqmGoal because it has associated questions.");
 
         _dbContext.GqmGoals.Remove(goal);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> DeleteByGoalIdAsync(Guid goalId, CancellationToken cancellationToken = default)
+    {
+        var goals = await _dbContext.GqmGoals.Where(g => g.GoalId == goalId).ToListAsync(cancellationToken);
+        if (!goals.Any())
+            return false;
+
+        bool hasQuestions = await _dbContext.Questions.AnyAsync(q => goals.Select(g => g.Id).Contains(q.GqmGoalId), cancellationToken);
+        if (hasQuestions)
+            throw new ConflictException("Cannot delete GqmGoals because they have associated questions.");
+
+        _dbContext.GqmGoals.RemoveRange(goals);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;

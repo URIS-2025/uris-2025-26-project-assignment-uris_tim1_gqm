@@ -95,7 +95,7 @@ public class PremiseAppService : IPremiseService
         await _dbContext.SaveChangesAsync();
 
         if (request.GoalId.HasValue)
-            await _orchestrationClient.RecordStepAsync(request.GoalId.Value, "PremisesAdded", $"api/premises/by-goal/{request.GoalId.Value}", "{}");
+            await _orchestrationClient.RecordStepAsync(request.GoalId.Value, "PremisesAdded", $"http://premise-service:8080/api/v1/premise/goal/{request.GoalId.Value}", "{}");
 
         return _mapper.Map<PremiseResponse>(premise);
     }
@@ -132,5 +132,21 @@ public class PremiseAppService : IPremiseService
 
         premise.IsActive = false;
         await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteByGoalIdAsync(Guid goalId)
+    {
+        var premises = await _dbContext.Premises
+            .Where(p => p.GoalId == goalId && p.IsActive)
+            .ToListAsync();
+
+        foreach (var premise in premises)
+        {
+            premise.IsActive = false;
+        }
+
+        if (premises.Any())
+            await _dbContext.SaveChangesAsync();
     }
 }

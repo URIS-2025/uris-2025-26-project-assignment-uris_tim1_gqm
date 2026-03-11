@@ -92,4 +92,14 @@ public class PremiseController : ControllerBase
         _ = _auditClient.LogAsync(Guid.Empty, "System", "PremiseDeactivated", "Premise", id);
         return NoContent();
     }
+
+    /// <summary>Soft-deletes premises associated with a goal.</summary>
+    [HttpDelete("goal/{goalId:guid}")]
+    [RequirePermission("manage_premises")]
+    public async Task<IActionResult> DeleteByGoalId(Guid goalId)
+    {
+        await _premiseService.DeleteByGoalIdAsync(goalId);
+        _ = _auditClient.LogAsync(Guid.Empty, "System", "PremisesDeactivatedForGoal", "Premise", goalId);
+        return NoContent();
+    }
 }

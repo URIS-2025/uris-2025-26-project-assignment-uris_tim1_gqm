@@ -68,4 +68,12 @@ public class GqmGoalController : ControllerBase
         await _service.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
+
+    [HttpDelete("by-goal/{goalId:guid}")]
+    [RequirePermission("delete_goals")]
+    public async Task<IActionResult> DeleteByGoalId(Guid goalId, CancellationToken cancellationToken = default)
+    {
+        await _service.DeleteByGoalIdAsync(goalId, cancellationToken);
+        return NoContent();
+    }
 }

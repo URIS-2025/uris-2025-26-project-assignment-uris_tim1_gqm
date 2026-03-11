@@ -20,7 +20,7 @@ public class QgmGoalClient : IQgmGoalClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/GqmGoal/by-goal/{goalId}");
+            var response = await _httpClient.GetAsync($"/api/v1/gqmgoal/by-goal/{goalId}");
             
             if (!response.IsSuccessStatusCode)
             {

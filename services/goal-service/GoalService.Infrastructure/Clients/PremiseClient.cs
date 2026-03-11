@@ -20,7 +20,7 @@ public class PremiseClient : IPremiseClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/api/premise/goal/{goalId}");
+            var response = await _httpClient.GetAsync($"/api/v1/premise/active/goal/{goalId}");
             
             if (!response.IsSuccessStatusCode)
             {

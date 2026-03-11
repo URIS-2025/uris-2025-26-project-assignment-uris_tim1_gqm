@@ -58,8 +58,12 @@
                 "output": "/"
               }
             ],
-            "styles": [
+          "styles": [
               "src/styles.css"
+            ],
+            "allowedCommonJsDependencies": [
+              "dagre",
+              "webcola"
             ]
           },
           "configurations": {
@@ -72,8 +76,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
-                  "maximumError": "16kB"
+                  "maximumWarning": "20kB",
+                  "maximumError": "30kB"
                 }
               ],
               "outputHashing": "all"

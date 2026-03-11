@@ -22,4 +22,5 @@ public interface IGqmGoalService
     Task<GqmGoalResponse> CreateAsync(GqmGoalRequest request, CancellationToken cancellationToken = default);
     Task<GqmGoalResponse> UpdateAsync(Guid id, GqmGoalRequest request, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeleteByGoalIdAsync(Guid goalId, CancellationToken cancellationToken = default);
 }
