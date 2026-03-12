@@ -45,8 +45,10 @@ services:
       - Services__AuditService=http://audit-service:8080
       - Services__DepartmentService=http://department-service:8080
     depends_on:
-      - user-db
-      - department-service
+      user-db:
+        condition: service_healthy
+      department-service:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -64,6 +66,12 @@ services:
       - "5435:5432"
     volumes:
       - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d userdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   department-service:
     build:
@@ -80,7 +88,8 @@ services:
       - Jwt__Issuer=user-service
       - Jwt__Audience=gqmplus-app
     depends_on:
-      - department-db
+      department-db:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -98,6 +107,12 @@ services:
       - "5440:5432"
     volumes:
       - department-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d departmentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   goal-service:
     build:
@@ -122,8 +137,10 @@ services:
       - Jwt__Issuer=user-service
       - Jwt__Audience=gqmplus-app
     depends_on:
-      - goal-db
-      - rabbitmq
+      goal-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -141,6 +158,12 @@ services:
       - "5433:5432"
     volumes:
       - goal-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d goaldb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   premise-service:
     build:
@@ -157,7 +180,8 @@ services:
       - Jwt__Issuer=user-service
       - Jwt__Audience=gqmplus-app
     depends_on:
-      - premise-db
+      premise-db:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -175,6 +199,12 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - premise-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d premisedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   gqm-goal-service:
     build:
@@ -191,7 +221,8 @@ services:
       - Jwt__Issuer=user-service
       - Jwt__Audience=gqmplus-app
     depends_on:
-      - gqm-goal-db
+      gqm-goal-db:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -209,6 +240,12 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - gqm-goal-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gqmgoaldb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   assessment-service:
     build:
@@ -228,7 +265,8 @@ services:
     ports:
       - "5006:8080"
     depends_on:
-      - assessment-db
+      assessment-db:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -246,6 +284,12 @@ services:
       - "5434:5432"
     volumes:
       - assessment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d assessmentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   orchestration-service:
     build:
@@ -263,8 +307,10 @@ services:
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
     depends_on:
-      - orchestration-db
-      - rabbitmq
+      orchestration-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -282,6 +328,12 @@ services:
       - "5437:5432"
     volumes:
       - orchestration-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orchestrationdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   audit-service:
     build:
@@ -298,8 +350,10 @@ services:
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
     depends_on:
-      - audit-db
-      - rabbitmq
+      audit-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -317,6 +371,12 @@ services:
       - "5438:5432"
     volumes:
       - audit-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auditdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -329,6 +389,12 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   prometheus:
     image: prom/prometheus:latest
