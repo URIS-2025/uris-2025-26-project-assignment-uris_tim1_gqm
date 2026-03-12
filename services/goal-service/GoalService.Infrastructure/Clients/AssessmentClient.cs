@@ -1,6 +1,7 @@
 using System.Text.Json;
 using GoalService.Application.DTOs.External;
 using GoalService.Application.Interfaces.Clients;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace GoalService.Infrastructure.Clients;
@@ -8,11 +9,13 @@ namespace GoalService.Infrastructure.Clients;
 public class AssessmentClient : IAssessmentClient
 {
     private readonly HttpClient _httpClient;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<AssessmentClient> _logger;
 
-    public AssessmentClient(HttpClient httpClient, ILogger<AssessmentClient> logger)
+    public AssessmentClient(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, ILogger<AssessmentClient> logger)
     {
         _httpClient = httpClient;
+        _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
 
@@ -20,7 +23,21 @@ public class AssessmentClient : IAssessmentClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/api/v1/assessment/goal/{goalId}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/assessment/goal/{goalId}");
+            
+            var authHeader = _httpContextAccessor.HttpContext?.Request.Headers.Authorization.ToString();
+            if (!string.IsNullOrWhiteSpace(authHeader))
+            {
+                request.Headers.Add("Authorization", authHeader);
+            }
+
+            var orgHeader = _httpContextAccessor.HttpContext?.Request.Headers["X-Organization-Id"].ToString();
+            if (!string.IsNullOrWhiteSpace(orgHeader))
+            {
+                request.Headers.Add("X-Organization-Id", orgHeader);
+            }
+
+            var response = await _httpClient.SendAsync(request);
             
             if (!response.IsSuccessStatusCode)
             {
@@ -33,9 +50,11 @@ public class AssessmentClient : IAssessmentClient
 
             var content = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var assessments = JsonSerializer.Deserialize<IEnumerable<AssessmentDto>>(content, options);
-            
-            return assessments ?? Enumerable.Empty<AssessmentDto>();
+            var assessment = JsonSerializer.Deserialize<AssessmentDto>(content, options);
+
+            return assessment is not null
+                ? new[] { assessment }
+                : Enumerable.Empty<AssessmentDto>();
         }
         catch (Exception ex)
         {
