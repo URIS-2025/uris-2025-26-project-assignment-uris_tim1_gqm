@@ -108,7 +108,11 @@ builder.Services.AddHttpClient<IDepartmentClient, DepartmentClient>(client =>
 builder.Services.AddHttpContextAccessor();
 
 // --- Controllers ---
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 
 // --- OpenTelemetry ---
