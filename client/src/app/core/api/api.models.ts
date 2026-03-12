@@ -147,9 +147,11 @@ export interface PremiseRequest {
 // Assessment models
 export interface Assessment {
     id: string;
-    probability: number;
-    notes: string;
     goalId: string;
+    probability: number;
+    state: string;
+    method: string;
+    notes: string;
     assessedAt?: string;
 }
 
@@ -220,13 +222,13 @@ export interface TargetRequest {
 
 export interface Measurement {
     id: string;
-    value: string;
+    value: number;
     measuredAt: string;
     targetId: string;
 }
 
 export interface MeasurementRequest {
-    value: string;
+    value: number;
     measuredAt: string;
     targetId: string;
 }

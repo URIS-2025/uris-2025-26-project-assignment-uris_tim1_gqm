@@ -122,7 +122,7 @@ export class GoalDetailComponent implements OnInit {
     private destroyRef = inject(DestroyRef);
 
     measurementForm = this.fb.group({
-        value: ['', Validators.required],
+        value: [null as number | null, [Validators.required, Validators.min(0)]],
         measuredAt: [new Date(), Validators.required],
     });
 
@@ -348,7 +348,7 @@ export class GoalDetailComponent implements OnInit {
         if (!this.measurementFormValid) return;
         const v = this.measurementForm.value;
         const req: MeasurementRequest = {
-            value: v.value!,
+            value: parseFloat(String(v.value)),
             measuredAt: new Date(v.measuredAt!).toISOString(),
             targetId: this.selectedTargetId,
         };
@@ -372,7 +372,7 @@ export class GoalDetailComponent implements OnInit {
     }
 
     private resetMeasurementForm(): void {
-        this.measurementForm.reset({ value: '', measuredAt: new Date() });
+        this.measurementForm.reset({ value: null, measuredAt: new Date() });
         this.selectedGqmGoalId = '';
         this.selectedQuestionId = '';
         this.selectedTargetId = '';
